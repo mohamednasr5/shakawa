@@ -1516,7 +1516,7 @@
                             <i class="fas fa-id-card"></i>
                         </div>
                         <div class="search-option-title">بحث بالرقم القومي</div>
-                        <div class="search-option-desc">ابحث باستخدام الرقم القومي المكون من 14 رقمًا</div>
+                        <div class="search-option-desc">ابحق باستخدام الرقم القومي المكون من 14 رقمًا</div>
                         <div class="search-option-arrow">
                             <i class="fas fa-arrow-left"></i>
                         </div>
@@ -1650,6 +1650,7 @@
         const phone2Input = document.getElementById('phone2');
         const departmentSelect = document.getElementById('department');
         const loadingOverlay = document.getElementById('loadingOverlay');
+        const localUnitSelect = document.getElementById('localUnit');
         
         // عناصر البحث الجديدة
         const searchByNumberBtn = document.getElementById('searchByNumberBtn');
@@ -1706,6 +1707,11 @@
                     this.value = value.replace(/\D/g, '');
                     if (this.value.length > 14) {
                         this.value = this.value.substring(0, 14);
+                    }
+                    
+                    // عندما يكتمل الرقم القومي (14 رقمًا)، جلب بلد الإقامة تلقائياً
+                    if (this.value.length === 14) {
+                        autoFillResidence();
                     }
                 });
             }
@@ -1935,6 +1941,69 @@
             }
         }
         
+        // ✅ دالة جديدة لتعبئة بلد الإقامة تلقائياً من قاعدة البيانات
+        async function autoFillResidence() {
+            const nationalId = document.getElementById('nationalId').value.trim();
+            
+            if (nationalId.length === 14) {
+                try {
+                    const residence = await getUserResidence(nationalId);
+                    if (residence && localUnitSelect) {
+                        // البحث عن الخيار المناسب وتحديده
+                        for (let i = 0; i < localUnitSelect.options.length; i++) {
+                            if (localUnitSelect.options[i].value === residence) {
+                                localUnitSelect.value = residence;
+                                
+                                // عرض رسالة صغيرة
+                                showMessage('success', `تم تعبئة بلد الإقامة تلقائياً: ${residence}`);
+                                break;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error auto-filling residence:', error);
+                }
+            }
+        }
+        
+        // ✅ دالة جديدة لحفظ بلد إقامة المستخدم
+        async function saveUserResidence(nationalId, localUnit) {
+            try {
+                // حفظ بلد الإقامة في قسم خاص بالمستخدمين
+                const userRef = database.ref('users').child(nationalId);
+                
+                const userData = {
+                    nationalId: nationalId,
+                    residence: localUnit,
+                    lastUpdated: new Date().toISOString()
+                };
+                
+                await userRef.set(userData);
+                
+                console.log('User residence saved:', nationalId, localUnit);
+            } catch (error) {
+                console.error('Error saving user residence:', error);
+                // لا نعرض رسالة خطأ للمستخدم لأن هذه عملية ثانوية
+            }
+        }
+        
+        // ✅ دالة جديدة لجلب بلد إقامة المستخدم
+        async function getUserResidence(nationalId) {
+            try {
+                const snapshot = await database.ref('users').child(nationalId).get();
+                
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    return userData.residence || null;
+                }
+                
+                return null;
+            } catch (error) {
+                console.error('Error getting user residence:', error);
+                return null;
+            }
+        }
+        
         // دالة تقديم الشكوى
         window.submitComplaint = async function() {
             const fullName = document.getElementById('fullName').value.trim();
@@ -1975,11 +2044,12 @@
                 const timestamp = new Date().toISOString();
                 const complaintNumber = await generateComplaintNumber(department);
                 
+                // البيانات الجديدة مع بلد الإقامة
                 const complaintData = {
                     complaintNumber: complaintNumber,
                     fullName: fullName,
                     nationalId: nationalId,
-                    localUnit: localUnit,
+                    localUnit: localUnit, // ✅ تم إضافة حقل بلد الإقامة
                     address: address,
                     phone1: phone1,
                     phone2: phone2 || '',
@@ -2000,6 +2070,9 @@
                 // حفظ الرقم الأخير في Firebase
                 await database.ref('lastComplaintNumber').set(complaintNumber);
                 
+                // ✅ حفظ بلد الإقامة في قسم خاص لكل مستخدم
+                await saveUserResidence(nationalId, localUnit);
+                
                 currentComplaintKey = complaintKey;
                 currentComplaintData = complaintData;
                 lastComplaintNumber = complaintNumber;
@@ -2010,6 +2083,7 @@
                         <div class="message success">
                             <p>✅ تم تقديم الشكوى بنجاح!</p>
                             <p><strong>رقم الشكوى:</strong> ${complaintNumber}</p>
+                            <p><strong>بلد الإقامة:</strong> ${localUnit}</p>
                             <p>سيتم مراجعة شكواك والرد عليك في أقرب وقت.</p>
                             <div style="margin-top: 20px;">
                                 <p>📎 <strong>لإرسال المستندات عبر واتساب:</strong></p>
@@ -2027,6 +2101,7 @@
                         <div class="message success">
                             <p>✅ تم تقديم الشكوى بنجاح!</p>
                             <p><strong>رقم الشكوى:</strong> ${complaintNumber}</p>
+                            <p><strong>بلد الإقامة:</strong> ${localUnit}</p>
                             <p>يمكنك استخدام هذا الرقم لمتابعة حالة الشكوى.</p>
                             <p>سيتم مراجعة شكواك والرد عليك في أقرب وقت.</p>
                         </div>
@@ -2255,7 +2330,7 @@
             // تحميل الردود
             const responses = complaint.responses || [];
             
-            // إنشاء محتوى الردود - الجديد والمحسّن
+            // إنشاء محتوى الردود
             let responsesHTML = '';
             
             if (responses.length > 0) {
@@ -2365,6 +2440,12 @@
                         </div>
                     </div>
                     
+                    <!-- ✅ إضافة حقل بلد الإقامة -->
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-home"></i> بلد الإقامة</div>
+                        <div>${complaint.localUnit || 'غير محدد'}</div>
+                    </div>
+                    
                     <div class="detail-item">
                         <div class="detail-label"><i class="fas fa-map-marker-alt"></i> العنوان</div>
                         <div>${complaint.address || 'غير معروف'}</div>
@@ -2432,6 +2513,66 @@
                     this.value = this.value.substring(0, 14);
                 }
             });
+        }
+        
+        function displayMultipleComplaints(complaints) {
+            const detailsContainer = document.getElementById('complaintDetails');
+            
+            let complaintsHTML = `
+                <h3 style="color: var(--primary-color); margin-bottom: 25px; text-align: center;"><i class="fas fa-search"></i> نتائج البحث (${complaints.length} شكوى)</h3>
+                <div style="display: grid; gap: 15px;">
+            `;
+            
+            complaints.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach((complaint, index) => {
+                const createdAt = complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString('ar-EG') : 'غير معروف';
+                
+                let statusClass = '';
+                switch(complaint.status) {
+                    case 'جديدة': statusClass = 'status-new'; break;
+                    case 'قيد المراجعة': statusClass = 'status-in-progress'; break;
+                    case 'قيد المعالجة': statusClass = 'status-in-progress'; break;
+                    case 'مكتملة': statusClass = 'status-resolved'; break;
+                    case 'ملغاة': statusClass = 'status-closed'; break;
+                }
+                
+                complaintsHTML += `
+                    <div class="detail-item" style="cursor: pointer;" onclick="displayComplaintDetails(${JSON.stringify(complaint).replace(/'/g, "\\'")})">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div style="font-weight: 800; color: var(--primary-color); font-size: 1.1rem;">
+                                <i class="fas fa-hashtag"></i> ${complaint.complaintNumber || 'غير معروف'}
+                            </div>
+                            <span class="status-badge ${statusClass}">
+                                ${complaint.status || 'غير محدد'}
+                            </span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                            <div>
+                                <strong><i class="fas fa-user"></i> الاسم:</strong> ${complaint.fullName || 'غير معروف'}
+                            </div>
+                            <div>
+                                <strong><i class="fas fa-building"></i> القسم:</strong> ${complaint.department || 'غير معروف'}
+                            </div>
+                            <div>
+                                <strong><i class="fas fa-home"></i> بلد الإقامة:</strong> ${complaint.localUnit || 'غير محدد'}
+                            </div>
+                            <div>
+                                <strong><i class="far fa-calendar"></i> التاريخ:</strong> ${createdAt}
+                            </div>
+                            <div>
+                                <strong><i class="fas fa-flag"></i> النوع:</strong> ${complaint.priority || 'غير محدد'}
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; text-align: center; color: var(--primary-color); font-weight: 600;">
+                            <i class="fas fa-eye"></i> انقر لعرض التفاصيل والردود
+                        </div>
+                    </div>
+                `;
+            });
+            
+            complaintsHTML += `</div>`;
+            detailsContainer.innerHTML = complaintsHTML;
+            detailsContainer.style.display = 'block';
+            detailsContainer.scrollIntoView({ behavior: 'smooth' });
         }
         
         // دالة التحقق من الرقم القومي للرد
@@ -2513,63 +2654,6 @@
                 showLoading(false);
             }
         };
-        
-        function displayMultipleComplaints(complaints) {
-            const detailsContainer = document.getElementById('complaintDetails');
-            
-            let complaintsHTML = `
-                <h3 style="color: var(--primary-color); margin-bottom: 25px; text-align: center;"><i class="fas fa-search"></i> نتائج البحث (${complaints.length} شكوى)</h3>
-                <div style="display: grid; gap: 15px;">
-            `;
-            
-            complaints.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach((complaint, index) => {
-                const createdAt = complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString('ar-EG') : 'غير معروف';
-                
-                let statusClass = '';
-                switch(complaint.status) {
-                    case 'جديدة': statusClass = 'status-new'; break;
-                    case 'قيد المراجعة': statusClass = 'status-in-progress'; break;
-                    case 'قيد المعالجة': statusClass = 'status-in-progress'; break;
-                    case 'مكتملة': statusClass = 'status-resolved'; break;
-                    case 'ملغاة': statusClass = 'status-closed'; break;
-                }
-                
-                complaintsHTML += `
-                    <div class="detail-item" style="cursor: pointer;" onclick="displayComplaintDetails(${JSON.stringify(complaint).replace(/'/g, "\\'")})">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <div style="font-weight: 800; color: var(--primary-color); font-size: 1.1rem;">
-                                <i class="fas fa-hashtag"></i> ${complaint.complaintNumber || 'غير معروف'}
-                            </div>
-                            <span class="status-badge ${statusClass}">
-                                ${complaint.status || 'غير محدد'}
-                            </span>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <div>
-                                <strong><i class="fas fa-user"></i> الاسم:</strong> ${complaint.fullName || 'غير معروف'}
-                            </div>
-                            <div>
-                                <strong><i class="fas fa-building"></i> القسم:</strong> ${complaint.department || 'غير معروف'}
-                            </div>
-                            <div>
-                                <strong><i class="far fa-calendar"></i> التاريخ:</strong> ${createdAt}
-                            </div>
-                            <div>
-                                <strong><i class="fas fa-flag"></i> النوع:</strong> ${complaint.priority || 'غير محدد'}
-                            </div>
-                        </div>
-                        <div style="margin-top: 15px; text-align: center; color: var(--primary-color); font-weight: 600;">
-                            <i class="fas fa-eye"></i> انقر لعرض التفاصيل والردود
-                        </div>
-                    </div>
-                `;
-            });
-            
-            complaintsHTML += `</div>`;
-            detailsContainer.innerHTML = complaintsHTML;
-            detailsContainer.style.display = 'block';
-            detailsContainer.scrollIntoView({ behavior: 'smooth' });
-        }
         
         window.sendDocumentsViaWhatsApp = function(complaintNumber, fullName) {
             const defaultComplaintNumber = currentComplaintData ? currentComplaintData.complaintNumber : complaintNumber;
