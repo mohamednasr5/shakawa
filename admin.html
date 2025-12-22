@@ -2,415 +2,84 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
     <title>لوحة التحكم - نظام الشكاوى الموحد</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        /* نفس الستايل السابق مع بعض الترتيب فقط، لم يتم حذف شيء أساسي */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Cairo', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html {
-            font-size: 16px;
-            scroll-behavior: smooth;
-        }
-
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: #333;
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
-            padding-bottom: 80px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 15px;
-        }
-
-        /* شاشة تسجيل الدخول */
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-            background: linear-gradient(135deg, #1a5fb4 0%, #2d8fd5 100%);
-        }
-
-        .login-box {
-            background: white;
-            border-radius: 20px;
-            padding: 30px 25px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            animation: slideUp 0.5s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(50px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .login-logo {
-            font-size: 3rem;
-            color: #1a5fb4;
-            margin-bottom: 15px;
-        }
-
-        .login-title {
-            font-size: 1.6rem;
-            color: #2c3e50;
-            margin-bottom: 25px;
-            font-weight: 700;
-        }
-
-        .login-form .form-group {
-            margin-bottom: 20px;
-            text-align: right;
-        }
-
-        .login-form .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 1rem;
-        }
-
-        .login-form .form-control {
-            width: 100%;
-            padding: 16px 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s;
-            background: #f8f9fa;
-        }
-
-        .login-form .form-control:focus {
-            border-color: #1a5fb4;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(26, 95, 180, 0.1);
-            background: white;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(to right, #1a5fb4, #2d8fd5);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .login-btn:hover {
-            background: linear-gradient(to right, #155093, #1a5fb4);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .login-error {
-            color: #e74c3c;
-            margin-top: 15px;
-            padding: 15px;
-            background: #fde8e8;
-            border-radius: 10px;
-            display: none;
-            font-size: 0.95rem;
-        }
-
-        /* رأس لوحة التحكم */
-        header {
-            background: linear-gradient(135deg, #1a5fb4 0%, #2d8fd5 100%);
-            color: white;
-            padding: 20px 0 25px;
-            text-align: center;
-            border-radius: 0 0 25px 25px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-            margin-bottom: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #ff7e5f, #feb47b, #86a8e7, #91eae4);
-            background-size: 400% 400%;
-            animation: gradientShift 8s ease infinite;
-        }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .logo {
-            font-size: 1.8rem;
-            margin-bottom: 8px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-            padding: 0 15px;
-            line-height: 1.4;
-        }
-
-        .subtitle {
-            font-size: 1rem;
-            opacity: 0.9;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 0 15px;
-            line-height: 1.5;
-        }
-
-        /* شريط المسؤول */
-        .admin-bar {
-            background: linear-gradient(135deg, #2c3e50 0%, #4a6572 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .admin-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .admin-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #3498db, #2c3e50);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            flex-shrink: 0;
-        }
-
-        .admin-text {
-            flex-grow: 1;
-            overflow: hidden;
-        }
-
-        .admin-text h3 {
-            margin-bottom: 5px;
-            font-size: 1.1rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .admin-text p {
-            opacity: 0.9;
-            font-size: 0.85rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .admin-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .stat-box {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 12px 8px;
-            border-radius: 10px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            opacity: 0.9;
-            line-height: 1.3;
-        }
-
-        .logout-btn {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 1rem;
-            width: 100%;
-        }
-
-        .logout-btn:hover {
-            background: #c0392b;
-            transform: translateY(-2px);
-        }
-
-        /* شبكة لوحة التحكم */
-        .dashboard-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* سايدبار */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 999;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .sidebar {
-            background: white;
-            border-radius: 20px 0 0 20px;
-            padding: 25px 20px;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
-            height: 100vh;
-            width: 280px;
-            position: fixed;
-            top: 0;
-            right: -300px;
-            z-index: 1000;
-            transition: right 0.3s ease;
-            overflow-y: auto;
-        }
-
-        .sidebar.active {
-            right: 0;
-        }
-
-        .sidebar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .sidebar-title {
-            font-size: 1.3rem;
-            color: #2c3e50;
-            font-weight: 700;
-        }
-
-        .close-sidebar {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: #666;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-        }
-
-        .menu-item {
-            padding: 16px 15px;
-            margin-bottom: 8px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #555;
-            font-size: 1rem;
-        }
-
-        .menu-item:hover {
-            background: #f8f9fa;
-            transform: translateX(-5px);
-        }
-
-        .menu-item.active {
-            background: linear-gradient(to right, #1a5fb4, #2d8fd5);
-            color: white;
-            box-shadow: 0 5px 15px rgba(26, 95, 180, 0.3);
-        }
-
-        .menu-icon {
-            font-size: 1.2rem;
-            width: 24px;
-            text-align: center;
-        }
-
-        .badge {
-            background: #e74c3c;
-            color: white;
-            border-radius: 10px;
-            padding: 4px 10px;
-            font-size: 0.8rem;
-            margin-right: auto;
-            display: none;
-        }
-
-        .main-content {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-            margin-bottom: 80px;
-        }
-
-        /* ... باقي الستايل كما هو في الملف الأصلي (جداول، بطاقات، مودال، موبايل ناف، الخ) ... */
-
-        /* حفاظًا على الطول لن أكرر كل CSS لأنه نفس الموجود في ملفك، فقط أضفنا منطق اليوزرات في JS. */
+        *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent}
+        html{font-size:16px;scroll-behavior:smooth}
+        body{background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);color:#333;line-height:1.6;min-height:100vh;overflow-x:hidden;padding-bottom:80px}
+        .container{max-width:1400px;margin:0 auto;padding:15px}
+        .login-container{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#1a5fb4 0%,#2d8fd5 100%)}
+        .login-box{background:#fff;border-radius:20px;padding:30px 25px;width:100%;max-width:400px;box-shadow:0 20px 40px rgba(0,0,0,.2);text-align:center;animation:slideUp .5s ease}
+        @keyframes slideUp{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:translateY(0)}}
+        .login-logo{font-size:3rem;color:#1a5fb4;margin-bottom:15px}
+        .login-title{font-size:1.6rem;color:#2c3e50;margin-bottom:25px;font-weight:700}
+        .login-form .form-group{margin-bottom:20px;text-align:right}
+        .login-form .form-label{display:block;margin-bottom:8px;font-weight:600;color:#2c3e50;font-size:1rem}
+        .login-form .form-control{width:100%;padding:16px 15px;border:2px solid #ddd;border-radius:10px;font-size:16px;transition:all .3s;background:#f8f9fa}
+        .login-form .form-control:focus{border-color:#1a5fb4;outline:none;box-shadow:0 0 0 3px rgba(26,95,180,.1);background:#fff}
+        .login-btn{width:100%;padding:18px;background:linear-gradient(to right,#1a5fb4,#2d8fd5);color:#fff;border:none;border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px}
+        .login-btn:hover{background:linear-gradient(to right,#155093,#1a5fb4);transform:translateY(-2px);box-shadow:0 10px 20px rgba(0,0,0,.15)}
+        .login-error{color:#e74c3c;margin-top:15px;padding:15px;background:#fde8e8;border-radius:10px;display:none;font-size:.95rem}
+        header{background:linear-gradient(135deg,#1a5fb4 0%,#2d8fd5 100%);color:#fff;padding:20px 0 25px;text-align:center;border-radius:0 0 25px 25px;box-shadow:0 8px 25px rgba(0,0,0,.15);margin-bottom:20px;position:relative;overflow:hidden}
+        header::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#ff7e5f,#feb47b,#86a8e7,#91eae4);background-size:400% 400%;animation:gradientShift 8s ease infinite}
+        @keyframes gradientShift{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
+        .logo{font-size:1.8rem;margin-bottom:8px;text-shadow:2px 2px 4px rgba(0,0,0,.2);padding:0 15px;line-height:1.4}
+        .subtitle{font-size:1rem;opacity:.9;max-width:600px;margin:0 auto;padding:0 15px;line-height:1.5}
+        .admin-bar{background:linear-gradient(135deg,#2c3e50 0%,#4a6572 100%);color:#fff;padding:15px;border-radius:15px;margin-bottom:20px;box-shadow:0 5px 15px rgba(0,0,0,.1);display:flex;flex-direction:column;gap:15px}
+        .admin-info{display:flex;align-items:center;gap:12px}
+        .admin-avatar{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#3498db,#2c3e50);display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 4px 10px rgba(0,0,0,.2);flex-shrink:0}
+        .admin-text{flex-grow:1;overflow:hidden}
+        .admin-text h3{margin-bottom:5px;font-size:1.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .admin-text p{opacity:.9;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .admin-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+        .stat-box{background:rgba(255,255,255,.15);padding:12px 8px;border-radius:10px;text-align:center;backdrop-filter:blur(10px)}
+        .stat-value{font-size:1.5rem;font-weight:700;margin-bottom:5px}
+        .stat-label{font-size:.8rem;opacity:.9;line-height:1.3}
+        .logout-btn{background:#e74c3c;color:#fff;border:none;padding:12px 20px;border-radius:10px;cursor:pointer;font-weight:600;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:8px;font-size:1rem;width:100%}
+        .logout-btn:hover{background:#c0392b;transform:translateY(-2px)}
+        .dashboard-grid{display:flex;flex-direction:column;gap:20px}
+        .sidebar-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:999;animation:fadeIn .3s ease}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        .sidebar{background:#fff;border-radius:20px 0 0 20px;padding:25px 20px;box-shadow:0 0 30px rgba(0,0,0,.3);height:100vh;width:280px;position:fixed;top:0;right:-300px;z-index:1000;transition:right .3s ease;overflow-y:auto}
+        .sidebar.active{right:0}
+        .sidebar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #f0f0f0}
+        .sidebar-title{font-size:1.3rem;color:#2c3e50;font-weight:700}
+        .close-sidebar{background:none;border:none;font-size:1.5rem;color:#666;cursor:pointer;padding:5px}
+        .sidebar-menu{list-style:none}
+        .menu-item{padding:16px 15px;margin-bottom:8px;border-radius:12px;cursor:pointer;transition:all .3s ease;display:flex;align-items:center;gap:12px;color:#555;font-size:1rem}
+        .menu-item:hover{background:#f8f9fa;transform:translateX(-5px)}
+        .menu-item.active{background:linear-gradient(to right,#1a5fb4,#2d8fd5);color:#fff;box-shadow:0 5px 15px rgba(26,95,180,.3)}
+        .menu-icon{font-size:1.2rem;width:24px;text-align:center}
+        .badge{background:#e74c3c;color:#fff;border-radius:10px;padding:4px 10px;font-size:.8rem;margin-right:auto;display:none}
+        .main-content{background:#fff;border-radius:20px;padding:20px;box-shadow:0 5px 20px rgba(0,0,0,.08);margin-bottom:80px}
+        .footer{text-align:center;padding:20px 15px;color:#666;font-size:.9rem;margin-top:30px;background:#fff;border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,.05);line-height:1.7}
+        .footer a{color:#1a5fb4;text-decoration:none;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+        .footer a:hover{color:#155093}
+        .admin-only{display:none}
+        .loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.9);display:none;justify-content:center;align-items:center;z-index:9999}
+        .loading-spinner{width:60px;height:60px;border:5px solid #f3f3f3;border-top:5px solid #1a5fb4;border-radius:50%;animation:spin 1s linear infinite}
+        @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+        .message{position:fixed;top:20px;right:20px;padding:15px 20px;border-radius:12px;z-index:10000;box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:90%;animation:slideIn .3s ease;font-size:.95rem;line-height:1.5;background:#d4edda;color:#155724}
+        .message.error{background:#f8d7da;color:#721c24}
+        @keyframes slideIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+        .complaint-details-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.9);display:none;justify-content:center;align-items:center;z-index:1100;padding:15px}
+        .modal-content{background:#fff;border-radius:20px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;position:relative;animation:modalSlideUp .3s ease}
+        @keyframes modalSlideUp{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:translateY(0)}}
+        .modal-header{background:linear-gradient(135deg,#1a5fb4 0%,#2d8fd5 100%);color:#fff;padding:20px;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1}
+        .modal-title{font-size:1.4rem;font-weight:700}
+        .close-modal{background:none;border:none;color:#fff;font-size:2rem;cursor:pointer;line-height:1;padding:5px}
+        .modal-body{padding:20px}
+        .details-grid{display:grid;grid-template-columns:1fr;gap:15px;margin-bottom:20px}
+        .detail-item{padding:15px;border-bottom:1px solid #eee;background:#f8f9fa;border-radius:10px}
+        .detail-label{font-weight:700;color:#1a5fb4;margin-bottom:8px;font-size:.95rem}
+        .action-btn{padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .2s ease;min-width:70px}
+        .btn-view{background:#3498db;color:#fff}
+        .btn-secondary{background:#6c757d;color:#fff}
+        @media(min-width:769px){.dashboard-grid{display:grid;grid-template-columns:280px 1fr}.sidebar{position:static;width:100%;height:auto;right:0;box-shadow:none;border-radius:15px}.sidebar-overlay{display:none !important}.close-sidebar{display:none}}
     </style>
 </head>
 <body>
@@ -423,7 +92,7 @@
             <h2 class="login-title">تسجيل دخول المسؤول</h2>
             <form id="loginForm" class="login-form">
                 <div class="form-group">
-                    <label class="form-label">اسم المستخدم / البريد الإلكتروني</label>
+                    <label class="form-label">اسم المستخدم</label>
                     <input type="text" class="form-control" id="username" placeholder="أدخل اسم المستخدم" required>
                 </div>
                 <div class="form-group">
@@ -442,7 +111,7 @@
     </div>
 
     <!-- لوحة التحكم -->
-    <div id="dashboardScreen" style="display: none;">
+    <div id="dashboardScreen" style="display:none;">
         <header>
             <div class="container">
                 <h1 class="logo">لوحة التحكم - نظام الشكاوى الموحد</h1>
@@ -485,7 +154,7 @@
 
             <div class="dashboard-grid">
                 <!-- سايدبار -->
-                <div class="sidebar-overlay" id="sidebarOverlay" style="display: none;"></div>
+                <div class="sidebar-overlay" id="sidebarOverlay"></div>
                 <div class="sidebar" id="sidebar">
                     <div class="sidebar-header">
                         <h3 class="sidebar-title">القائمة الرئيسية</h3>
@@ -514,27 +183,32 @@
                     </ul>
                 </div>
 
-                <!-- المحتوى الرئيسي (اختصرته – نفس أقسامك: dashboardSection, complaintsSection, usersSection, settingsSection) -->
+                <!-- المحتوى الرئيسي -->
                 <div class="main-content">
-                    <!-- لوحة التحكم -->
                     <div id="dashboardSection" class="content-section">
-                        <!-- الإحصائيات + آخر الشكاوى (كما في كودك الأصلي) -->
-                        <!-- ... -->
+                        <p>لوحة التحكم الرئيسية (ضع هنا كروت الإحصائيات والجداول المختصرة كما في كودك الأصلي).</p>
                     </div>
 
-                    <!-- إدارة الشكاوى -->
                     <div id="complaintsSection" class="content-section" style="display:none;">
-                        <!-- نفس جدول الشكاوى والفلاتر والصفحات من كودك الأصلي -->
-                        <!-- ... -->
+                        <table style="width:100%;border-collapse:collapse;">
+                            <thead>
+                                <tr>
+                                    <th>رقم الشكوى</th>
+                                    <th>الاسم</th>
+                                    <th>القسم</th>
+                                    <th>الأولوية</th>
+                                    <th>الحالة</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="complaintsTable"></tbody>
+                        </table>
                     </div>
 
-                    <!-- المستخدمين -->
                     <div id="usersSection" class="content-section" style="display:none;">
-                        <!-- يمكنك لاحقاً عمل فورم إضافة/تعديل يوزر يكتب: name, username, password, phone, role, departments[] -->
-                        <p>قسم إدارة المستخدمين (يمكنك إكماله لاحقًا لحفظ/تعديل بيانات المسؤولين في Firebase).</p>
+                        <p>قسم إدارة المستخدمين (يمكنك إكماله لاحقًا).</p>
                     </div>
 
-                    <!-- الإعدادات -->
                     <div id="settingsSection" class="content-section" style="display:none;">
                         <p>إعدادات عامة للنظام.</p>
                     </div>
@@ -544,6 +218,13 @@
             <div class="footer">
                 <p>© 2026 نظام الشكاوى الموحد - لوحة التحكم الإدارية</p>
                 <p>جميع الحقوق محفوظة - الإصدار 2.1.0</p>
+                <p>
+                    تم برمجة الموقع من
+                    <a href="https://www.facebook.com/en.mohamed.nasr" target="_blank" rel="noopener">
+                        المهندس محمد حماد
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                </p>
             </div>
         </div>
 
@@ -569,7 +250,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <script>
-        /* ===================== إعداد Firebase ===================== */
         const firebaseConfig = {
             apiKey: "AIzaSyBIIStbiZD0ZJ6su7C1bwZlBvqx-PP-t58",
             authDomain: "shakawa-e0a3c.firebaseapp.com",
@@ -583,7 +263,6 @@
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        /* ===================== متغيرات عامة ===================== */
         let isLoggedIn = false;
         let currentUser = null;
         let currentSection = 'dashboard';
@@ -591,7 +270,6 @@
         let filteredComplaints = [];
         let currentPage = 1;
         let itemsPerPage = 10;
-        let usersCache = []; // تخزين اليوزرات مع الأقسام
 
         document.addEventListener('DOMContentLoaded', () => {
             initApp();
@@ -601,8 +279,6 @@
             checkLoginStatus();
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-
-            document.getElementById('mobileMenuBtn')?.addEventListener('click', openSidebar);
             document.getElementById('closeSidebar').addEventListener('click', closeSidebar);
             document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
             document.getElementById('closeModal').addEventListener('click', closeModal);
@@ -620,96 +296,41 @@
                 });
             });
 
-            // فلاتر الشكاوى + ترقيم + إلخ (نفس كودك السابق – لم يتم حذفه، فقط اختصر هنا)
-            // ... loadComplaints(), filterComplaints(), displayComplaintsTable(), displayRecentComplaints() ...
-
-            // تحميل المستخدمين (مسؤولين الأقسام)
-            loadUsers();
+            loadComplaints();
         }
 
-        /* ===================== نظام المستخدمين ===================== */
-
-        // جدول users في Firebase، كل عنصر:
-        // users/{key} = { name, username, password, phone, role: 'admin' | 'user', departments: {deptKey: true, ...} }
-        async function loadUsers() {
-            try {
-                const snap = await database.ref('users').get();
-                usersCache = [];
-                if (snap.exists()) {
-                    snap.forEach(ch => {
-                        const u = ch.val();
-                        u.key = ch.key;
-                        usersCache.push(u);
-                    });
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        // البحث عن مسؤول قسم معين: يوزر له departments[department] = true
-        function getDepartmentManager(department) {
-            if (!department || !usersCache.length) return null;
-            const manager = usersCache.find(u =>
-                u.departments &&
-                (u.departments[department] === true || u.departments[department] === 'true')
-            );
-            return manager || null;
-        }
-
-        /* ===================== تسجيل الدخول ===================== */
-
-        async function handleLogin(e) {
+        // تسجيل الدخول ثابت admin / 742018
+        function handleLogin(e) {
             e.preventDefault();
-            showLoading();
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
+            const loginError = document.getElementById('loginError');
 
-            try {
-                // تحقق من users في Firebase
-                const snap = await database.ref('users')
-                    .orderByChild('username')
-                    .equalTo(username)
-                    .get();
-
-                let matchedUser = null;
-                if (snap.exists()) {
-                    snap.forEach(ch => {
-                        const u = ch.val();
-                        if (u.password === password) {
-                            matchedUser = { ...u, key: ch.key };
-                        }
-                    });
-                }
-
-                if (!matchedUser) {
-                    document.getElementById('loginError').style.display = 'block';
-                } else {
-                    loginSuccess(matchedUser);
-                }
-            } catch (err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء تسجيل الدخول', 'error');
-            } finally {
-                hideLoading();
+            if (username === 'admin' && password === '742018') {
+                const userData = {
+                    username: 'admin',
+                    name: 'المدير العام',
+                    role: 'admin',
+                    phone: ''
+                };
+                loginError.style.display = 'none';
+                loginSuccess(userData);
+            } else {
+                loginError.style.display = 'block';
             }
         }
 
         function loginSuccess(userData) {
             isLoggedIn = true;
             currentUser = {
-                key: userData.key,
                 username: userData.username,
                 name: userData.name,
                 role: userData.role || 'user',
                 phone: userData.phone || '',
-                loginTime: new Date().toISOString(),
-                departments: userData.departments || {}
+                loginTime: new Date().toISOString()
             };
-
             localStorage.setItem('adminLoggedIn', 'true');
             localStorage.setItem('adminUser', JSON.stringify(currentUser));
-
             showDashboard();
             showMessage(`مرحباً ${currentUser.name}! تم تسجيل الدخول بنجاح`, 'success');
         }
@@ -751,8 +372,6 @@
             updateAdminWelcome();
             updateSidebarPermissions();
             showSection('dashboard');
-            checkMobileView();
-            loadComplaints();
         }
 
         function updateAdminWelcome() {
@@ -768,13 +387,11 @@
         function updateSidebarPermissions() {
             const adminOnly = document.querySelectorAll('.admin-only');
             if (currentUser && currentUser.role === 'admin') {
-                adminOnly.forEach(el => { el.style.display = 'flex'; });
+                adminOnly.forEach(el => el.style.display = 'flex');
             } else {
-                adminOnly.forEach(el => { el.style.display = 'none'; });
+                adminOnly.forEach(el => el.style.display = 'none');
             }
         }
-
-        /* ===================== الشكاوى (نفس منطقك + تعديل viewComplaint فقط) ===================== */
 
         async function loadComplaints() {
             showLoading();
@@ -788,12 +405,13 @@
                         allComplaints.push(c);
                     });
                 }
-                allComplaints.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                allComplaints.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
                 updateDashboardStats();
-                filterComplaints();
-            } catch (err) {
+                filteredComplaints = allComplaints.slice();
+                displayComplaintsTable();
+            } catch(err){
                 console.error(err);
-                showMessage('حدث خطأ أثناء تحميل الشكاوى', 'error');
+                showMessage('حدث خطأ أثناء تحميل الشكاوى','error');
             } finally {
                 hideLoading();
             }
@@ -803,50 +421,16 @@
             const total = allComplaints.length;
             const newComplaints = allComplaints.filter(c => c.status === 'جديدة').length;
             const resolvedComplaints = allComplaints.filter(c => c.status === 'مكتملة' || c.status === 'تم الرد').length;
-            const inProgress = allComplaints.filter(c => c.status === 'قيد المتابعة').length;
-            const closed = allComplaints.filter(c => c.status === 'مغلقة').length;
-
             document.getElementById('totalComplaints').textContent = total;
             document.getElementById('newComplaints').textContent = newComplaints;
             document.getElementById('resolvedComplaints').textContent = resolvedComplaints;
-            document.getElementById('statNew')?.textContent = newComplaints;
-            document.getElementById('statInProgress')?.textContent = inProgress;
-            document.getElementById('statResolved')?.textContent = resolvedComplaints;
-            document.getElementById('statClosed')?.textContent = closed;
-        }
-
-        function filterComplaints() {
-            const statusFilter = document.getElementById('filterStatus')?.value || '';
-            const departmentFilter = document.getElementById('filterDepartment')?.value || '';
-            const priorityFilter = document.getElementById('filterPriority')?.value || '';
-            const searchText = (document.getElementById('searchInput')?.value || '').toLowerCase();
-
-            filteredComplaints = allComplaints.filter(c => {
-                if (statusFilter && c.status !== statusFilter) return false;
-                if (departmentFilter && c.department !== departmentFilter) return false;
-                if (priorityFilter && c.priority !== priorityFilter) return false;
-                if (searchText) {
-                    const n1 = (c.complaintNumber || '').toLowerCase();
-                    const n2 = (c.fullName || '').toLowerCase();
-                    if (!n1.includes(searchText) && !n2.includes(searchText)) return false;
-                }
-                return true;
-            });
-            currentPage = 1;
-            displayComplaintsTable();
-            // displayRecentComplaints() إذا أردت في الداشبورد
         }
 
         function displayComplaintsTable() {
             const tbody = document.getElementById('complaintsTable');
             if (!tbody) return;
             if (!filteredComplaints.length) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align:center;padding:40px;color:#666;">
-                            لا توجد شكاوى تطابق معايير البحث
-                        </td>
-                    </tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:#666;">لا توجد شكاوى</td></tr>`;
                 return;
             }
             const start = (currentPage - 1) * itemsPerPage;
@@ -870,79 +454,34 @@
             tbody.innerHTML = html;
         }
 
-        /* ======== تعديل viewComplaint لإضافة واتساب المسؤول عن القسم ======== */
         function viewComplaint(complaintKey) {
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) {
-                showMessage('لم يتم العثور على الشكوى', 'error');
+                showMessage('لم يتم العثور على الشكوى','error');
                 return;
             }
-
             const modalBody = document.getElementById('modalBody');
             const createdAt = complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : '-';
             const updatedAt = complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : createdAt;
-
-            // إيجاد مسؤول القسم
-            const manager = getDepartmentManager(complaint.department);
-            const managerPhone = manager && manager.phone ? manager.phone.replace('+', '') : null;
-
             modalBody.innerHTML = `
                 <div style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:10px;">
-                    <button class="btn btn-primary" onclick="printComplaint('${complaint.key}')">
-                        <i class="fas fa-print"></i> طباعة الطلب
-                    </button>
                     <button class="btn btn-secondary" onclick="closeModal()">
                         <i class="fas fa-times"></i> إغلاق
                     </button>
                 </div>
-
                 <div class="details-grid">
                     <div class="detail-item">
                         <div class="detail-label">رقم الشكوى</div>
                         <div><strong>${complaint.complaintNumber || ''}</strong></div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">اسم مقدم الشكوى</div>
+                        <div class="detail-label">الاسم</div>
                         <div>${complaint.fullName || ''}</div>
                     </div>
-                    <div class="detail-item">
-                        <div class="detail-label">رقم هاتف المواطن</div>
-                        <div>${complaint.phone1 || ''}</div>
-                        ${complaint.phone1 ? `
-                        <div class="phone-actions">
-                            <a href="tel:${complaint.phone1}" class="call-btn">
-                                <i class="fas fa-phone"></i> اتصال
-                            </a>
-                            <a href="https://wa.me/${complaint.phone1.replace('+','')}" class="whatsapp-btn" target="_blank">
-                                <i class="fab fa-whatsapp"></i> واتساب المواطن
-                            </a>
-                        </div>` : ''}
-                    </div>
-
                     <div class="detail-item">
                         <div class="detail-label">القسم</div>
                         <div>${complaint.department || ''}</div>
                     </div>
-
-                    ${manager ? `
-                    <div class="detail-item">
-                        <div class="detail-label">مسؤول القسم</div>
-                        <div><strong>${manager.name}</strong></div>
-                        ${managerPhone ? `
-                        <div class="phone-actions" style="margin-top:8px;">
-                            <a href="tel:${managerPhone}" class="call-btn">
-                                <i class="fas fa-phone"></i> اتصال بالمشرف
-                            </a>
-                            <a href="https://wa.me/${managerPhone}" class="whatsapp-btn" target="_blank">
-                                <i class="fab fa-whatsapp"></i> واتساب المشرف
-                            </a>
-                        </div>` : ''}
-                    </div>` : `
-                    <div class="detail-item">
-                        <div class="detail-label">مسؤول القسم</div>
-                        <div>لم يتم تعيين مسؤول لهذا القسم بعد</div>
-                    </div>`}
-
                     <div class="detail-item">
                         <div class="detail-label">نوع المشكلة</div>
                         <div>${complaint.priority || ''}</div>
@@ -959,16 +498,11 @@
                         <div class="detail-label">آخر تحديث</div>
                         <div>${updatedAt}</div>
                     </div>
-                </div>
-
-                <div style="margin-top:25px;">
-                    <h3 style="color:#1a5fb4;margin-bottom:15px;">تفاصيل المشكلة</h3>
-                    <div style="background:#f8f9fa;padding:20px;border-radius:12px;">
-                        <p style="white-space:pre-line;line-height:1.8;">${complaint.problemDetails || ''}</p>
+                    <div class="detail-item">
+                        <div class="detail-label">تفاصيل المشكلة</div>
+                        <div style="white-space:pre-line;">${complaint.problemDetails || ''}</div>
                     </div>
-                </div>
-            `;
-
+                </div>`;
             document.getElementById('complaintDetailsModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
         }
@@ -978,7 +512,35 @@
             document.body.style.overflow = 'auto';
         }
 
-        /* باقي الدوال: printComplaint, generatePrintContent, showSection, showLoading, hideLoading, showMessage, checkMobileView ... نفس كودك السابق */
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.style.display = (sec.id === sectionId + 'Section') ? 'block' : 'none';
+            });
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function showMessage(text, type='success') {
+            const old = document.getElementById('globalMessage');
+            if (old) old.remove();
+            const msg = document.createElement('div');
+            msg.id = 'globalMessage';
+            msg.className = 'message' + (type === 'error' ? ' error' : '');
+            msg.textContent = text;
+            document.body.appendChild(msg);
+            setTimeout(() => { msg.remove(); }, 4000);
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebarOverlay').style.display = 'none';
+        }
     </script>
 </body>
 </html>
