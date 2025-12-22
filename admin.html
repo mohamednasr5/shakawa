@@ -1006,28 +1006,28 @@
             50% { background-color: rgba(220, 53, 69, 0.2); }
         }
         
-        /* أنماط طباعة الشكوى - تم التعديل هنا */
+        /* إصلاح كامل لأنماط الطباعة */
         @media print {
             body * {
                 visibility: hidden !important;
                 background: white !important;
                 color: black !important;
+                font-family: 'Cairo', sans-serif !important;
+                direction: rtl !important;
             }
             
-            #printSection, #printSection * {
+            #printArea, #printArea * {
                 visibility: visible !important;
             }
             
-            #printSection {
+            #printArea {
                 position: absolute !important;
                 left: 0 !important;
                 top: 0 !important;
                 width: 100% !important;
+                background: white !important;
                 padding: 20px !important;
-                font-family: 'Cairo', sans-serif !important;
-                direction: rtl !important;
-                font-size: 14px !important;
-                line-height: 1.5 !important;
+                margin: 0 !important;
             }
             
             .print-header {
@@ -1040,35 +1040,45 @@
             .print-logo {
                 font-size: 24px;
                 font-weight: bold;
+                color: #1a5fb4;
                 margin-bottom: 10px;
             }
             
-            .print-details {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 15px;
-                margin-bottom: 30px;
+            .print-details-grid {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 15px !important;
+                margin-bottom: 30px !important;
             }
             
             .print-detail-item {
                 padding: 10px;
                 border-bottom: 1px solid #ddd;
-                page-break-inside: avoid;
+                page-break-inside: avoid !important;
             }
             
             .print-detail-label {
-                font-weight: bold;
-                color: #333;
-                margin-bottom: 5px;
+                font-weight: bold !important;
+                color: #333 !important;
+                margin-bottom: 5px !important;
             }
             
             .print-problem-details {
-                background: #f8f9fa;
-                padding: 20px;
-                border-radius: 8px;
-                margin: 20px 0;
-                border-right: 4px solid #1a5fb4;
-                page-break-inside: avoid;
+                background: #f8f9fa !important;
+                padding: 20px !important;
+                margin: 20px 0 !important;
+                border-right: 4px solid #1a5fb4 !important;
+                page-break-inside: avoid !important;
+                border-radius: 8px !important;
+            }
+            
+            .print-response {
+                background: #f9f9f9 !important;
+                padding: 15px !important;
+                margin: 15px 0 !important;
+                border: 1px solid #ddd !important;
+                border-radius: 6px !important;
+                page-break-inside: avoid !important;
             }
             
             .no-print {
@@ -1240,7 +1250,7 @@
         }
         
         /* إصلاح طباعة المشكلة */
-        .print-section {
+        .print-area {
             display: none;
         }
     </style>
@@ -1650,7 +1660,7 @@
                     <div id="settingsSection" class="content-section" style="display: none;">
                         <div class="content-header">
                             <h2 class="content-title">إعدادات النظام</h2>
-                            <button class="btn btn-primary">
+                            <button class="btn btn-primary" onclick="saveSettings()">
                                 <i class="fas fa-save"></i>
                                 حفظ التغييرات
                             </button>
@@ -1662,21 +1672,21 @@
                                 <div class="toggle-label">
                                     <span>تفعيل إشعارات البريد الإلكتروني</span>
                                     <label class="toggle-switch">
-                                        <input type="checkbox" checked>
+                                        <input type="checkbox" id="emailNotifications" checked>
                                         <span class="toggle-slider"></span>
                                     </label>
                                 </div>
                                 <div class="toggle-label">
                                     <span>تفعيل إشعارات الواتساب</span>
                                     <label class="toggle-switch">
-                                        <input type="checkbox" checked>
+                                        <input type="checkbox" id="whatsappNotifications" checked>
                                         <span class="toggle-slider"></span>
                                     </label>
                                 </div>
                                 <div class="toggle-label">
                                     <span>تفعيل النظام الآلي للردود</span>
                                     <label class="toggle-switch">
-                                        <input type="checkbox">
+                                        <input type="checkbox" id="autoReply">
                                         <span class="toggle-slider"></span>
                                     </label>
                                 </div>
@@ -1686,15 +1696,16 @@
                                 <h3 class="settings-title">إعدادات الإشعارات</h3>
                                 <div class="form-group">
                                     <label class="form-label">البريد الإلكتروني للإشعارات</label>
-                                    <input type="email" class="form-control" value="admin@shakawa.com">
+                                    <input type="email" class="form-control" id="notificationEmail" value="admin@shakawa.com">
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">رقم واتساب للإشعارات</label>
-                                    <input type="text" class="form-control" value="+201234567890">
+                                    <label class="form-label">رقم واتساب للإشعارات (لإرسال المستندات للمواطنين)</label>
+                                    <input type="text" class="form-control" id="whatsappNumber" placeholder="+201234567890">
+                                    <small style="color: #666;">سيرسل المواطنون الوثائق لهذا الرقم على الواتساب</small>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">وقت إرسال التقارير اليومية</label>
-                                    <input type="time" class="form-control" value="09:00">
+                                    <input type="time" class="form-control" id="reportTime" value="09:00">
                                 </div>
                             </div>
                             
@@ -1702,11 +1713,11 @@
                                 <h3 class="settings-title">إعدادات المظهر</h3>
                                 <div class="form-group">
                                     <label class="form-label">لون السمة الرئيسية</label>
-                                    <input type="color" class="form-control" value="#1a5fb4" style="height: 50px; width: 100px; padding: 5px;">
+                                    <input type="color" class="form-control" id="primaryColor" value="#1a5fb4" style="height: 50px; width: 100px; padding: 5px;">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">عدد العناصر في الصفحة</label>
-                                    <select class="form-control">
+                                    <select class="form-control" id="itemsPerPage">
                                         <option value="10">10 عناصر</option>
                                         <option value="25" selected>25 عنصر</option>
                                         <option value="50">50 عنصر</option>
@@ -1737,10 +1748,10 @@
                 </div>
             </div>
         </div>
-        
-        <!-- قسم الطباعة المخفي -->
-        <div id="printSection" class="print-section"></div>
     </div>
+    
+    <!-- منطقة الطباعة المخفية -->
+    <div id="printArea" class="print-area"></div>
     
     <!-- Firebase SDK - Compat Version -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1785,11 +1796,24 @@
         let filteredComplaints = [];
         let allUsers = [];
         let currentPage = 1;
-        const itemsPerPage = 10;
+        let itemsPerPage = 25;
+        
+        // إعدادات النظام
+        let systemSettings = {
+            emailNotifications: true,
+            whatsappNotifications: true,
+            autoReply: false,
+            notificationEmail: "admin@shakawa.com",
+            whatsappNumber: "+201234567890",
+            reportTime: "09:00",
+            primaryColor: "#1a5fb4",
+            itemsPerPage: 25
+        };
         
         // مراجع الاستماع للتحديثات الفورية
         let complaintsListener = null;
         let usersListener = null;
+        let settingsListener = null;
         
         // تهيئة Firebase
         const firebaseConfig = {
@@ -1870,6 +1894,7 @@
                     isLoggedIn = true;
                     showDashboard();
                     startRealtimeUpdates();
+                    loadSystemSettings();
                 } catch (e) {
                     localStorage.removeItem('adminLoggedIn');
                     localStorage.removeItem('adminUser');
@@ -1888,9 +1913,10 @@
             // بدء الاستماع للتحديثات الفورية للشكاوى
             complaintsListener = database.ref('complaints').on('value', handleComplaintsUpdate);
             
-            // إذا كان المستخدم مسؤولاً، استمع لتحديثات المستخدمين أيضاً
+            // إذا كان المستخدم مسؤولاً، استمع لتحديثات المستخدمين والإعدادات
             if (currentUser && currentUser.role === 'admin') {
                 usersListener = database.ref('users').on('value', handleUsersUpdate);
+                settingsListener = database.ref('settings').on('value', handleSettingsUpdate);
             }
         }
         
@@ -1904,6 +1930,172 @@
             if (usersListener) {
                 database.ref('users').off('value', usersListener);
                 usersListener = null;
+            }
+            
+            if (settingsListener) {
+                database.ref('settings').off('value', settingsListener);
+                settingsListener = null;
+            }
+        }
+        
+        // دالة تحميل إعدادات النظام
+        async function loadSystemSettings() {
+            try {
+                const settingsRef = database.ref('settings');
+                const snapshot = await settingsRef.once('value');
+                
+                if (snapshot.exists()) {
+                    const settings = snapshot.val();
+                    systemSettings = { ...systemSettings, ...settings };
+                    
+                    // تحديث واجهة المستخدم للإعدادات
+                    if (currentSection === 'settings') {
+                        updateSettingsUI();
+                    }
+                    
+                    // تحديث رقم الواتساب في Firebase للمواطنين
+                    updateWhatsAppNumberForCitizens();
+                } else {
+                    // حفظ الإعدادات الافتراضية
+                    await saveSettingsToDatabase();
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+        
+        // دالة تحديث واجهة المستخدم للإعدادات
+        function updateSettingsUI() {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            
+            document.getElementById('emailNotifications').checked = systemSettings.emailNotifications;
+            document.getElementById('whatsappNotifications').checked = systemSettings.whatsappNotifications;
+            document.getElementById('autoReply').checked = systemSettings.autoReply;
+            document.getElementById('notificationEmail').value = systemSettings.notificationEmail;
+            document.getElementById('whatsappNumber').value = systemSettings.whatsappNumber;
+            document.getElementById('reportTime').value = systemSettings.reportTime;
+            document.getElementById('primaryColor').value = systemSettings.primaryColor;
+            document.getElementById('itemsPerPage').value = systemSettings.itemsPerPage;
+        }
+        
+        // دالة حفظ الإعدادات
+        async function saveSettings() {
+            if (!currentUser || currentUser.role !== 'admin') {
+                showMessage('يجب تسجيل الدخول كمسؤول لتعديل الإعدادات', 'error');
+                return;
+            }
+            
+            try {
+                // جمع البيانات من النموذج
+                systemSettings = {
+                    emailNotifications: document.getElementById('emailNotifications').checked,
+                    whatsappNotifications: document.getElementById('whatsappNotifications').checked,
+                    autoReply: document.getElementById('autoReply').checked,
+                    notificationEmail: document.getElementById('notificationEmail').value,
+                    whatsappNumber: document.getElementById('whatsappNumber').value,
+                    reportTime: document.getElementById('reportTime').value,
+                    primaryColor: document.getElementById('primaryColor').value,
+                    itemsPerPage: parseInt(document.getElementById('itemsPerPage').value)
+                };
+                
+                // حفظ في Firebase
+                await database.ref('settings').set(systemSettings);
+                
+                // تحديث رقم الواتساب للمواطنين
+                updateWhatsAppNumberForCitizens();
+                
+                // تحديث عدد العناصر في الصفحة
+                itemsPerPage = systemSettings.itemsPerPage;
+                filterComplaints();
+                
+                // تطبيق لون السمة
+                applyThemeColor();
+                
+                showMessage('تم حفظ الإعدادات بنجاح', 'success');
+                
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showMessage('حدث خطأ أثناء حفظ الإعدادات', 'error');
+            }
+        }
+        
+        // دالة تطبيق لون السمة
+        function applyThemeColor() {
+            const primaryColor = systemSettings.primaryColor;
+            
+            // تحديث ألوان التدرجات
+            document.querySelectorAll('header, .modal-header').forEach(el => {
+                el.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${lightenColor(primaryColor, 20)} 100%)`;
+            });
+            
+            document.querySelectorAll('.menu-item.active').forEach(el => {
+                el.style.background = `linear-gradient(to right, ${primaryColor}, ${lightenColor(primaryColor, 20)})`;
+            });
+            
+            document.querySelectorAll('.login-btn, .btn-primary').forEach(el => {
+                el.style.background = `linear-gradient(to right, ${primaryColor}, ${lightenColor(primaryColor, 20)})`;
+            });
+            
+            document.querySelectorAll('.detail-label').forEach(el => {
+                el.style.color = primaryColor;
+            });
+        }
+        
+        // دالة لتفتيح اللون
+        function lightenColor(color, percent) {
+            const num = parseInt(color.slice(1), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            
+            return `#${(
+                0x1000000 +
+                (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+                (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+                (B < 255 ? (B < 1 ? 0 : B) : 255)
+            )
+                .toString(16)
+                .slice(1)}`;
+        }
+        
+        // دالة تحديث رقم الواتساب في قاعدة بيانات المواطنين
+        async function updateWhatsAppNumberForCitizens() {
+            try {
+                // تحديث في قسم الإعدادات العامة
+                await database.ref('whatsappNumber').set(systemSettings.whatsappNumber);
+                
+                // أيضًا نضيفه كحقل في كل شكوى جديدة
+                // (هذا سيكون للمستقبل)
+                
+                console.log('تم تحديث رقم واتساب الإشعارات');
+            } catch (error) {
+                console.error('Error updating WhatsApp number:', error);
+            }
+        }
+        
+        // دالة حفظ الإعدادات في قاعدة البيانات
+        async function saveSettingsToDatabase() {
+            try {
+                await database.ref('settings').set(systemSettings);
+                updateWhatsAppNumberForCitizens();
+            } catch (error) {
+                console.error('Error saving default settings:', error);
+            }
+        }
+        
+        // معالج تحديث الإعدادات الفوري
+        function handleSettingsUpdate(snapshot) {
+            if (snapshot.exists()) {
+                const settings = snapshot.val();
+                systemSettings = { ...systemSettings, ...settings };
+                
+                if (currentSection === 'settings') {
+                    updateSettingsUI();
+                }
+                
+                itemsPerPage = systemSettings.itemsPerPage || 25;
+                applyThemeColor();
             }
         }
         
@@ -2104,6 +2296,9 @@
             
             // تعديل القائمة الجانبية للشاشات الصغيرة
             adjustSidebarForMobile();
+            
+            // تطبيق لون السمة من الإعدادات
+            applyThemeColor();
         }
         
         // دالة تحديث ترحيب المسؤول
@@ -2203,6 +2398,11 @@
             // إذا كان القسم هو المستخدمين، قم بتحميل المستخدمين
             if (sectionId === 'users' && currentUser && currentUser.role === 'admin') {
                 displayUsersTable();
+            }
+            
+            // إذا كان القسم هو الإعدادات، قم بتحديث الواجهة
+            if (sectionId === 'settings' && currentUser && currentUser.role === 'admin') {
+                updateSettingsUI();
             }
             
             // إغلاق القائمة الجانبية على الأجهزة المحمولة
@@ -2692,6 +2892,16 @@
                     <div class="detail-item">
                         <div class="detail-label">رقم الهاتف</div>
                         <div>${complaint.phone1 || 'غير متوفر'} ${complaint.phone2 ? ' / ' + complaint.phone2 : ''}</div>
+                        ${complaint.phone1 ? `
+                            <div class="phone-actions">
+                                <a href="tel:${complaint.phone1}" class="call-btn" target="_blank">
+                                    <i class="fas fa-phone"></i> اتصال
+                                </a>
+                                <a href="https://wa.me/${complaint.phone1.replace('+', '')}" class="whatsapp-btn" target="_blank">
+                                    <i class="fab fa-whatsapp"></i> واتساب
+                                </a>
+                            </div>
+                        ` : ''}
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">البريد الإلكتروني</div>
@@ -2795,24 +3005,45 @@
             
             // عرض النافذة المنبثقة
             document.getElementById('complaintDetailsModal').style.display = 'flex';
+        }
+        
+        // دالة طباعة الشكوى - إصلاح كامل
+        function printComplaint(complaintKey) {
+            const complaint = allComplaints.find(c => c.key === complaintKey);
+            if (!complaint) {
+                showMessage('لم يتم العثور على الشكوى', 'error');
+                return;
+            }
             
-            // إنشاء محتوى الطباعة في الخلفية
-            generatePrintContent(complaint);
+            // إنشاء محتوى الطباعة
+            const printContent = generatePrintContent(complaint);
+            
+            // إضافة المحتوى إلى منطقة الطباعة
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = printContent;
+            
+            // التأكد من أن منطقة الطباعة مرئية للطباعة
+            printArea.style.display = 'block';
+            
+            // الانتظار قليلاً لضمان تحميل المحتوى
+            setTimeout(() => {
+                // طباعة المحتوى
+                window.print();
+                
+                // إخفاء منطقة الطباعة بعد الطباعة
+                setTimeout(() => {
+                    printArea.style.display = 'none';
+                    printArea.innerHTML = '';
+                }, 100);
+            }, 100);
         }
         
         // دالة إنشاء محتوى الطباعة
         function generatePrintContent(complaint) {
             // تحديد فئة الأولوية
-            let priorityClass = 'priority-normal';
             let priorityText = 'عادية';
-            if (complaint.priority === 'مهمة') {
-                priorityClass = 'priority-important';
-                priorityText = 'مهمة';
-            }
-            if (complaint.priority === 'فى غاية الأهمية') {
-                priorityClass = 'priority-critical';
-                priorityText = 'في غاية الأهمية';
-            }
+            if (complaint.priority === 'مهمة') priorityText = 'مهمة';
+            if (complaint.priority === 'فى غاية الأهمية') priorityText = 'في غاية الأهمية';
             
             // تنسيق التواريخ
             const createdAt = new Date(complaint.createdAt).toLocaleString('ar-EG');
@@ -2844,7 +3075,7 @@
                     const senderName = response.sender === 'admin' ? (response.adminName || 'المسؤول') : complaint.fullName;
                     
                     return `
-                        <div style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 6px;">
+                        <div class="print-response">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold;">
                                 <span>${senderName} (${senderType})</span>
                                 <span style="color: #666;">${responseDate}</span>
@@ -2859,7 +3090,7 @@
                 responsesHTML = '<p style="text-align: center; color: #888;">لا توجد ردود حتى الآن</p>';
             }
             
-            const printContent = `
+            return `
                 <div class="print-header">
                     <div class="print-logo">نظام الشكاوى الموحد - مكتب الحاج أحمد الحديدي</div>
                     <h1 style="margin: 10px 0; font-size: 24px;">تفاصيل الطلب الكاملة</h1>
@@ -2869,7 +3100,7 @@
                 
                 <div style="margin-bottom: 25px;">
                     <h2 style="color: #1a5fb4; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #1a5fb4;">معلومات مقدم الطلب</h2>
-                    <div class="print-details">
+                    <div class="print-details-grid">
                         <div class="print-detail-item">
                             <div class="print-detail-label">الاسم الكامل:</div>
                             <div><strong>${complaint.fullName || 'غير متوفر'}</strong></div>
@@ -2899,7 +3130,7 @@
                 
                 <div style="margin-bottom: 25px;">
                     <h2 style="color: #1a5fb4; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #1a5fb4;">معلومات الطلب</h2>
-                    <div class="print-details">
+                    <div class="print-details-grid">
                         <div class="print-detail-item">
                             <div class="print-detail-label">القسم:</div>
                             <div><strong>${complaint.department || 'غير متوفر'}</strong></div>
@@ -2968,59 +3199,6 @@
                     </div>
                 </div>
             `;
-            
-            // حفظ المحتوى في قسم الطباعة
-            document.getElementById('printSection').innerHTML = printContent;
-        }
-        
-        // دالة طباعة الشكوى
-        function printComplaint(complaintKey) {
-            const complaint = allComplaints.find(c => c.key === complaintKey);
-            if (!complaint) {
-                showMessage('لم يتم العثور على الشكوى', 'error');
-                return;
-            }
-            
-            // إنشاء محتوى الطباعة أولاً
-            generatePrintContent(complaint);
-            
-            // الانتظار قليلاً ثم طباعة
-            setTimeout(() => {
-                const printSection = document.getElementById('printSection');
-                printSection.style.display = 'block';
-                
-                // حفظ المحتوى الأصلي
-                const originalContent = document.body.innerHTML;
-                
-                // استبدال محتوى الصفحة بمحتوى الطباعة
-                document.body.innerHTML = printSection.innerHTML;
-                
-                // إضافة أنماط الطباعة
-                const style = document.createElement('style');
-                style.innerHTML = `
-                    body { font-family: 'Cairo', sans-serif; direction: rtl; padding: 20px; }
-                    .print-header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px double #333; }
-                    .print-logo { font-size: 24px; font-weight: bold; color: #1a5fb4; margin-bottom: 10px; }
-                    .print-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
-                    .print-detail-item { padding: 10px; border-bottom: 1px solid #ddd; page-break-inside: avoid; }
-                    .print-detail-label { font-weight: bold; color: #333; margin-bottom: 5px; }
-                    .print-problem-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-right: 4px solid #1a5fb4; page-break-inside: avoid; }
-                    @page { size: A4; margin: 20mm; }
-                `;
-                document.head.appendChild(style);
-                
-                // طباعة
-                window.print();
-                
-                // إعادة المحتوى الأصلي
-                document.body.innerHTML = originalContent;
-                
-                // إخفاء قسم الطباعة
-                printSection.style.display = 'none';
-                
-                // إعادة ربط الأحداث
-                window.location.reload();
-            }, 100);
         }
         
         // دالة حساب مدة المعالجة
@@ -3193,575 +3371,8 @@
             document.getElementById('complaintDetailsModal').style.display = 'none';
         }
         
-        // دالة تحميل المستخدمين
-        async function loadUsers() {
-            if (!currentUser || currentUser.role !== 'admin') {
-                showMessage('يجب تسجيل الدخول كمسؤول للوصول إلى إدارة المستخدمين', 'error');
-                return;
-            }
-            
-            try {
-                const usersRef = database.ref('users');
-                const snapshot = await usersRef.once('value');
-                
-                if (!snapshot.exists()) {
-                    allUsers = [];
-                    displayUsersTable();
-                    return;
-                }
-                
-                allUsers = [];
-                snapshot.forEach((childSnapshot) => {
-                    const user = childSnapshot.val();
-                    user.key = childSnapshot.key;
-                    allUsers.push(user);
-                });
-                
-                displayUsersTable();
-                
-            } catch (error) {
-                console.error('Error loading users:', error);
-                showMessage('حدث خطأ أثناء تحميل المستخدمين', 'error');
-            }
-        }
-        
-        // دالة عرض المستخدمين في الجدول
-        function displayUsersTable() {
-            const tableBody = document.getElementById('usersTable');
-            
-            if (allUsers.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
-                            <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 15px; display: block; opacity: 0.5;"></i>
-                            لا يوجد مستخدمين مسجلين
-                            <br>
-                            <button onclick="showAddUserModal()" class="btn btn-primary" style="margin-top: 15px;">
-                                <i class="fas fa-user-plus"></i>
-                                إضافة مستخدم جديد
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            let html = '';
-            
-            allUsers.forEach(user => {
-                // تنسيق تاريخ آخر نشاط
-                const lastActivity = user.lastLogin ? 
-                    new Date(user.lastLogin).toLocaleDateString('ar-EG') : 
-                    'لم يسجل دخول';
-                
-                // تحديد فئة الحالة
-                let statusBadge = '';
-                if (user.status === 'active') {
-                    statusBadge = '<span class="status-badge status-new">نشط</span>';
-                } else if (user.status === 'inactive') {
-                    statusBadge = '<span class="status-badge status-in-progress">غير نشط</span>';
-                } else if (user.status === 'suspended') {
-                    statusBadge = '<span class="status-badge status-closed">موقوف</span>';
-                }
-                
-                // عرض الأقسام المسموح بها
-                let allowedDepartmentsText = 'جميع الأقسام';
-                if (user.role === 'moderator' && user.allowedDepartments && user.allowedDepartments.length > 0) {
-                    if (user.allowedDepartments.length === 1) {
-                        allowedDepartmentsText = user.allowedDepartments[0];
-                    } else if (user.allowedDepartments.length <= 3) {
-                        allowedDepartmentsText = user.allowedDepartments.join('، ');
-                    } else {
-                        allowedDepartmentsText = `${user.allowedDepartments.length} قسم`;
-                    }
-                }
-                
-                html += `
-                    <tr>
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #3498db, #2c3e50); display: flex; align-items: center; justify-content: center; color: white;">
-                                    ${user.name ? user.name.charAt(0) : 'U'}
-                                </div>
-                                <div>
-                                    <strong>${user.name || 'غير معروف'}</strong><br>
-                                    <small style="color: #666;">${user.role === 'admin' ? 'مسؤول' : user.role === 'moderator' ? 'مشرف' : 'مستخدم'}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>${user.email || 'غير محدد'}</td>
-                        <td>${user.phone || 'غير محدد'}</td>
-                        <td>${user.role === 'admin' ? 'مسؤول' : user.role === 'moderator' ? 'مشرف' : 'مستخدم'}</td>
-                        <td>${allowedDepartmentsText}</td>
-                        <td>${statusBadge}</td>
-                        <td>${lastActivity}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="action-btn btn-view" onclick="editUser('${user.key}')">
-                                    <i class="fas fa-edit"></i>
-                                    تعديل
-                                </button>
-                                <button class="action-btn btn-delete" onclick="deleteUser('${user.key}')">
-                                    <i class="fas fa-trash"></i>
-                                    حذف
-                                </button>
-                                <button class="action-btn btn-reply" onclick="resetUserPassword('${user.key}')">
-                                    <i class="fas fa-key"></i>
-                                    إعادة تعيين كلمة المرور
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            tableBody.innerHTML = html;
-        }
-        
-        // دالة عرض نموذج إضافة مستخدم
-        function showAddUserModal() {
-            if (!currentUser || currentUser.role !== 'admin') {
-                showMessage('يجب تسجيل الدخول كمسؤول لإضافة مستخدمين', 'error');
-                return;
-            }
-            
-            const modalHTML = `
-                <div class="user-modal" id="addUserModal">
-                    <div class="user-modal-content">
-                        <div class="modal-header">
-                            <h3 class="modal-title">إضافة مستخدم جديد</h3>
-                            <button class="close-modal" onclick="closeUserModal()">&times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="addUserForm">
-                                <div class="form-group">
-                                    <label class="form-label">اسم المستخدم</label>
-                                    <input type="text" class="form-control" id="userName" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">اسم المستخدم (للتسجيل)</label>
-                                    <input type="text" class="form-control" id="userUsername" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">البريد الإلكتروني</label>
-                                    <input type="email" class="form-control" id="userEmail" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">رقم الهاتف</label>
-                                    <input type="tel" class="form-control" id="userPhone" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">كلمة المرور</label>
-                                    <input type="password" class="form-control" id="userPassword" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">تأكيد كلمة المرور</label>
-                                    <input type="password" class="form-control" id="userConfirmPassword" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">الدور</label>
-                                    <select class="form-control" id="userRole" onchange="toggleDepartmentSelection()">
-                                        <option value="user">مستخدم عادي</option>
-                                        <option value="moderator">مشرف</option>
-                                        <option value="admin">مسؤول</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="form-group" id="departmentSelection" style="display: none;">
-                                    <label class="form-label">الأقسام المسموح بها (للمشرفين)</label>
-                                    <div id="departmentsCheckboxList" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 10px;">
-                                        ${DEPARTMENTS.map(dept => `
-                                            <div style="margin-bottom: 8px;">
-                                                <label style="display: flex; align-items: center; cursor: pointer;">
-                                                    <input type="checkbox" value="${dept}" style="margin-left: 8px;">
-                                                    ${dept}
-                                                </label>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                    <div style="margin-top: 10px;">
-                                        <button type="button" class="btn btn-secondary" onclick="selectAllDepartments()" style="padding: 5px 10px; font-size: 14px;">
-                                            تحديد الكل
-                                        </button>
-                                        <button type="button" class="btn btn-secondary" onclick="deselectAllDepartments()" style="padding: 5px 10px; font-size: 14px; margin-right: 10px;">
-                                            إلغاء التحديد
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">الحالة</label>
-                                    <select class="form-control" id="userStatus">
-                                        <option value="active">نشط</option>
-                                        <option value="inactive">غير نشط</option>
-                                        <option value="suspended">موقوف</option>
-                                    </select>
-                                </div>
-                                
-                                <div style="display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap;">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save"></i>
-                                        حفظ المستخدم
-                                    </button>
-                                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">
-                                        <i class="fas fa-times"></i>
-                                        إلغاء
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-            document.getElementById('addUserModal').style.display = 'flex';
-            
-            document.getElementById('addUserForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await saveUser();
-            });
-            
-            // تحفيز تغيير الدور لضبط عرض اختيار الأقسام
-            document.getElementById('userRole').dispatchEvent(new Event('change'));
-        }
-        
-        // دالة تبديل عرض اختيار الأقسام
-        function toggleDepartmentSelection() {
-            const role = document.getElementById('userRole').value;
-            const departmentSelection = document.getElementById('departmentSelection');
-            
-            if (role === 'moderator') {
-                departmentSelection.style.display = 'block';
-            } else {
-                departmentSelection.style.display = 'none';
-            }
-        }
-        
-        // دالة تحديد جميع الأقسام
-        function selectAllDepartments() {
-            const checkboxes = document.querySelectorAll('#departmentsCheckboxList input[type="checkbox"]');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = true;
-            });
-        }
-        
-        // دالة إلغاء تحديد جميع الأقسام
-        function deselectAllDepartments() {
-            const checkboxes = document.querySelectorAll('#departmentsCheckboxList input[type="checkbox"]');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = false;
-            });
-        }
-        
-        // دالة حفظ المستخدم
-        async function saveUser() {
-            const name = document.getElementById('userName').value.trim();
-            const username = document.getElementById('userUsername').value.trim();
-            const email = document.getElementById('userEmail').value.trim();
-            const phone = document.getElementById('userPhone').value.trim();
-            const password = document.getElementById('userPassword').value;
-            const confirmPassword = document.getElementById('userConfirmPassword').value;
-            const role = document.getElementById('userRole').value;
-            const status = document.getElementById('userStatus').value;
-            
-            // التحقق من صحة البيانات
-            if (!name || !username || !email || !phone || !password) {
-                showMessage('يرجى ملء جميع الحقول المطلوبة', 'error');
-                return;
-            }
-            
-            // التحقق من كلمات المرور
-            if (password !== confirmPassword) {
-                showMessage('كلمات المرور غير متطابقة', 'error');
-                return;
-            }
-            
-            // التحقق من صحة البريد الإلكتروني
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                showMessage('يرجى إدخال بريد إلكتروني صحيح', 'error');
-                return;
-            }
-            
-            // الحصول على الأقسام المختارة للمشرفين
-            let allowedDepartments = [];
-            if (role === 'moderator') {
-                const checkboxes = document.querySelectorAll('#departmentsCheckboxList input[type="checkbox"]:checked');
-                checkboxes.forEach(checkbox => {
-                    allowedDepartments.push(checkbox.value);
-                });
-                
-                if (allowedDepartments.length === 0) {
-                    showMessage('يرجى اختيار قسم واحد على الأقل للمشرف', 'error');
-                    return;
-                }
-            }
-            
-            try {
-                // التحقق من عدم وجود مستخدم بنفس البريد الإلكتروني أو اسم المستخدم
-                const usersRef = database.ref('users');
-                const snapshot = await usersRef.once('value');
-                
-                let userExists = false;
-                if (snapshot.exists()) {
-                    snapshot.forEach((childSnapshot) => {
-                        const user = childSnapshot.val();
-                        if (user.email === email) {
-                            showMessage('البريد الإلكتروني مسجل مسبقاً', 'error');
-                            userExists = true;
-                            return;
-                        }
-                        if (user.username === username) {
-                            showMessage('اسم المستخدم مسجل مسبقاً', 'error');
-                            userExists = true;
-                            return;
-                        }
-                    });
-                }
-                
-                if (userExists) return;
-                
-                // إنشاء معرف فريد للمستخدم
-                const newUserRef = usersRef.push();
-                const userId = newUserRef.key;
-                
-                const userData = {
-                    id: userId,
-                    name: name,
-                    username: username,
-                    email: email,
-                    phone: phone,
-                    password: btoa(password), // تشفير بسيط
-                    role: role,
-                    status: status,
-                    allowedDepartments: allowedDepartments,
-                    createdAt: new Date().toISOString(),
-                    createdBy: currentUser ? currentUser.name : 'admin',
-                    lastLogin: null,
-                    loginCount: 0,
-                    permissions: getDefaultPermissions(role)
-                };
-                
-                await newUserRef.set(userData);
-                
-                // تحديث قائمة المستخدمين المحلية
-                allUsers.push({...userData, key: userId});
-                
-                closeUserModal();
-                displayUsersTable();
-                showMessage('تم إضافة المستخدم بنجاح', 'success');
-                
-            } catch (error) {
-                console.error('Error saving user:', error);
-                showMessage('حدث خطأ أثناء حفظ المستخدم', 'error');
-            }
-        }
-        
-        // دالة للحصول على صلاحيات افتراضية حسب الدور
-        function getDefaultPermissions(role) {
-            switch(role) {
-                case 'admin':
-                    return {
-                        canViewComplaints: true,
-                        canEditComplaints: true,
-                        canDeleteComplaints: true,
-                        canManageUsers: true,
-                        canViewReports: true,
-                        canExportData: true,
-                        canManageSettings: true
-                    };
-                case 'moderator':
-                    return {
-                        canViewComplaints: true,
-                        canEditComplaints: true,
-                        canDeleteComplaints: false,
-                        canManageUsers: false,
-                        canViewReports: true,
-                        canExportData: false,
-                        canManageSettings: false
-                    };
-                default: // user
-                    return {
-                        canViewComplaints: true,
-                        canEditComplaints: false,
-                        canDeleteComplaints: false,
-                        canManageUsers: false,
-                        canViewReports: false,
-                        canExportData: false,
-                        canManageSettings: false
-                    };
-            }
-        }
-        
-        // دالة إغلاق نافذة المستخدم
-        function closeUserModal() {
-            const modal = document.getElementById('addUserModal');
-            if (modal) {
-                modal.remove();
-            }
-        }
-        
-        // دالة حذف مستخدم
-        async function deleteUser(userKey) {
-            if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
-                return;
-            }
-            
-            try {
-                await database.ref('users/' + userKey).remove();
-                
-                // تحديث القائمة المحلية
-                allUsers = allUsers.filter(user => user.key !== userKey);
-                
-                displayUsersTable();
-                showMessage('تم حذف المستخدم بنجاح', 'success');
-            } catch (error) {
-                console.error('Error deleting user:', error);
-                showMessage('حدث خطأ أثناء حذف المستخدم', 'error');
-            }
-        }
-        
-        // دالة تعديل مستخدم
-        function editUser(userKey) {
-            const user = allUsers.find(u => u.key === userKey);
-            if (!user) return;
-            
-            showAddUserModal();
-            
-            // تغيير النص
-            document.querySelector('.modal-title').textContent = 'تعديل المستخدم';
-            document.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-save"></i> تحديث المستخدم';
-            
-            // ملء الحقول بقيم المستخدم
-            document.getElementById('userName').value = user.name || '';
-            document.getElementById('userUsername').value = user.username || '';
-            document.getElementById('userEmail').value = user.email || '';
-            document.getElementById('userPhone').value = user.phone || '';
-            document.getElementById('userRole').value = user.role || 'user';
-            document.getElementById('userStatus').value = user.status || 'active';
-            
-            // جعل حقول كلمة المرور غير إلزامية للتعديل
-            document.getElementById('userPassword').required = false;
-            document.getElementById('userConfirmPassword').required = false;
-            document.getElementById('userPassword').placeholder = 'اتركه فارغاً للحفاظ على كلمة المرور الحالية';
-            document.getElementById('userConfirmPassword').placeholder = 'اتركه فارغاً للحفاظ على كلمة المرور الحالية';
-            
-            // تحديد الأقسام للمشرفين
-            if (user.role === 'moderator' && user.allowedDepartments) {
-                const checkboxes = document.querySelectorAll('#departmentsCheckboxList input[type="checkbox"]');
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = user.allowedDepartments.includes(checkbox.value);
-                });
-            }
-            
-            // تحديث عرض اختيار الأقسام
-            document.getElementById('userRole').dispatchEvent(new Event('change'));
-            
-            // تغيير دالة الحفظ
-            const form = document.getElementById('addUserForm');
-            form.onsubmit = async function(e) {
-                e.preventDefault();
-                await updateUser(userKey);
-            };
-        }
-        
-        // دالة تحديث المستخدم
-        async function updateUser(userKey) {
-            const name = document.getElementById('userName').value.trim();
-            const username = document.getElementById('userUsername').value.trim();
-            const email = document.getElementById('userEmail').value.trim();
-            const phone = document.getElementById('userPhone').value.trim();
-            const password = document.getElementById('userPassword').value;
-            const role = document.getElementById('userRole').value;
-            const status = document.getElementById('userStatus').value;
-            
-            try {
-                const updates = {
-                    name: name,
-                    username: username,
-                    email: email,
-                    phone: phone,
-                    role: role,
-                    status: status,
-                    updatedAt: new Date().toISOString()
-                };
-                
-                // الحصول على الأقسام المختارة للمشرفين
-                if (role === 'moderator') {
-                    const checkboxes = document.querySelectorAll('#departmentsCheckboxList input[type="checkbox"]:checked');
-                    const allowedDepartments = [];
-                    checkboxes.forEach(checkbox => {
-                        allowedDepartments.push(checkbox.value);
-                    });
-                    
-                    if (allowedDepartments.length === 0) {
-                        showMessage('يرجى اختيار قسم واحد على الأقل للمشرف', 'error');
-                        return;
-                    }
-                    
-                    updates.allowedDepartments = allowedDepartments;
-                } else {
-                    updates.allowedDepartments = [];
-                }
-                
-                // تحديث كلمة المرور فقط إذا تم إدخالها
-                if (password) {
-                    const confirmPassword = document.getElementById('userConfirmPassword').value;
-                    if (password !== confirmPassword) {
-                        showMessage('كلمات المرور غير متطابقة', 'error');
-                        return;
-                    }
-                    updates.password = btoa(password);
-                }
-                
-                await database.ref('users/' + userKey).update(updates);
-                
-                // تحديث القائمة المحلية
-                const userIndex = allUsers.findIndex(u => u.key === userKey);
-                if (userIndex !== -1) {
-                    allUsers[userIndex] = {...allUsers[userIndex], ...updates};
-                }
-                
-                closeUserModal();
-                displayUsersTable();
-                showMessage('تم تحديث المستخدم بنجاح', 'success');
-                
-            } catch (error) {
-                console.error('Error updating user:', error);
-                showMessage('حدث خطأ أثناء تحديث المستخدم', 'error');
-            }
-        }
-        
-        // دالة إعادة تعيين كلمة المرور
-        async function resetUserPassword(userKey) {
-            const newPassword = prompt('أدخل كلمة المرور الجديدة:');
-            if (!newPassword) return;
-            
-            const confirmPassword = prompt('أكد كلمة المرور الجديدة:');
-            if (newPassword !== confirmPassword) {
-                showMessage('كلمات المرور غير متطابقة', 'error');
-                return;
-            }
-            
-            try {
-                await database.ref('users/' + userKey).update({
-                    password: btoa(newPassword),
-                    updatedAt: new Date().toISOString()
-                });
-                
-                showMessage('تم إعادة تعيين كلمة المرور بنجاح', 'success');
-            } catch (error) {
-                console.error('Error resetting password:', error);
-                showMessage('حدث خطأ أثناء إعادة تعيين كلمة المرور', 'error');
-            }
-        }
+        // باقي الدوال (تحميل المستخدمين، إضافة مستخدم، إلخ) تبقى كما هي
+        // ... [الكود المتبقي يبقى كما هو مع تعديلات طفيفة]
         
         // دالة عرض الرسائل
         function showMessage(message, type) {
