@@ -934,37 +934,75 @@
             display: block;
         }
         
-        /* الردود */
-        .responses {
+        /* الردود - التصميم المحسّن */
+        .responses-container {
             margin-top: 30px;
-            padding-top: 25px;
-            border-top: 3px solid #e9ecef;
+            padding: 25px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: var(--border-radius);
+            border: 2px solid #e0e0e0;
         }
         
-        .response {
-            padding: 20px;
+        .responses-title {
+            color: var(--primary-color);
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.4rem;
+        }
+        
+        .responses-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .response-item {
+            padding: 20px;
             border-radius: 15px;
-            position: relative;
-            animation: slideIn 0.5s ease;
+            animation: fadeIn 0.5s ease;
         }
         
         .response-admin {
             background: linear-gradient(135deg, #d4edda, #c3e6cb);
-            border: 2px solid var(--success-color);
+            border-right: 5px solid var(--success-color);
+            margin-right: 30px;
         }
         
         .response-client {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-right: 5px solid #6c757d;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-left: 5px solid #3498db;
+            margin-left: 30px;
         }
         
-        .response-date {
-            font-size: 0.95rem;
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .response-sender {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+        }
+        
+        .response-time {
+            font-size: 0.9rem;
             color: #666;
-            margin-top: 10px;
-            text-align: left;
             font-weight: 600;
+        }
+        
+        .response-content {
+            white-space: pre-line;
+            line-height: 1.8;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            margin-top: 10px;
         }
         
         /* قسم الرد */
@@ -1164,6 +1202,14 @@
             
             .verify-national-id-input {
                 max-width: 100%;
+            }
+            
+            .response-admin {
+                margin-right: 10px;
+            }
+            
+            .response-client {
+                margin-left: 10px;
             }
         }
         
@@ -2214,71 +2260,56 @@
             // تحميل الردود
             const responses = complaint.responses || [];
             
-            // فصل الردود الرسمية (من الإدارة) عن ردود العملاء
-            const adminResponses = responses.filter(r => r.type === 'admin');
-            const clientResponses = responses.filter(r => r.type === 'client');
+            // إنشاء محتوى الردود - الجديد والمحسّن
+            let responsesHTML = '';
             
-            // عرض الردود الرسمية مباشرة بعد تفاصيل المشكلة
-            let adminResponsesHTML = '';
-            if (adminResponses.length > 0) {
-                adminResponsesHTML = `
-                    <div class="responses">
-                        <h3 style="color: var(--primary-color); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-comment-alt-check"></i> الردود الرسمية من الإدارة
+            if (responses.length > 0) {
+                // فرز الردود حسب التاريخ من الأقدم للأحدث
+                responses.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                
+                responsesHTML = `
+                    <div class="responses-container">
+                        <h3 class="responses-title">
+                            <i class="fas fa-comments"></i> سجل المحادثة
                         </h3>
-                        ${adminResponses.map(response => `
-                            <div class="response response-admin">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <strong style="display: flex; align-items: center; gap: 8px;">
-                                        <i class="fas fa-user-tie"></i> رد الإدارة
-                                    </strong>
-                                    <small style="color: #666; font-weight: 600;">${new Date(response.timestamp).toLocaleString('ar-EG')}</small>
-                                </div>
-                                <div style="white-space: pre-line; line-height: 1.8; padding: 15px; background: rgba(212, 237, 218, 0.3); border-radius: 10px;">
-                                    ${response.message}
-                                </div>
-                                <div class="response-date">تم الرد في: ${new Date(response.timestamp).toLocaleString('ar-EG')}</div>
-                            </div>
-                        `).join('')}
-                    </div>
+                        <div class="responses-list">
                 `;
-            } else {
-                adminResponsesHTML = `
-                    <div class="responses">
-                        <h3 style="color: #6c757d; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                            <i class="far fa-comment-alt"></i> الردود الرسمية
-                        </h3>
-                        <div class="response" style="background: #f8f9fa; border: 2px dashed #dee2e6;">
-                            <div style="text-align: center; padding: 20px; color: #6c757d;">
-                                <i class="far fa-clock fa-2x" style="margin-bottom: 10px;"></i>
-                                <p style="font-size: 1.1rem; font-weight: 600;">لم يتم الرد على الشكوى بعد</p>
-                                <p>شكراً لتواصلك معنا، سيتم الرد عليك في أقرب وقت.</p>
+                
+                responses.forEach(response => {
+                    const isAdmin = response.type === 'admin';
+                    const date = new Date(response.timestamp).toLocaleString('ar-EG');
+                    
+                    responsesHTML += `
+                        <div class="response-item ${isAdmin ? 'response-admin' : 'response-client'}">
+                            <div class="response-header">
+                                <div class="response-sender">
+                                    <i class="fas ${isAdmin ? 'fa-user-tie' : 'fa-user'}"></i>
+                                    ${isAdmin ? (response.respondedBy || 'الإدارة') : 'أنت'}
+                                </div>
+                                <div class="response-time">${date}</div>
                             </div>
+                            <div class="response-content">
+                                ${response.message}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                responsesHTML += `
                         </div>
                     </div>
                 `;
-            }
-            
-            // عرض ردود العملاء (إذا وجدت)
-            let clientResponsesHTML = '';
-            if (clientResponses.length > 0) {
-                clientResponsesHTML = `
-                    <div class="responses">
-                        <h3 style="color: #6c757d; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-user-comments"></i> ردود العميل
+            } else {
+                responsesHTML = `
+                    <div class="responses-container">
+                        <h3 class="responses-title">
+                            <i class="fas fa-comments"></i> سجل المحادثة
                         </h3>
-                        ${clientResponses.map(response => `
-                            <div class="response response-client">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <strong style="display: flex; align-items: center; gap: 8px;">
-                                        <i class="fas fa-user"></i> رد العميل
-                                    </strong>
-                                    <small style="color: #666; font-weight: 600;">${new Date(response.timestamp).toLocaleString('ar-EG')}</small>
-                                </div>
-                                <div style="white-space: pre-line; line-height: 1.8;">${response.message}</div>
-                                <div class="response-date">تم الإرسال في: ${new Date(response.timestamp).toLocaleString('ar-EG')}</div>
-                            </div>
-                        `).join('')}
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <i class="far fa-comment-alt fa-3x" style="margin-bottom: 15px;"></i>
+                            <p style="font-size: 1.1rem; font-weight: 600;">لا توجد ردود بعد</p>
+                            <p>شكراً لتواصلك معنا، سيتم الرد عليك في أقرب وقت.</p>
+                        </div>
                     </div>
                 `;
             }
@@ -2377,9 +2408,7 @@
                     </div>
                 </div>
                 
-                ${adminResponsesHTML}
-                
-                ${clientResponsesHTML}
+                ${responsesHTML}
                 
                 ${replyVerificationHTML}
                 
@@ -2452,7 +2481,7 @@
             
             try {
                 showLoading(true);
-                // الحصول على الشكوى الحالية
+                
                 const snapshot = await database.ref(`complaints/${complaintKey}`).get();
                 if (!snapshot.exists()) {
                     showSearchResult('error', 'حدث خطأ: لم يتم العثور على الشكوى');
@@ -2469,7 +2498,6 @@
                     timestamp: new Date().toISOString()
                 });
                 
-                // تحديث الشكوى في قاعدة البيانات
                 await database.ref(`complaints/${complaintKey}`).update({
                     responses: responses,
                     updatedAt: new Date().toISOString(),
@@ -2481,6 +2509,7 @@
                 await displayComplaintDetails(updatedComplaint);
                 
                 showSearchResult('success', '✅ تم إرسال ردك بنجاح!');
+                document.getElementById('clientReplyMessage').value = '';
                 
             } catch (error) {
                 console.error('Error submitting reply:', error);
