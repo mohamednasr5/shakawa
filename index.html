@@ -368,7 +368,7 @@
                         <option value="مساعدة مالية">مساعدة مالية</option>
                         <option value="مشكلة خاصة بالصحة">مشكلة خاصة بالصحة</option>
                         <option value="مشكلات مياه الشرب والصرف الصحي">مشكلات مياه الشرب والصرف الصحي</option>
-                        <option value="مشكلة خاصة بالتعليم">مشكلة خاصة بالالتعليم</option>
+                        <option value="مشكلة خاصة بالتعليم">مشكلة خاصة بالتعليم</option>
                         <option value="مشكلة خاصة بالشرطة والداخلية">مشكلة خاصة بالشرطة والداخلية</option>
                         <option value="حالة طارئة">حالة طارئة</option>
                         <option value="مشكلات أخري">مشكلات أخري</option>
@@ -403,12 +403,19 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, set, push, get, child, query, orderByChild, equalTo, update, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-
+    <!-- Firebase SDK - Compat Version -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <script>
+        // عداد الأحرف
+        const problemDetails = document.getElementById('problemDetails');
+        const charCount = document.getElementById('charCount');
+        
+        problemDetails.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+        });
+        
         // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBIIStbiZD0ZJ6su7C1bwZlBvqx-PP-t58",
@@ -421,23 +428,8 @@
         };
 
         // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
-        // جعل الدوال متاحة عالمياً
-        window.database = database;
-        window.dbRef = ref(database);
-        window.dbFunctions = { get, child, query, orderByChild, equalTo, push, set, update, remove };
-    </script>
-    
-    <script>
-        // عداد الأحرف
-        const problemDetails = document.getElementById('problemDetails');
-        const charCount = document.getElementById('charCount');
-        
-        problemDetails.addEventListener('input', function() {
-            charCount.textContent = this.value.length;
-        });
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
         
         // دالة إرسال الشكوى
         window.submitComplaint = async function() {
@@ -469,13 +461,15 @@
             }
             
             try {
-                // توليد رقم الشكوى
-                const complaintRef = ref(database, 'complaints');
-                const newComplaintRef = push(complaintRef);
+                // إنشاء مرجع لقاعدة البيانات
+                const complaintsRef = database.ref('complaints');
+                const newComplaintRef = complaintsRef.push();
                 
                 // إنشاء رقم تسلسلي للقسم
-                const departmentRef = ref(database, 'departmentCounters/' + department);
-                const departmentSnapshot = await get(departmentRef);
+                const departmentRef = database.ref('departmentCounters/' + department);
+                
+                // الحصول على القيمة الحالية للعداد
+                const departmentSnapshot = await departmentRef.once('value');
                 
                 let counter = 1;
                 if (departmentSnapshot.exists()) {
@@ -483,7 +477,7 @@
                 }
                 
                 // تحديث العداد للقسم
-                await set(departmentRef, counter);
+                await departmentRef.set(counter);
                 
                 // رقم الشكوى النهائي
                 const complaintNumber = `${getDepartmentCode(department)}-${counter.toString().padStart(5, '0')}`;
@@ -507,7 +501,7 @@
                 };
                 
                 // حفظ البيانات
-                await set(newComplaintRef, complaintData);
+                await newComplaintRef.set(complaintData);
                 
                 // عرض رسالة النجاح
                 showMessage(`تم إرسال الشكوى بنجاح! رقم الطلب هو: ${complaintNumber}<br>يرجى الاحتفاظ بهذا الرقم لمتابعة الشكوى`, 'success');
@@ -540,8 +534,8 @@
             }
             
             try {
-                const complaintsRef = ref(database, 'complaints');
-                const snapshot = await get(complaintsRef);
+                const complaintsRef = database.ref('complaints');
+                const snapshot = await complaintsRef.once('value');
                 
                 if (!snapshot.exists()) {
                     showMessage('لا توجد شكاوى', 'error');
