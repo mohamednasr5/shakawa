@@ -887,6 +887,32 @@
             background: white;
         }
         
+        /* التحديث: إبقاء الرموز ظاهرة أثناء الكتابة */
+        .search-input-with-prefix {
+            position: relative;
+            width: 100%;
+        }
+        
+        .search-input-with-prefix input {
+            padding: 18px 20px 18px 70px;
+        }
+        
+        .search-prefix {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #555;
+            z-index: 2;
+            background: transparent;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
         .search-input:focus {
             border-color: var(--primary-color);
             outline: none;
@@ -940,7 +966,7 @@
         
         .documents-instructions.show {
             display: block;
-           }
+        }
         
         /* الردود */
         .responses {
@@ -982,6 +1008,94 @@
             border-radius: 15px;
             margin-top: 25px;
             border: 2px solid #dee2e6;
+        }
+        
+        /* حقل التحقق من الرقم القومي للرد */
+        .verify-national-id-container {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 2px solid var(--warning-color);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .verify-national-id-container h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .verify-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .verify-national-id-input {
+            flex: 1;
+            max-width: 300px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            text-align: center;
+            letter-spacing: 2px;
+            font-family: monospace;
+        }
+        
+        /* رمز المشكلة */
+        .priority-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        
+        .priority-high {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+        
+        .priority-medium {
+            background: linear-gradient(135deg, #feca57, #ff9f43);
+            color: white;
+        }
+        
+        .priority-low {
+            background: linear-gradient(135deg, #48dbfb, #0abde3);
+            color: white;
+        }
+        
+        /* شارات الحالة */
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 700;
+        }
+        
+        .status-new {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .status-in-progress {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+        
+        .status-resolved {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+        
+        .status-closed {
+            background: linear-gradient(135deg, #7f8c8d, #95a5a6);
+            color: white;
         }
         
         /* التذييل المحسّن */
@@ -1061,6 +1175,14 @@
             
             .search-option-content {
                 width: 100%;
+            }
+            
+            .verify-input-group {
+                flex-direction: column;
+            }
+            
+            .verify-national-id-input {
+                max-width: 100%;
             }
         }
         
@@ -1332,13 +1454,13 @@
                         </div>
                     </div>
                     
-                    <!-- حقل البحث برقم الطلب -->
+                    <!-- حقل البحث برقم الطلب مع إضافة # -->
                     <div class="search-input-container active" id="numberSearchContainer">
-                        <div class="search-input-wrapper">
-                            <input type="text" id="searchByNumber" class="search-input" placeholder="أدخل رقم الطلب (مثال: JUD-00001)">
-                            <div class="search-input-icon">
+                        <div class="search-input-with-prefix">
+                            <div class="search-prefix">
                                 <i class="fas fa-hashtag"></i>
                             </div>
+                            <input type="text" id="searchByNumber" class="search-input" placeholder="أدخل رقم الطلب (مثال: JUD-00001)">
                         </div>
                         <div class="search-btn-container">
                             <button onclick="searchByComplaintNumber()" class="btn btn-search">
@@ -1364,13 +1486,13 @@
                         </div>
                     </div>
                     
-                    <!-- حقل البحث بالرقم القومي -->
+                    <!-- حقل البحث بالرقم القومي مع إضافة رمز الشخص -->
                     <div class="search-input-container" id="nationalIdSearchContainer">
-                        <div class="search-input-wrapper">
-                            <input type="text" id="searchByNationalId" class="search-input" placeholder="أدخل الرقم القومي (14 رقمًا)" maxlength="14">
-                            <div class="search-input-icon">
-                                <i class="fas fa-id-card"></i>
+                        <div class="search-input-with-prefix">
+                            <div class="search-prefix">
+                                <i class="fas fa-user"></i>
                             </div>
+                            <input type="text" id="searchByNationalId" class="search-input" placeholder="أدخل الرقم القومي (14 رقمًا)" maxlength="14">
                         </div>
                         <div class="search-btn-container">
                             <button onclick="searchByNationalId()" class="btn btn-search">
@@ -1396,13 +1518,13 @@
                         </div>
                     </div>
                     
-                    <!-- حقل البحث بالاسم -->
+                    <!-- حقل البحث بالاسم مع إضافة رمز الشخص -->
                     <div class="search-input-container" id="nameSearchContainer">
-                        <div class="search-input-wrapper">
-                            <input type="text" id="searchByName" class="search-input" placeholder="أدخل الاسم (ثلاثي على الأقل: الاسم + الأب + الجد)">
-                            <div class="search-input-icon">
-                                <i class="fas fa-user"></i>
+                        <div class="search-input-with-prefix">
+                            <div class="search-prefix">
+                                <i class="fas fa-user-circle"></i>
                             </div>
+                            <input type="text" id="searchByName" class="search-input" placeholder="أدخل الاسم (ثلاثي على الأقل: الاسم + الأب + الجد)">
                         </div>
                         <div class="search-btn-container">
                             <button onclick="searchByName()" class="btn btn-search">
@@ -1460,6 +1582,7 @@
         let currentComplaintKey = null;
         let currentComplaintData = null;
         let lastComplaintNumber = null;
+        let clientReplyEnabled = false;
         
         // Firebase Configuration
         const firebaseConfig = {
@@ -1674,6 +1797,9 @@
                 
                 document.getElementById('complaintDetails').style.display = 'none';
                 document.getElementById('complaintDetails').innerHTML = '';
+                
+                // إعادة تعيين الرد
+                clientReplyEnabled = false;
             }
         }
         
@@ -1732,7 +1858,8 @@
                     updatedAt: timestamp,
                     sendDocuments: sendDocs,
                     documentsSent: false,
-                    whatsappLink: sendDocs ? generateWhatsAppLink(complaintNumber, fullName) : ''
+                    whatsappLink: sendDocs ? generateWhatsAppLink(complaintNumber, fullName) : '',
+                    responses: []
                 };
                 
                 await complaintRef.set(complaintData);
@@ -1918,7 +2045,7 @@
                 
                 // عرض النتائج
                 if (foundComplaints.length === 1) {
-                    displayComplaintDetails(foundComplaints[0]);
+                    await displayComplaintDetails(foundComplaints[0]);
                 } else {
                     displayMultipleComplaints(foundComplaints);
                 }
@@ -1941,7 +2068,20 @@
                 .toLowerCase();
         }
         
-        function displayComplaintDetails(complaint) {
+        // دالة لتنسيق الرقم القومي (إظهار آخر 4 أرقام فقط)
+        function formatNationalId(nationalId) {
+            if (!nationalId || nationalId.length !== 14) {
+                return 'غير معروف';
+            }
+            return '××××××××××' + nationalId.substring(10);
+        }
+        
+        // دالة للتحقق من الرقم القومي لتفعيل الرد
+        function verifyNationalIdForReply(nationalId, complaintNationalId) {
+            return nationalId === complaintNationalId;
+        }
+        
+        async function displayComplaintDetails(complaint) {
             const detailsContainer = document.getElementById('complaintDetails');
             const createdAt = complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : 'غير معروف';
             const updatedAt = complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : createdAt;
@@ -1957,9 +2097,9 @@
             
             let priorityClass = '';
             switch(complaint.priority) {
-                case 'عاجلة': priorityClass = 'high'; break;
-                case 'مهمة': priorityClass = 'medium'; break;
-                case 'عادية': priorityClass = 'low'; break;
+                case 'فى غاية الأهمية': priorityClass = 'priority-high'; break;
+                case 'مهمة': priorityClass = 'priority-medium'; break;
+                case 'عادية': priorityClass = 'priority-low'; break;
             }
             
             let whatsappButton = '';
@@ -1976,6 +2116,52 @@
                     </div>
                 `;
             }
+            
+            // تحميل الردود
+            const responses = complaint.responses || [];
+            
+            let responsesHTML = '';
+            if (responses.length > 0) {
+                responsesHTML = `
+                    <div class="responses">
+                        <h3 style="color: var(--primary-color); margin-bottom: 20px;">📨 الردود</h3>
+                        ${responses.map(response => `
+                            <div class="response ${response.type === 'admin' ? 'response-admin' : 'response-client'}">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <strong>${response.type === 'admin' ? '📋 رد الإدارة' : '👤 رد العميل'}</strong>
+                                    <small style="color: #666;">${new Date(response.timestamp).toLocaleString('ar-EG')}</small>
+                                </div>
+                                <div style="white-space: pre-line;">${response.message}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            // إضافة قسم التحقق من الرقم القومي للرد
+            const replyVerificationHTML = `
+                <div class="verify-national-id-container" id="verifyNationalIdContainer">
+                    <h3>🔐 التحقق من الرقم القومي للرد على الشكوى</h3>
+                    <p style="margin-bottom: 15px;">لإضافة رد على الشكوى، يرجى إدخال الرقم القومي المسجل في الشكوى للتحقق</p>
+                    <div class="verify-input-group">
+                        <input type="text" id="verifyNationalIdInput" class="verify-national-id-input" placeholder="أدخل الرقم القومي" maxlength="14">
+                        <button onclick="verifyNationalIdForReply('${complaint.nationalId}')" class="btn btn-client-reply" style="max-width: 200px;">
+                            <i class="fas fa-check-circle"></i>
+                            التحقق
+                        </button>
+                    </div>
+                    <p style="font-size: 0.9rem; margin-top: 10px; color: #666;">سيتم تفعيل زر الرد بعد التحقق من الرقم القومي</p>
+                </div>
+                
+                <div class="reply-section" id="replySection" style="display: none;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">✍️ إضافة رد على الشكوى</h3>
+                    <textarea id="clientReplyMessage" placeholder="اكتب ردك هنا..." rows="4" style="width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem;"></textarea>
+                    <button onclick="submitClientReply('${complaint.key}')" class="btn btn-client-reply" style="margin-top: 15px;">
+                        <i class="fas fa-paper-plane"></i>
+                        إرسال الرد
+                    </button>
+                </div>
+            `;
             
             const detailsHTML = `
                 <h3 style="color: var(--primary-color); margin-bottom: 25px; text-align: center;">📄 تفاصيل الشكوى</h3>
@@ -2002,7 +2188,9 @@
                     
                     <div class="detail-item">
                         <div class="detail-label">الرقم القومي</div>
-                        <div>${complaint.nationalId || 'غير معروف'}</div>
+                        <div style="font-family: monospace; font-size: 1.1rem; letter-spacing: 2px;">
+                            ${formatNationalId(complaint.nationalId)}
+                        </div>
                     </div>
                     
                     <div class="detail-item">
@@ -2018,7 +2206,7 @@
                     <div class="detail-item">
                         <div class="detail-label">نوع المشكلة</div>
                         <div>
-                            <span class="status-badge ${priorityClass}">
+                            <span class="priority-badge ${priorityClass}">
                                 ${complaint.priority || 'غير محدد'}
                             </span>
                         </div>
@@ -2042,13 +2230,113 @@
                     </div>
                 </div>
                 
+                ${responsesHTML}
+                
+                ${replyVerificationHTML}
+                
                 ${whatsappButton}
+                
+                <div style="margin-top: 25px; text-align: center;">
+                    <button onclick="printComplaintDetails()" class="btn" style="background: linear-gradient(135deg, #6c757d, #5a6268); max-width: 250px;">
+                        <i class="fas fa-print"></i>
+                        طباعة تفاصيل الشكوى
+                    </button>
+                </div>
             `;
             
             detailsContainer.innerHTML = detailsHTML;
             detailsContainer.style.display = 'block';
             detailsContainer.scrollIntoView({ behavior: 'smooth' });
+            
+            // تعيين المتغيرات الحالية
+            currentComplaintKey = complaint.key;
+            currentComplaintData = complaint;
+            
+            // إضافة حدث الإدخال لحقل التحقق
+            document.getElementById('verifyNationalIdInput').addEventListener('input', function(e) {
+                this.value = this.value.replace(/\D/g, '');
+                if (this.value.length > 14) {
+                    this.value = this.value.substring(0, 14);
+                }
+            });
         }
+        
+        // دالة التحقق من الرقم القومي للرد
+        window.verifyNationalIdForReply = function(complaintNationalId) {
+            const inputNationalId = document.getElementById('verifyNationalIdInput').value.trim();
+            
+            if (!inputNationalId) {
+                showSearchResult('error', 'يرجى إدخال الرقم القومي للتحقق');
+                return;
+            }
+            
+            if (inputNationalId.length !== 14) {
+                showSearchResult('error', 'الرقم القومي يجب أن يكون 14 رقمًا');
+                return;
+            }
+            
+            if (verifyNationalIdForReply(inputNationalId, complaintNationalId)) {
+                // نجاح التحقق
+                document.getElementById('verifyNationalIdContainer').style.display = 'none';
+                document.getElementById('replySection').style.display = 'block';
+                clientReplyEnabled = true;
+                
+                showSearchResult('success', '✅ تم التحقق بنجاح! يمكنك الآن إضافة رد على الشكوى');
+            } else {
+                showSearchResult('error', '❌ الرقم القومي غير صحيح. يرجى التأكد من الرقم والمحاولة مرة أخرى');
+            }
+        };
+        
+        // دالة إرسال رد العميل
+        window.submitClientReply = async function(complaintKey) {
+            if (!clientReplyEnabled) {
+                showSearchResult('error', 'يرجى التحقق من الرقم القومي أولاً');
+                return;
+            }
+            
+            const replyMessage = document.getElementById('clientReplyMessage').value.trim();
+            
+            if (!replyMessage) {
+                showSearchResult('error', 'يرجى كتابة الرد قبل الإرسال');
+                return;
+            }
+            
+            try {
+                // الحصول على الشكوى الحالية
+                const snapshot = await database.ref(`complaints/${complaintKey}`).get();
+                if (!snapshot.exists()) {
+                    showSearchResult('error', 'حدث خطأ: لم يتم العثور على الشكوى');
+                    return;
+                }
+                
+                const complaint = snapshot.val();
+                const responses = complaint.responses || [];
+                
+                // إضافة رد العميل
+                responses.push({
+                    type: 'client',
+                    message: replyMessage,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // تحديث الشكوى في قاعدة البيانات
+                await database.ref(`complaints/${complaintKey}`).update({
+                    responses: responses,
+                    updatedAt: new Date().toISOString(),
+                    lastClientReply: new Date().toISOString()
+                });
+                
+                // تحديث العرض
+                const updatedComplaint = { ...complaint, responses: responses };
+                await displayComplaintDetails(updatedComplaint);
+                
+                showSearchResult('success', '✅ تم إرسال ردك بنجاح!');
+                
+            } catch (error) {
+                console.error('Error submitting reply:', error);
+                showSearchResult('error', 'حدث خطأ أثناء إرسال الرد. يرجى المحاولة مرة أخرى');
+            }
+        };
         
         function displayMultipleComplaints(complaints) {
             const detailsContainer = document.getElementById('complaintDetails');
@@ -2126,6 +2414,47 @@
             }
         };
         
+        // دالة طباعة تفاصيل الشكوى
+        function printComplaintDetails() {
+            const printContent = document.getElementById('complaintDetails').innerHTML;
+            const originalContent = document.body.innerHTML;
+            
+            document.body.innerHTML = `
+                <!DOCTYPE html>
+                <html dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>طباعة تفاصيل الشكوى</title>
+                    <style>
+                        body { font-family: 'Cairo', sans-serif; padding: 20px; }
+                        h1 { color: #1a5fb4; text-align: center; }
+                        .detail-item { margin: 10px 0; padding: 10px; border-bottom: 1px solid #ddd; }
+                        .detail-label { font-weight: bold; color: #1a5fb4; }
+                        @media print {
+                            button { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>تفاصيل الشكوى - نظام الشكاوى الموحد</h1>
+                    ${printContent}
+                    <div style="margin-top: 30px; text-align: center;">
+                        <button onclick="window.close()" style="padding: 10px 20px; background: #1a5fb4; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            إغلاق النافذة
+                        </button>
+                        <button onclick="window.print()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                            طباعة
+                        </button>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            window.print();
+            document.body.innerHTML = originalContent;
+            window.location.reload();
+        }
+        
         function showMessage(type, text) {
             const messageDiv = document.getElementById('message');
             messageDiv.innerHTML = `
@@ -2142,12 +2471,17 @@
         
         function showSearchResult(type, text) {
             const detailsContainer = document.getElementById('complaintDetails');
-            detailsContainer.innerHTML = `
-                <div class="message ${type}">
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = `
+                <div class="message ${type}" style="margin-top: 20px;">
                     ${text}
                 </div>
             `;
-            detailsContainer.style.display = 'block';
+            detailsContainer.appendChild(tempDiv);
+            
+            setTimeout(() => {
+                tempDiv.remove();
+            }, 5000);
         }
         
         function showLoading(show) {
@@ -2161,27 +2495,6 @@
                 `;
                 document.getElementById('complaintDetails').style.display = 'block';
             }
-        }
-        
-        function showSearchMessage(message, type = 'info') {
-            const searchSection = document.querySelector('.search-section');
-            let messageDiv = document.getElementById('searchMessage');
-            
-            if (!messageDiv) {
-                messageDiv = document.createElement('div');
-                messageDiv.id = 'searchMessage';
-                searchSection.appendChild(messageDiv);
-            }
-            
-            messageDiv.innerHTML = `
-                <div class="message ${type}">
-                    ${message}
-                </div>
-            `;
-            
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 5000);
         }
     </script>
     
