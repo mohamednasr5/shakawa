@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>نظام الشكاوى الموحد</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -20,12 +20,16 @@
             line-height: 1.6;
             min-height: 100vh;
             overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            -moz-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            width: 100%;
         }
         
         header {
@@ -298,6 +302,8 @@
             align-items: center;
             gap: 8px;
             margin-bottom: 20px;
+            width: 100%;
+            max-width: 200px;
         }
         
         .back-button:hover {
@@ -379,6 +385,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            white-space: nowrap;
         }
         
         .btn-primary {
@@ -408,6 +415,17 @@
         
         .btn-whatsapp:hover {
             background: linear-gradient(to right, #1da851, #0d7d5f);
+        }
+        
+        /* زر إرسال مستندات */
+        .btn-documents {
+            background: linear-gradient(to right, #FF9800, #FF5722);
+            color: white;
+            margin-top: 10px;
+        }
+        
+        .btn-documents:hover {
+            background: linear-gradient(to right, #F57C00, #E64A19);
         }
         
         /* زر رد العميل */
@@ -488,6 +506,16 @@
             font-weight: 600;
         }
         
+        /* حالة إرسال المستندات */
+        .documents-sent {
+            color: #25D366;
+            font-weight: 600;
+        }
+        
+        .documents-not-sent {
+            color: #6c757d;
+        }
+        
         /* أنماط الردود - تم التعديل */
         .responses {
             margin-top: 30px;
@@ -560,13 +588,78 @@
             margin: 0;
         }
         
-        @media (max-width: 768px) {
+        /* زر إرسال المستندات (اختياري) */
+        .documents-option {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .documents-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .documents-checkbox input {
+            width: auto;
+        }
+        
+        .documents-instructions {
+            background: #e8f5e9;
+            border-right: 4px solid #4caf50;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .documents-instructions.show {
+            display: block;
+        }
+        
+        /* تحسينات للاستجابة */
+        @media (max-width: 1200px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .logo {
+                font-size: 2.2rem;
+            }
+        }
+        
+        @media (max-width: 992px) {
             .boxes-container {
                 gap: 30px;
             }
             
             .box-wrapper {
                 width: 280px;
+                height: 350px;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .welcome-text h2 {
+                font-size: 1.8rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .boxes-container {
+                gap: 20px;
+            }
+            
+            .box-wrapper {
+                width: 100%;
+                max-width: 320px;
                 height: 350px;
             }
             
@@ -590,18 +683,171 @@
             .details-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .logo {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .box-title {
+                font-size: 1.6rem;
+            }
+            
+            .box-description {
+                font-size: 0.95rem;
+            }
+            
+            .box-icon {
+                font-size: 3.5rem;
+            }
+            
+            .back-button {
+                max-width: 100%;
+            }
         }
         
-        @media (max-width: 640px) {
-            .boxes-container {
-                flex-direction: column;
-                align-items: center;
+        @media (max-width: 576px) {
+            .box-wrapper {
+                height: 320px;
+            }
+            
+            .box-front, .box-back {
+                padding: 20px;
+            }
+            
+            .box-icon {
+                font-size: 3rem;
+                margin-bottom: 20px;
+            }
+            
+            .box-title {
+                font-size: 1.4rem;
+                margin-bottom: 10px;
+            }
+            
+            .box-description {
+                font-size: 0.9rem;
+                margin-bottom: 20px;
+            }
+            
+            .box-button {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .welcome-text h2 {
+                font-size: 1.6rem;
+            }
+            
+            .welcome-text p {
+                font-size: 1rem;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 14px;
+                width: 100%;
+            }
+            
+            .form-section h2 {
+                font-size: 1.5rem;
+            }
+            
+            .dropdown-menu {
+                padding: 15px;
+            }
+            
+            .dropdown-option {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            header {
+                padding: 20px 0;
+            }
+            
+            .logo {
+                font-size: 1.6rem;
+                margin-bottom: 8px;
+            }
+            
+            .subtitle {
+                font-size: 0.9rem;
             }
             
             .box-wrapper {
-                width: 100%;
-                max-width: 320px;
+                height: 300px;
             }
+            
+            .box-icon {
+                font-size: 2.5rem;
+            }
+            
+            .box-title {
+                font-size: 1.3rem;
+            }
+            
+            .form-section, .search-section {
+                padding: 15px;
+            }
+            
+            input, select, textarea {
+                padding: 10px 12px;
+                font-size: 15px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .logo {
+                font-size: 1.4rem;
+            }
+            
+            .box-wrapper {
+                height: 280px;
+            }
+            
+            .box-front, .box-back {
+                padding: 15px;
+            }
+            
+            .box-button {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* للشاشات الكبيرة جداً */
+        @media (min-width: 1600px) {
+            .container {
+                max-width: 1400px;
+            }
+        }
+        
+        /* تحسينات للهواتف في الوضع الأفقي */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .main-container {
+                min-height: auto;
+                padding: 10px 0;
+            }
+            
+            .boxes-container {
+                margin-bottom: 20px;
+            }
+            
+            .box-wrapper {
+                height: 300px;
+            }
+        }
+        
+        /* تحسينات للتحكم في النص */
+        .text-wrap {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .footer {
@@ -611,22 +857,27 @@
             font-size: 0.9rem;
             margin-top: 30px;
         }
+        
+        @media (max-width: 768px) {
+            .footer {
+                padding: 15px;
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
             <h1 class="logo">نظام الشكاوى الموحد للنائب أحمد الحديدي</h1>
-            <p class="subtitle">خدمة إلكترونية لتقديم الشكاوى والمشكلات ومتابعتها </p>
+            <p class="subtitle">خدمة إلكترونية لتقديم الشكاوى والمشكلات ومتابعتها</p>
         </div>
     </header>
     
     <div class="container">
-        <!-- تم إزالة زر لوحة التحكم -->
-        
         <div class="main-container">
             <div class="welcome-text">
-                <h2>مرحبًا بكم في نظام الشكاوى الموحد </h2>
+                <h2>مرحبًا بكم في نظام الشكاوى الموحد</h2>
                 <p>نظام إلكتروني متكامل لتقديم الشكاوى والمشكلات التي تواجهكم في مختلف المجالات، ومتابعة حالة الشكوى المقدمة حتى حلها. اختر الخدمة التي تريدها من خلال المربعات أدناه.</p>
             </div>
             
@@ -757,11 +1008,12 @@
                     <div class="form-col">
                         <label for="nationalId" class="required">الرقم القومي</label>
                         <input type="text" id="nationalId" placeholder="14 رقم ويبدأ بـ 2 أو 3" maxlength="14">
+                        <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">يجب أن يكون 14 رقمًا ويبدأ بـ 2 أو 3</small>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="localUnit" class="required">بلد الإقامة </label>
+                    <label for="localUnit" class="required">بلد الإقامة</label>
                     <select id="localUnit">
                         <option value="">اختر الوحدة المحلية</option>
                         <option value="المنزلة">المنزلة</option>
@@ -809,11 +1061,13 @@
                 <div class="form-row">
                     <div class="form-col">
                         <label for="phone1" class="required">رقم الهاتف (1)</label>
-                        <input type="tel" id="phone1" placeholder="مثال: 01012345678">
+                        <input type="tel" id="phone1" placeholder="مثال: 01012345678" maxlength="11">
+                        <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">يجب أن يكون 11 رقمًا ويبدأ بـ 01</small>
                     </div>
                     <div class="form-col">
                         <label for="phone2">رقم الهاتف (2) - اختياري</label>
-                        <input type="tel" id="phone2" placeholder="رقم هاتف إضافي">
+                        <input type="tel" id="phone2" placeholder="رقم هاتف إضافي" maxlength="11">
+                        <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">يجب أن يكون 11 رقمًا ويبدأ بـ 01 (اختياري)</small>
                     </div>
                 </div>
                 
@@ -849,7 +1103,23 @@
                     <div class="char-count">عدد الأحرف: <span id="charCount">0</span> / 5000</div>
                 </div>
                 
-                <button onclick="submitComplaint()" class="btn btn-primary" style="width: 100%; font-size: 18px; padding: 16px;">
+                <!-- قسم إرسال المستندات -->
+                <div class="documents-option">
+                    <div class="documents-checkbox">
+                        <input type="checkbox" id="sendDocuments" name="sendDocuments">
+                        <label for="sendDocuments">أريد إرسال مستندات داعمة للشكوى عبر واتساب</label>
+                    </div>
+                    
+                    <div id="documentsInstructions" class="documents-instructions">
+                        <p><strong>تعليمات إرسال المستندات:</strong></p>
+                        <p>1. بعد إرسال الشكوى، سيظهر لك زر لإرسال المستندات عبر واتساب</p>
+                        <p>2. اضغط على الزر وسيتم فتح تطبيق واتساب مع رقم مكتب النائب</p>
+                        <p>3. أرسل صور المستندات المطلوبة مع ذكر رقم الشكوى</p>
+                        <p>4. سيتم تحديث حالة الشكوى في لوحة التحكم بأنك أرسلت مستندات</p>
+                    </div>
+                </div>
+                
+                <button onclick="submitComplaint()" class="btn btn-primary" style="width: 100%; font-size: 18px; padding: 16px; margin-top: 20px;">
                     <i class="fas fa-paper-plane"></i> إرسال الشكوى
                 </button>
                 
@@ -897,7 +1167,7 @@
         
         <div class="footer">
             <p>© 2026 نظام الشكاوى الموحد - جميع الحقوق محفوظة</p>
-            <p>هذه خدمة إلكترونية مقدمة لتسهيل تقديم ومتابعة الشكاوى</p>
+            <p>هذا النظام برمجة مهندس محمد حماد</p>
         </div>
     </div>
 
@@ -911,6 +1181,7 @@
         let activeBox = null;
         let currentComplaintKey = null; // لتخزين مفتاح الشكوى الحالية
         let currentComplaintData = null; // لتخزين بيانات الشكوى الحالية
+        let lastComplaintNumber = null; // لتخزين آخر رقم شكوى تم إرساله
         
         // تهيئة العناصر
         const submitBox = document.getElementById('submitBox');
@@ -923,6 +1194,8 @@
         const backFromSubmit = document.getElementById('backFromSubmit');
         const backFromTrack = document.getElementById('backFromTrack');
         const searchOptions = document.getElementById('searchOptions');
+        const sendDocumentsCheckbox = document.getElementById('sendDocuments');
+        const documentsInstructions = document.getElementById('documentsInstructions');
         
         // إضافة مستمعي الأحداث للمربعات
         submitBox.addEventListener('click', function(e) {
@@ -1040,6 +1313,17 @@
         backFromTrack.addEventListener('click', function() {
             closeAllSections();
         });
+        
+        // التحكم في عرض تعليمات إرسال المستندات
+        if (sendDocumentsCheckbox) {
+            sendDocumentsCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    documentsInstructions.classList.add('show');
+                } else {
+                    documentsInstructions.classList.remove('show');
+                }
+            });
+        }
         
         // دالة لإغلاق جميع القوائم
         function closeAllDropdowns() {
@@ -1168,6 +1452,37 @@
             return { valid: true, message: '' };
         }
         
+        // دالة التحقق من رقم الهاتف المصري
+        function validateEgyptianPhoneNumber(phone) {
+            if (!phone) {
+                return { valid: false, message: 'رقم الهاتف مطلوب' };
+            }
+            
+            // التحقق من الطول
+            if (phone.length !== 11) {
+                return { valid: false, message: 'رقم الهاتف يجب أن يكون 11 رقمًا' };
+            }
+            
+            // التحقق من أن جميع الأحرف أرقام
+            if (!/^\d+$/.test(phone)) {
+                return { valid: false, message: 'رقم الهاتف يجب أن يحتوي على أرقام فقط' };
+            }
+            
+            // التحقق من أن الرقم يبدأ بـ 01
+            if (!phone.startsWith('01')) {
+                return { valid: false, message: 'رقم الهاتف يجب أن يبدأ بـ 01' };
+            }
+            
+            // التحقق من أن الرقم الثالث مناسب (0,1,2,5,6,7,8,9)
+            const thirdDigit = phone.charAt(2);
+            const validThirdDigits = ['0', '1', '2', '5', '6', '7', '8', '9'];
+            if (!validThirdDigits.includes(thirdDigit)) {
+                return { valid: false, message: 'رقم الهاتف غير صحيح' };
+            }
+            
+            return { valid: true, message: '' };
+        }
+        
         // دالة إرسال الشكوى
         window.submitComplaint = async function() {
             // التحقق من البيانات
@@ -1180,6 +1495,7 @@
             const department = document.getElementById('department').value;
             const priority = document.getElementById('priority').value;
             const problemDetails = document.getElementById('problemDetails').value.trim();
+            const sendDocuments = document.getElementById('sendDocuments') ? document.getElementById('sendDocuments').checked : false;
             
             // التحقق من البيانات الإجبارية
             if (!fullName || !nationalId || !localUnit || !address || !phone1 || !department || !priority || !problemDetails) {
@@ -1192,6 +1508,22 @@
             if (!nationalIdValidation.valid) {
                 showMessage(nationalIdValidation.message, 'error');
                 return;
+            }
+            
+            // التحقق من صحة رقم الهاتف (1)
+            const phone1Validation = validateEgyptianPhoneNumber(phone1);
+            if (!phone1Validation.valid) {
+                showMessage('رقم الهاتف (1): ' + phone1Validation.message, 'error');
+                return;
+            }
+            
+            // التحقق من صحة رقم الهاتف (2) إذا كان موجوداً
+            if (phone2 && phone2.trim() !== '') {
+                const phone2Validation = validateEgyptianPhoneNumber(phone2);
+                if (!phone2Validation.valid) {
+                    showMessage('رقم الهاتف (2): ' + phone2Validation.message, 'error');
+                    return;
+                }
             }
             
             if (problemDetails.length > 5000) {
@@ -1233,6 +1565,8 @@
                     department: department,
                     priority: priority,
                     problemDetails: problemDetails,
+                    sendDocuments: sendDocuments, // حفظ اختيار إرسال المستندات
+                    documentsSent: false, // حالة إرسال المستندات (سيتم تحديثها لاحقاً)
                     status: 'جديدة',
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),
@@ -1242,8 +1576,33 @@
                 // حفظ البيانات
                 await newComplaintRef.set(complaintData);
                 
+                // حفظ رقم الشكوى الأخير
+                lastComplaintNumber = complaintNumber;
+                
+                // تحضير رسالة النجاح
+                let successMessage = `تم إرسال الشكوى بنجاح! رقم الطلب هو: <strong>${complaintNumber}</strong><br>يرجى الاحتفاظ بهذا الرقم لمتابعة الشكوى`;
+                
+                // إذا كان المستخدم يريد إرسال مستندات
+                if (sendDocuments) {
+                    // رقم واتساب مكتب النائب (يمكن تغييره حسب الحاجة)
+                    const whatsappNumber = "+201234567890"; // رقم وهمي - يجب استبداله بالرقم الحقيقي
+                    
+                    // تحضير رسالة واتساب مع رقم الشكوى
+                    const whatsappMessage = `مرحباً، لدي مستندات للشكوى رقم ${complaintNumber}`;
+                    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+                    
+                    successMessage += `<br><br>لإرسال المستندات، يرجى الضغط على الزر أدناه:<br>
+                    <button onclick="window.open('${whatsappURL}', '_blank')" class="btn btn-documents" style="margin-top: 10px;">
+                        <i class="fab fa-whatsapp"></i> إرسال المستندات عبر واتساب
+                    </button>
+                    <br><small>ملاحظة: سيتم تحديث حالة الشكوى في لوحة التحكم بأنك أرسلت المستندات</small>`;
+                    
+                    // إضافة ملاحظة للمستخدم
+                    successMessage += `<br><br><strong>ملاحظة:</strong> بعد إرسال المستندات عبر واتساب، سيتم تحديث حالة الشكوى في لوحة التحكم للإدارة.`;
+                }
+                
                 // عرض رسالة النجاح
-                showMessage(`تم إرسال الشكوى بنجاح! رقم الطلب هو: ${complaintNumber}<br>يرجى الاحتفاظ بهذا الرقم لمتابعة الشكوى`, 'success');
+                showMessage(successMessage, 'success');
                 
                 // مسح النموذج
                 document.getElementById('fullName').value = '';
@@ -1255,6 +1614,8 @@
                 document.getElementById('department').value = '';
                 document.getElementById('priority').value = '';
                 document.getElementById('problemDetails').value = '';
+                if (sendDocumentsCheckbox) sendDocumentsCheckbox.checked = false;
+                if (documentsInstructions) documentsInstructions.classList.remove('show');
                 if (charCount) charCount.textContent = '0';
                 
             } catch (error) {
@@ -1350,6 +1711,16 @@
             if (complaint.priority === 'مهمة') priorityClass = 'priority-important';
             if (complaint.priority === 'فى غاية الأهمية') priorityClass = 'priority-critical';
             
+            // حالة إرسال المستندات
+            let documentsStatus = 'لم يتم إرسالها';
+            let documentsStatusClass = 'documents-not-sent';
+            if (complaint.documentsSent) {
+                documentsStatus = 'تم الإرسال عبر واتساب';
+                documentsStatusClass = 'documents-sent';
+            } else if (complaint.sendDocuments) {
+                documentsStatus = 'مطلوب إرسالها';
+            }
+            
             // تحويل التاريخ
             const createdAt = new Date(complaint.createdAt).toLocaleString('ar-EG');
             const updatedAt = new Date(complaint.updatedAt).toLocaleString('ar-EG');
@@ -1420,6 +1791,10 @@
                     <div class="detail-item">
                         <div class="detail-label">نوع المشكلة:</div>
                         <div class="${priorityClass}">${complaint.priority}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">حالة المستندات:</div>
+                        <div class="${documentsStatusClass}">${documentsStatus}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">الحالة:</div>
@@ -1577,7 +1952,7 @@
             
             setTimeout(() => {
                 messageDiv.style.display = 'none';
-            }, 5000);
+            }, 10000);
         }
         
         // دالة لإنشاء رمز القسم
@@ -1609,13 +1984,106 @@
                         const firstDigit = value.charAt(0);
                         if (firstDigit !== '2' && firstDigit !== '3') {
                             this.style.borderColor = '#e74c3c';
+                            this.style.boxShadow = '0 0 0 2px rgba(231, 76, 60, 0.2)';
                         } else {
                             this.style.borderColor = '#ddd';
+                            this.style.boxShadow = 'none';
                         }
+                    }
+                    
+                    // تحديد الطول الأقصى
+                    if (value.length > 14) {
+                        this.value = value.substring(0, 14);
                     }
                 }
             });
         }
+        
+        // التحقق من رقم الهاتف أثناء الكتابة
+        const phone1Input = document.getElementById('phone1');
+        if (phone1Input) {
+            phone1Input.addEventListener('input', function() {
+                const value = this.value.trim();
+                if (value.length > 0) {
+                    // منع إدخال أي شيء غير أرقام
+                    this.value = value.replace(/\D/g, '');
+                    
+                    // التحقق من أن الرقم يبدأ بـ 01
+                    if (value.length >= 2) {
+                        const firstTwoDigits = value.substring(0, 2);
+                        if (firstTwoDigits !== '01') {
+                            this.style.borderColor = '#e74c3c';
+                            this.style.boxShadow = '0 0 0 2px rgba(231, 76, 60, 0.2)';
+                        } else {
+                            this.style.borderColor = '#ddd';
+                            this.style.boxShadow = 'none';
+                        }
+                    }
+                    
+                    // تحديد الطول الأقصى
+                    if (value.length > 11) {
+                        this.value = value.substring(0, 11);
+                    }
+                }
+            });
+        }
+        
+        // التحقق من رقم الهاتف الثاني أثناء الكتابة
+        const phone2Input = document.getElementById('phone2');
+        if (phone2Input) {
+            phone2Input.addEventListener('input', function() {
+                const value = this.value.trim();
+                if (value.length > 0) {
+                    // منع إدخال أي شيء غير أرقام
+                    this.value = value.replace(/\D/g, '');
+                    
+                    // التحقق من أن الرقم يبدأ بـ 01
+                    if (value.length >= 2) {
+                        const firstTwoDigits = value.substring(0, 2);
+                        if (firstTwoDigits !== '01') {
+                            this.style.borderColor = '#e74c3c';
+                            this.style.boxShadow = '0 0 0 2px rgba(231, 76, 60, 0.2)';
+                        } else {
+                            this.style.borderColor = '#ddd';
+                            this.style.boxShadow = 'none';
+                        }
+                    }
+                    
+                    // تحديد الطول الأقصى
+                    if (value.length > 11) {
+                        this.value = value.substring(0, 11);
+                    }
+                }
+            });
+        }
+        
+        // تحسينات للاستجابة على الأجهزة المحمولة
+        function handleResize() {
+            const screenWidth = window.innerWidth;
+            const logo = document.querySelector('.logo');
+            
+            if (screenWidth < 480) {
+                if (logo) logo.style.fontSize = '1.4rem';
+            } else if (screenWidth < 768) {
+                if (logo) logo.style.fontSize = '1.6rem';
+            } else {
+                if (logo) logo.style.fontSize = '2.5rem';
+            }
+        }
+        
+        // استدعاء handleResize عند تحميل الصفحة وتغيير حجم النافذة
+        window.addEventListener('load', handleResize);
+        window.addEventListener('resize', handleResize);
+        
+        // منع التكبير/التصغير المزدوج على الهواتف
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
     </script>
 </body>
 </html>
