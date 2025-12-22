@@ -255,6 +255,95 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
+        /* إضافات جديدة لعرض المستندات الداعمة */
+        .documents-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .documents-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+        }
+        
+        .document-item {
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #ddd;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .document-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: #1a5fb4;
+        }
+        
+        .document-icon {
+            font-size: 2rem;
+            color: #1a5fb4;
+            margin-bottom: 10px;
+        }
+        
+        .document-name {
+            font-size: 0.85rem;
+            color: #333;
+            word-break: break-all;
+            margin-bottom: 5px;
+        }
+        
+        .document-size {
+            font-size: 0.75rem;
+            color: #666;
+        }
+        
+        .whatsapp-document-note {
+            background: #25D366;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .whatsapp-document-note i {
+            font-size: 1.2rem;
+        }
+        
+        .no-documents {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        
+        .no-documents i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
         @media (max-width:768px){
             .mobile-menu-btn,.mobile-nav{display:flex}
             .cards-grid{grid-template-columns:1fr}
@@ -273,6 +362,7 @@
             .edit-form-grid{grid-template-columns:1fr}
             .response-admin { margin-right: 10px; }
             .response-client { margin-left: 10px; }
+            .documents-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
         }
         @media (min-width:769px){
             .dashboard-grid{display:grid;grid-template-columns:280px 1fr}
@@ -840,12 +930,16 @@
                                 <input type="text" class="setting-input national-id" id="editNationalId" required>
                             </div>
                             <div class="form-group">
-                                <label class="setting-label">رقم الهاتف</label>
+                                <label class="setting-label">رقم الهاتف (1)</label>
                                 <input type="tel" class="setting-input" id="editPhone" required>
                             </div>
                             <div class="form-group">
-                                <label class="setting-label">البريد الإلكتروني</label>
-                                <input type="email" class="setting-input" id="editEmail">
+                                <label class="setting-label">رقم الهاتف (2) - اختياري</label>
+                                <input type="tel" class="setting-input" id="editPhone2">
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">بلد الإقامة</label>
+                                <input type="text" class="setting-input" id="editCountry" required>
                             </div>
                             <div class="form-group">
                                 <label class="setting-label">المحافظة</label>
@@ -1012,7 +1106,7 @@
                     <form id="departmentForm">
                         <div class="form-group">
                             <label class="setting-label">اسم القسم</label>
-                            <input type="text" class="setting-input" id="departmentName" required>
+                                <input type="text" class="setting-input" id="departmentName" required>
                         </div>
                         <div class="form-group">
                             <label class="setting-label">وصف القسم</label>
@@ -1055,7 +1149,7 @@
             </a>
             <a href="#" class="mobile-nav-item" onclick="if(currentUser && currentUser.role === 'admin'){showSection('users'); updateMobileNav(this);} else {showMessage('يجب تسجيل الدخول كمسؤول', 'error');} return false;">
                 <i class="fas fa-users mobile-nav-icon"></i>
-                                <span>المستخدمين</span>
+                <span>المستخدمين</span>
             </a>
             <a href="#" class="mobile-nav-item" onclick="showSection('settings'); updateMobileNav(this); return false;">
                 <i class="fas fa-cog mobile-nav-icon"></i>
@@ -1720,6 +1814,9 @@
             // تحميل الردود
             const responses = complaint.responses || [];
             
+            // تحميل المستندات الداعمة
+            const documents = complaint.documents || [];
+            
             // إنشاء محتوى الردود
             let responsesHTML = '';
             
@@ -1773,6 +1870,63 @@
                 `;
             }
             
+            // إنشاء محتوى المستندات الداعمة
+            let documentsHTML = '';
+            
+            if (documents.length > 0) {
+                documentsHTML = `
+                    <div class="documents-section">
+                        <h3 class="documents-title">
+                            <i class="fas fa-file-alt"></i> المستندات الداعمة للشكوى
+                        </h3>
+                        <div class="documents-grid">
+                `;
+                
+                documents.forEach((doc, index) => {
+                    const fileIcon = getFileIcon(doc.type);
+                    const fileSize = doc.size ? formatFileSize(doc.size) : 'غير معروف';
+                    
+                    documentsHTML += `
+                        <div class="document-item" onclick="viewDocument('${doc.url}', '${doc.name}')">
+                            <div class="document-icon">
+                                <i class="${fileIcon}"></i>
+                            </div>
+                            <div class="document-name">${doc.name}</div>
+                            <div class="document-size">${fileSize}</div>
+                        </div>
+                    `;
+                });
+                
+                documentsHTML += `
+                        </div>
+                        ${complaint.whatsappDocuments ? `
+                        <div class="whatsapp-document-note">
+                            <i class="fab fa-whatsapp"></i>
+                            <span>تم رفع بعض المستندات عبر واتساب: ${complaint.whatsappDocuments}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                documentsHTML = `
+                    <div class="documents-section">
+                        <h3 class="documents-title">
+                            <i class="fas fa-file-alt"></i> المستندات الداعمة للشكوى
+                        </h3>
+                        <div class="no-documents">
+                            <i class="far fa-file-alt"></i>
+                            <p style="font-weight: 600;">لا توجد مستندات مرفقة</p>
+                            ${complaint.whatsappDocuments ? `
+                            <div class="whatsapp-document-note" style="margin-top: 15px;">
+                                <i class="fab fa-whatsapp"></i>
+                                <span>تم رفع المستندات عبر واتساب: ${complaint.whatsappDocuments}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            
             // زر تنزيل PDF
             const downloadBtn = `<button class="action-btn btn-download-pdf" onclick="downloadComplaintPDF('${complaint.key}')">
                 <i class="fas fa-download"></i> تنزيل PDF
@@ -1802,7 +1956,7 @@
                         <div><strong>${complaint.complaintNumber || ''}</strong></div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">الاسم بالكامل</div>
+                        <div class="detail-label">الاسم بالكامل (عربي)</div>
                         <div>${complaint.fullName || ''}</div>
                     </div>
                     <div class="detail-item">
@@ -1810,12 +1964,8 @@
                         <div class="national-id">${complaint.nationalId || 'غير متوفر'}</div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">الهاتف</div>
-                        <div>${complaint.phone || 'غير متوفر'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">البريد الإلكتروني</div>
-                        <div>${complaint.email || 'غير متوفر'}</div>
+                        <div class="detail-label">بلد الإقامة</div>
+                        <div>${complaint.country || complaint.governorate || 'غير متوفر'}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">المحافظة</div>
@@ -1828,6 +1978,18 @@
                     <div class="detail-item">
                         <div class="detail-label">العنوان بالتفصيل</div>
                         <div>${complaint.address || ''}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">رقم الهاتف (1)</div>
+                        <div>${complaint.phone || 'غير متوفر'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">رقم الهاتف (2) - اختياري</div>
+                        <div>${complaint.phone2 || 'غير متوفر'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">البريد الإلكتروني</div>
+                        <div>${complaint.email || 'غير متوفر'}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">القسم</div>
@@ -1855,6 +2017,8 @@
                     </div>
                 </div>
                 
+                ${documentsHTML}
+                
                 ${responsesHTML}
                 
                 <div style="margin-top:20px;padding-top:20px;border-top:1px solid #eee">
@@ -1879,6 +2043,27 @@
             document.body.style.overflow = 'hidden';
         }
 
+        function getFileIcon(fileType) {
+            if (fileType.includes('image')) return 'fas fa-file-image';
+            if (fileType.includes('pdf')) return 'fas fa-file-pdf';
+            if (fileType.includes('word') || fileType.includes('document')) return 'fas fa-file-word';
+            if (fileType.includes('excel') || fileType.includes('spreadsheet')) return 'fas fa-file-excel';
+            if (fileType.includes('video')) return 'fas fa-file-video';
+            return 'fas fa-file';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 بايت';
+            const k = 1024;
+            const sizes = ['بايت', 'كيلوبايت', 'ميجابايت', 'جيجابايت'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function viewDocument(url, name) {
+            window.open(url, '_blank');
+        }
+
         function editComplaint(complaintKey) {
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) return;
@@ -1887,7 +2072,8 @@
             document.getElementById('editFullName').value = complaint.fullName || '';
             document.getElementById('editNationalId').value = complaint.nationalId || '';
             document.getElementById('editPhone').value = complaint.phone || '';
-            document.getElementById('editEmail').value = complaint.email || '';
+            document.getElementById('editPhone2').value = complaint.phone2 || '';
+            document.getElementById('editCountry').value = complaint.country || '';
             document.getElementById('editGovernorate').value = complaint.governorate || '';
             document.getElementById('editCity').value = complaint.city || '';
             document.getElementById('editAddress').value = complaint.address || '';
@@ -1909,7 +2095,8 @@
                 fullName: document.getElementById('editFullName').value.trim(),
                 nationalId: document.getElementById('editNationalId').value.trim(),
                 phone: document.getElementById('editPhone').value.trim(),
-                email: document.getElementById('editEmail').value.trim(),
+                phone2: document.getElementById('editPhone2').value.trim(),
+                country: document.getElementById('editCountry').value.trim(),
                 governorate: document.getElementById('editGovernorate').value.trim(),
                 city: document.getElementById('editCity').value.trim(),
                 address: document.getElementById('editAddress').value.trim(),
@@ -1936,6 +2123,7 @@
                 updateDashboardStats();
                 displayComplaintsTable();
                 displayLatestComplaints();
+                viewComplaint(complaintKey);
             } catch(err) {
                 console.error(err);
                 showMessage('حدث خطأ أثناء تحديث الشكوى', 'error');
@@ -1973,7 +2161,7 @@
                 displayLatestComplaints();
                 
                 showMessage(`تم تحديث حالة الشكوى إلى "${newStatus}" بنجاح`, 'success');
-                closeModal();
+                viewComplaint(complaintKey);
             } catch(err) {
                 console.error(err);
                 showMessage('حدث خطأ أثناء تحديث الحالة', 'error');
@@ -2320,11 +2508,13 @@
                             <tr><td class="label">رقم الشكوى:</td><td>${complaint.complaintNumber || ''}</td></tr>
                             <tr><td class="label">الاسم بالكامل:</td><td>${complaint.fullName || ''}</td></tr>
                             <tr><td class="label">الرقم القومي:</td><td>${complaint.nationalId || 'غير متوفر'}</td></tr>
-                            <tr><td class="label">الهاتف:</td><td>${complaint.phone || 'غير متوفر'}</td></tr>
-                            <tr><td class="label">البريد الإلكتروني:</td><td>${complaint.email || 'غير متوفر'}</td></tr>
+                            <tr><td class="label">بلد الإقامة:</td><td>${complaint.country || complaint.governorate || 'غير متوفر'}</td></tr>
                             <tr><td class="label">المحافظة:</td><td>${complaint.governorate || ''}</td></tr>
                             <tr><td class="label">المدينة/القرية:</td><td>${complaint.city || ''}</td></tr>
-                            <tr><td class="label">العنوان:</td><td>${complaint.address || ''}</td></tr>
+                            <tr><td class="label">العنوان بالتفصيل:</td><td>${complaint.address || ''}</td></tr>
+                            <tr><td class="label">رقم الهاتف (1):</td><td>${complaint.phone || 'غير متوفر'}</td></tr>
+                            <tr><td class="label">رقم الهاتف (2):</td><td>${complaint.phone2 || 'غير متوفر'}</td></tr>
+                            <tr><td class="label">البريد الإلكتروني:</td><td>${complaint.email || 'غير متوفر'}</td></tr>
                             <tr><td class="label">القسم:</td><td>${complaint.department || ''}</td></tr>
                             <tr><td class="label">نوع المشكلة:</td><td>${complaint.priority || ''}</td></tr>
                             <tr><td class="label">الحالة:</td><td>${complaint.status || ''}</td></tr>
@@ -2334,6 +2524,13 @@
                         
                         <h3>تفاصيل المشكلة:</h3>
                         <div class="details">${complaint.problemDetails || ''}</div>
+                        
+                        ${complaint.whatsappDocuments ? `
+                        <h3>مستندات واتساب:</h3>
+                        <div class="details">
+                            <p><strong>ملاحظة:</strong> تم رفع المستندات عبر واتساب: ${complaint.whatsappDocuments}</p>
+                        </div>
+                        ` : ''}
                         
                         ${complaint.responses && complaint.responses.length > 0 ? `
                         <h3>سجل المحادثة:</h3>
