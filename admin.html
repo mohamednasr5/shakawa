@@ -943,7 +943,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="setting-label">المحافظة</label>
-                                <input type="text" class="setting-input" id="editGovernorate" required>
+                                <input type="text" class="setting-input" id="editGovernorate" value="الدقهلية" readonly>
                             </div>
                             <div class="form-group">
                                 <label class="setting-label">المدينة/القرية</label>
@@ -1195,17 +1195,17 @@
         // خريطة تحويل أسماء الحقول للتعامل مع أسماء متعددة في قاعدة البيانات
         const fieldMapping = {
             // حقل رقم الهاتف (1)
-            'phone': ['phone', 'phone1', 'رقم الهاتف (1)', 'رقم_الهاتف_1', 'الهاتف', 'mobile'],
+            'phone': ['phone', 'phone1', 'رقم الهاتف (1)', 'رقم_الهاتف_1', 'الهاتف', 'mobile', 'رقم الهاتف'],
             // حقل رقم الهاتف (2)
-            'phone2': ['phone2', 'رقم الهاتف (2)', 'رقم_الهاتف_2', 'هاتف إضافي'],
-            // حقل البلد
-            'country': ['country', 'البلد', 'بلد الإقامة', 'مكان الإقامة'],
+            'phone2': ['phone2', 'رقم الهاتف (2)', 'رقم_الهاتف_2', 'هاتف إضافي', 'رقم آخر'],
+            // حقل البلد - إضافة مزيد من الأسماء المحتملة
+            'country': ['country', 'البلد', 'بلد الإقامة', 'مكان الإقامة', 'residence', 'بلد', 'location', 'محل الإقامة'],
             // حقل المحافظة
-            'governorate': ['governorate', 'المحافظة', 'المحافظة/القرية', 'region'],
+            'governorate': ['governorate', 'المحافظة', 'المحافظة/القرية', 'region', 'state', 'province'],
             // حقل المدينة
-            'city': ['city', 'المدينة', 'المدينة/القرية', 'town'],
+            'city': ['city', 'المدينة', 'المدينة/القرية', 'town', 'village', 'المنطقة'],
             // حقل العنوان
-            'address': ['address', 'العنوان', 'العنوان بالتفصيل', 'detailedAddress'],
+            'address': ['address', 'العنوان', 'العنوان بالتفصيل', 'detailedAddress', 'locationDetails'],
             // حقل البريد الإلكتروني
             'email': ['email', 'البريد الإلكتروني', 'البريد_الإلكتروني', 'mail']
         };
@@ -1221,6 +1221,79 @@
             }
             
             return 'غير متوفر';
+        }
+
+        // دالة خاصة للحصول على بلد الإقامة مع خيارات أكثر
+        function getCountryField(complaint) {
+            // أولاً: ابحث عن حقل البلد مباشرة
+            const possibleNames = ['country', 'البلد', 'بلد الإقامة', 'مكان الإقامة', 'residence', 'بلد', 'location'];
+            
+            for (const name of possibleNames) {
+                if (complaint[name] !== undefined && complaint[name] !== '' && complaint[name] !== null) {
+                    return complaint[name];
+                }
+            }
+            
+            // ثانياً: ابحث في المحافظة إذا كانت تحتوي على كلمة "دقهلية" أو ما شابه
+            if (complaint.governorate && complaint.governorate.includes('دقهلية')) {
+                return 'مصر';
+            }
+            
+            // ثالثاً: جرب التحقق من المدينة
+            if (complaint.city) {
+                // إذا كانت المدينة مصرية
+                const egyptianCities = ['المنصورة', 'طنطا', 'القاهرة', 'الإسكندرية', 'الجيزة', 'الدقهلية'];
+                for (const city of egyptianCities) {
+                    if (complaint.city.includes(city)) {
+                        return 'مصر';
+                    }
+                }
+            }
+            
+            return 'غير متوفر';
+        }
+
+        // دالة لعرض بيانات الشكوى بشكل شامل
+        function displayComplaintDetails(complaint) {
+            // دالة مساعدة للحصول على قيمة الحقل مع السجل
+            function getFieldValue(fieldName, possibleNames) {
+                for (const name of possibleNames) {
+                    if (complaint[name] !== undefined && complaint[name] !== '' && complaint[name] !== null) {
+                        console.log(`✅ ${fieldName}: وجدت باسم "${name}" = "${complaint[name]}"`);
+                        return complaint[name];
+                    }
+                }
+                console.log(`❌ ${fieldName}: لم يتم العثور على أي من الأسماء: ${possibleNames.join(', ')}`);
+                return 'غير متوفر';
+            }
+
+            // سجل البحث عن البيانات
+            console.log('=== البحث عن بيانات الشكوى ===');
+            
+            // البحث عن بلد الإقامة
+            const countryPossibleNames = ['country', 'البلد', 'بلد الإقامة', 'مكان الإقامة', 'residence', 'بلد'];
+            const countryValue = getFieldValue('بلد الإقامة', countryPossibleNames);
+            
+            // البحث عن المحافظة
+            const governoratePossibleNames = ['governorate', 'المحافظة', 'المحافظة/القرية', 'region'];
+            const governorateValue = getFieldValue('المحافظة', governoratePossibleNames) || 'الدقهلية';
+            
+            // البحث عن الهاتف (1)
+            const phonePossibleNames = ['phone', 'phone1', 'رقم الهاتف (1)', 'رقم_الهاتف_1', 'الهاتف'];
+            const phoneValue = getFieldValue('رقم الهاتف (1)', phonePossibleNames);
+            
+            // البحث عن الهاتف (2)
+            const phone2PossibleNames = ['phone2', 'رقم الهاتف (2)', 'رقم_الهاتف_2', 'هاتف إضافي'];
+            const phone2Value = getFieldValue('رقم الهاتف (2)', phone2PossibleNames);
+            
+            console.log('=== انتهى البحث ===');
+            
+            return {
+                country: countryValue,
+                governorate: governorateValue,
+                phone: phoneValue,
+                phone2: phone2Value
+            };
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1980,7 +2053,9 @@
             
             document.getElementById('modalHeaderControls').innerHTML = downloadBtn + replyBtn + controlBtns;
             
-            // استخدام الدالة الذكية للحصول على بيانات العميل
+            // استخدام الدالة الشاملة للحصول على بيانات الشكوى
+            const details = displayComplaintDetails(complaint);
+            
             modalBody.innerHTML = `
                 <div class="details-grid">
                     <div class="detail-item">
@@ -1997,11 +2072,11 @@
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">بلد الإقامة</div>
-                        <div>${getComplaintField(complaint, 'country')}</div>
+                        <div>${details.country}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">المحافظة</div>
-                        <div>${getComplaintField(complaint, 'governorate')}</div>
+                        <div>${details.governorate}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">المدينة/القرية</div>
@@ -2013,11 +2088,11 @@
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">رقم الهاتف (1)</div>
-                        <div>${getComplaintField(complaint, 'phone')}</div>
+                        <div>${details.phone}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">رقم الهاتف (2) - اختياري</div>
-                        <div>${getComplaintField(complaint, 'phone2')}</div>
+                        <div>${details.phone2}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">البريد الإلكتروني</div>
@@ -2105,12 +2180,14 @@
             document.getElementById('editNationalId').value = complaint.nationalId || '';
             
             // استخدام الدالة الذكية لملء حقول الهاتف والعنوان
-            document.getElementById('editPhone').value = getComplaintField(complaint, 'phone');
-            document.getElementById('editPhone2').value = getComplaintField(complaint, 'phone2');
-            document.getElementById('editCountry').value = getComplaintField(complaint, 'country');
-            document.getElementById('editGovernorate').value = getComplaintField(complaint, 'governorate');
-            document.getElementById('editCity').value = getComplaintField(complaint, 'city');
-            document.getElementById('editAddress').value = getComplaintField(complaint, 'address');
+            const details = displayComplaintDetails(complaint);
+            
+            document.getElementById('editPhone').value = details.phone;
+            document.getElementById('editPhone2').value = details.phone2;
+            document.getElementById('editCountry').value = details.country === 'غير متوفر' ? '' : details.country;
+            document.getElementById('editGovernorate').value = 'الدقهلية'; // المحافظة دائماً الدقهلية
+            document.getElementById('editCity').value = getComplaintField(complaint, 'city') === 'غير متوفر' ? '' : getComplaintField(complaint, 'city');
+            document.getElementById('editAddress').value = getComplaintField(complaint, 'address') === 'غير متوفر' ? '' : getComplaintField(complaint, 'address');
             
             document.getElementById('editDepartment').value = complaint.department || '';
             document.getElementById('editPriority').value = complaint.priority || 'متوسطة';
@@ -2132,7 +2209,7 @@
                 phone: document.getElementById('editPhone').value.trim(),
                 phone2: document.getElementById('editPhone2').value.trim(),
                 country: document.getElementById('editCountry').value.trim(),
-                governorate: document.getElementById('editGovernorate').value.trim(),
+                governorate: 'الدقهلية', // المحافظة دائماً الدقهلية
                 city: document.getElementById('editCity').value.trim(),
                 address: document.getElementById('editAddress').value.trim(),
                 department: document.getElementById('editDepartment').value,
@@ -2514,6 +2591,9 @@
             
             try {
                 showLoading();
+                // استخدام الدالة الشاملة للحصول على البيانات
+                const details = displayComplaintDetails(complaint);
+                
                 // إنشاء محتوى PDF
                 const htmlContent = `
                     <!DOCTYPE html>
@@ -2543,12 +2623,12 @@
                             <tr><td class="label">رقم الشكوى:</td><td>${complaint.complaintNumber || ''}</td></tr>
                             <tr><td class="label">الاسم بالكامل:</td><td>${complaint.fullName || ''}</td></tr>
                             <tr><td class="label">الرقم القومي:</td><td>${complaint.nationalId || 'غير متوفر'}</td></tr>
-                            <tr><td class="label">بلد الإقامة:</td><td>${getComplaintField(complaint, 'country')}</td></tr>
-                            <tr><td class="label">المحافظة:</td><td>${getComplaintField(complaint, 'governorate')}</td></tr>
+                            <tr><td class="label">بلد الإقامة:</td><td>${details.country}</td></tr>
+                            <tr><td class="label">المحافظة:</td><td>${details.governorate}</td></tr>
                             <tr><td class="label">المدينة/القرية:</td><td>${getComplaintField(complaint, 'city')}</td></tr>
                             <tr><td class="label">العنوان بالتفصيل:</td><td>${getComplaintField(complaint, 'address')}</td></tr>
-                            <tr><td class="label">رقم الهاتف (1):</td><td>${getComplaintField(complaint, 'phone')}</td></tr>
-                            <tr><td class="label">رقم الهاتف (2):</td><td>${getComplaintField(complaint, 'phone2')}</td></tr>
+                            <tr><td class="label">رقم الهاتف (1):</td><td>${details.phone}</td></tr>
+                            <tr><td class="label">رقم الهاتف (2):</td><td>${details.phone2}</td></tr>
                             <tr><td class="label">البريد الإلكتروني:</td><td>${getComplaintField(complaint, 'email')}</td></tr>
                             <tr><td class="label">القسم:</td><td>${complaint.department || ''}</td></tr>
                             <tr><td class="label">نوع المشكلة:</td><td>${complaint.priority || ''}</td></tr>
@@ -2786,32 +2866,34 @@
             setTimeout(() => { msg.remove(); }, 4000);
         }
 
-        // دالة مساعدة لفحص هيكل البيانات (للاستخدام في التصحيح)
+        // دالة لفحص هيكل البيانات الكامل (للاستخدام في التصحيح)
         function debugComplaintData(complaintKey) {
             const complaint = allComplaints.find(c => c.key === complaintKey);
-            if (!complaint) return;
+            if (!complaint) {
+                showMessage('لم يتم العثور على الشكوى', 'error');
+                return;
+            }
             
-            console.log("=== هيكل بيانات الشكوى ===");
-            console.log("المفاتيح الموجودة:", Object.keys(complaint));
+            console.log('=== هيكل بيانات الشكوى الكامل ===');
+            console.log('جميع المفاتيح:', Object.keys(complaint));
+            console.log('قيم جميع الحقول:');
             
-            // عرض جميع الحقول وقيمها
             Object.keys(complaint).forEach(key => {
                 if (typeof complaint[key] !== 'object' || complaint[key] === null) {
-                    console.log(`${key}: ${complaint[key]}`);
+                    console.log(`  "${key}": "${complaint[key]}"`);
                 }
             });
             
-            console.log("========================");
+            console.log('=== نتائج البحث الذكي ===');
+            const details = displayComplaintDetails(complaint);
+            console.log('بلد الإقامة:', details.country);
+            console.log('المحافظة:', details.governorate);
+            console.log('الهاتف (1):', details.phone);
+            console.log('الهاتف (2):', details.phone2);
+            console.log('المدينة:', getComplaintField(complaint, 'city'));
+            console.log('العنوان:', getComplaintField(complaint, 'address'));
             
-            // عرض في واجهة المستخدم أيضًا
-            let debugInfo = "هيكل بيانات الشكوى:\n";
-            Object.keys(complaint).forEach(key => {
-                if (typeof complaint[key] !== 'object' || complaint[key] === null) {
-                    debugInfo += `${key}: ${complaint[key]}\n`;
-                }
-            });
-            
-            showMessage("تم فحص هيكل البيانات. انظر في console للمزيد من التفاصيل", "success");
+            showMessage('تم فحص هيكل البيانات. انظر في console للمزيد من التفاصيل', 'success');
         }
     </script>
 </body>
