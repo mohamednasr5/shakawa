@@ -1020,7 +1020,43 @@
                 top: 0;
                 width: 100%;
                 padding: 20px;
+                font-family: 'Cairo', sans-serif;
+                direction: rtl;
             }
+            
+            .print-header {
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 3px double #333;
+                padding-bottom: 20px;
+            }
+            
+            .print-logo {
+                font-size: 28px;
+                font-weight: bold;
+                color: #1a5fb4;
+                margin-bottom: 10px;
+            }
+            
+            .print-details {
+                page-break-inside: avoid;
+            }
+            
+            .print-problem-details {
+                page-break-inside: avoid;
+                margin: 20px 0;
+            }
+            
+            @page {
+                size: A4;
+                margin: 20mm;
+            }
+            
+            body {
+                font-size: 14px;
+                line-height: 1.5;
+            }
+            
             .no-print {
                 display: none !important;
             }
@@ -1071,6 +1107,11 @@
         
         .admin-only.visible {
             display: inline-flex;
+        }
+        
+        /* أقسام القائمة الجانبية المخفية للمشرفين */
+        .menu-item.hidden-for-supervisor {
+            display: none !important;
         }
         
         @media (max-width: 1200px) {
@@ -1129,7 +1170,7 @@
             <h2 class="login-title">تسجيل دخول المسؤول</h2>
             <form id="loginForm" class="login-form">
                 <div class="form-group">
-                    <label class="form-label">اسم المستخدم</label>
+                    <label class="form-label">اسم المستخدم / البريد الإلكتروني</label>
                     <input type="text" class="form-control" id="username" placeholder="أدخل اسم المستخدم" required>
                 </div>
                 <div class="form-group">
@@ -1163,8 +1204,8 @@
                         <i class="fas fa-user-shield"></i>
                     </div>
                     <div>
-                        <h3 style="margin-bottom: 5px;">مرحباً، المسؤول أحمد</h3>
-                        <p style="opacity: 0.9; font-size: 0.9rem;">آخر دخول: اليوم الساعة 10:30 صباحاً</p>
+                        <h3 style="margin-bottom: 5px;" id="adminWelcome">مرحباً، المسؤول أحمد</h3>
+                        <p style="opacity: 0.9; font-size: 0.9rem;" id="adminLastLogin">آخر دخول: اليوم الساعة 10:30 صباحاً</p>
                     </div>
                 </div>
                 
@@ -1206,11 +1247,11 @@
                             <i class="fas fa-users menu-icon"></i>
                             <span>المستخدمين</span>
                         </li>
-                        <li class="menu-item" data-section="reports">
+                        <li class="menu-item admin-only" data-section="reports">
                             <i class="fas fa-chart-bar menu-icon"></i>
                             <span>التقارير والإحصائيات</span>
                         </li>
-                        <li class="menu-item" data-section="settings">
+                        <li class="menu-item admin-only" data-section="settings">
                             <i class="fas fa-cog menu-icon"></i>
                             <span>الإعدادات</span>
                         </li>
@@ -1223,7 +1264,7 @@
                         <div class="content-header">
                             <h2 class="content-title">لوحة التحكم</h2>
                             <div>
-                                <button class="btn btn-export">
+                                <button class="btn btn-export admin-only">
                                     <i class="fas fa-download"></i>
                                     تصدير تقرير
                                 </button>
@@ -1425,6 +1466,7 @@
                                         <th>البريد الإلكتروني</th>
                                         <th>رقم الهاتف</th>
                                         <th>الدور</th>
+                                        <th>القسم المسؤول عنه</th>
                                         <th>الحالة</th>
                                         <th>آخر نشاط</th>
                                         <th>الإجراءات</th>
@@ -1614,11 +1656,33 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <script>
-        // بيانات تسجيل الدخول للمسؤول
-        const ADMIN_CREDENTIALS = {
-            username: "admin",
-            password: "742018"
-        };
+        // بيانات المسؤولين الرئيسيين
+        const ADMIN_USERS = [
+            {
+                username: "admin",
+                password: "742018",
+                name: "مهندس محمد نصر",
+                role: "admin"
+            },
+            {
+                username: "engineer",
+                password: "123456",
+                name: "مهندس محمد نصر",
+                role: "admin"
+            }
+        ];
+        
+        // قائمة الأقسام المتاحة
+        const DEPARTMENTS = [
+            "مشكلة خاصة بالقضاء والمحاكم",
+            "مساعدة مالية",
+            "مشكلة خاصة بالصحة",
+            "مشكلات مياه الشرب والصرف الصحي",
+            "مشكلة خاصة بالتعليم",
+            "مشكلة خاصة بالشرطة والداخلية",
+            "حالة طارئة",
+            "مشكلات أخرى"
+        ];
         
         // حالة تسجيل الدخول
         let isLoggedIn = false;
@@ -1659,7 +1723,7 @@
             const menuItems = document.querySelectorAll('.menu-item');
             menuItems.forEach(item => {
                 item.addEventListener('click', function() {
-                    if (this.classList.contains('admin-only') && !isLoggedIn) {
+                    if (this.classList.contains('admin-only') && !(currentUser && currentUser.role === 'admin')) {
                         showMessage('يجب تسجيل الدخول كمسؤول للوصول إلى هذا القسم', 'error');
                         return;
                     }
@@ -1698,10 +1762,19 @@
         // دالة التحقق من حالة تسجيل الدخول
         function checkLoginStatus() {
             const savedLogin = localStorage.getItem('adminLoggedIn');
-            if (savedLogin === 'true') {
-                isLoggedIn = true;
-                showDashboard();
-                loadComplaints();
+            const savedUser = localStorage.getItem('adminUser');
+            
+            if (savedLogin === 'true' && savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    isLoggedIn = true;
+                    showDashboard();
+                    loadComplaints();
+                } catch (e) {
+                    localStorage.removeItem('adminLoggedIn');
+                    localStorage.removeItem('adminUser');
+                    showLogin();
+                }
             } else {
                 showLogin();
             }
@@ -1715,22 +1788,100 @@
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('loginError');
             
-            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-                isLoggedIn = true;
-                localStorage.setItem('adminLoggedIn', 'true');
-                currentUser = {
-                    username: username,
-                    role: 'admin',
-                    loginTime: new Date().toISOString()
-                };
-                showDashboard();
-                loadComplaints();
-                showMessage('تم تسجيل الدخول بنجاح!', 'success');
+            // البحث عن المستخدم في قائمة المسؤولين الرئيسيين
+            const adminUser = ADMIN_USERS.find(user => 
+                user.username === username && user.password === password
+            );
+            
+            if (adminUser) {
+                loginSuccess(adminUser);
             } else {
-                errorDiv.style.display = 'block';
-                setTimeout(() => {
-                    errorDiv.style.display = 'none';
-                }, 3000);
+                // البحث في قاعدة بيانات المستخدمين
+                checkDatabaseUser(username, password);
+            }
+        }
+        
+        // دالة تسجيل الدخول الناجح
+        function loginSuccess(userData) {
+            isLoggedIn = true;
+            currentUser = {
+                username: userData.username,
+                name: userData.name,
+                role: userData.role,
+                loginTime: new Date().toISOString(),
+                allowedDepartments: userData.allowedDepartments || DEPARTMENTS // جميع الأقسام للمسؤولين
+            };
+            
+            // حفظ حالة تسجيل الدخول
+            localStorage.setItem('adminLoggedIn', 'true');
+            localStorage.setItem('adminUser', JSON.stringify(currentUser));
+            
+            showDashboard();
+            loadComplaints();
+            showMessage(`مرحباً ${currentUser.name}! تم تسجيل الدخول بنجاح`, 'success');
+        }
+        
+        // دالة للتحقق من المستخدمين في قاعدة البيانات
+        async function checkDatabaseUser(username, password) {
+            try {
+                const usersRef = database.ref('users');
+                const snapshot = await usersRef.once('value');
+                
+                if (!snapshot.exists()) {
+                    document.getElementById('loginError').style.display = 'block';
+                    return;
+                }
+                
+                let userFound = false;
+                snapshot.forEach((childSnapshot) => {
+                    const user = childSnapshot.val();
+                    
+                    // التحقق من البريد الإلكتروني أو اسم المستخدم
+                    const isEmailMatch = user.email && user.email === username;
+                    const isUsernameMatch = user.username && user.username === username;
+                    
+                    if ((isEmailMatch || isUsernameMatch) && user.password && atob(user.password) === password) {
+                        // التحقق من حالة المستخدم
+                        if (user.status && user.status !== 'active') {
+                            showMessage('حسابك غير نشط، يرجى التواصل مع المسؤول', 'error');
+                            return;
+                        }
+                        
+                        isLoggedIn = true;
+                        currentUser = {
+                            username: user.email || user.username,
+                            name: user.name,
+                            role: user.role,
+                            loginTime: new Date().toISOString(),
+                            key: childSnapshot.key,
+                            allowedDepartments: user.allowedDepartments || []
+                        };
+                        
+                        // تحديث آخر دخول
+                        database.ref('users/' + childSnapshot.key).update({
+                            lastLogin: new Date().toISOString(),
+                            loginCount: (user.loginCount || 0) + 1
+                        });
+                        
+                        // حفظ حالة تسجيل الدخول
+                        localStorage.setItem('adminLoggedIn', 'true');
+                        localStorage.setItem('adminUser', JSON.stringify(currentUser));
+                        
+                        showDashboard();
+                        loadComplaints();
+                        showMessage(`مرحباً ${user.name}! تم تسجيل الدخول بنجاح`, 'success');
+                        
+                        userFound = true;
+                    }
+                });
+                
+                if (!userFound) {
+                    document.getElementById('loginError').style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error('Error checking database user:', error);
+                document.getElementById('loginError').style.display = 'block';
             }
         }
         
@@ -1738,8 +1889,9 @@
         function handleLogout() {
             if (confirm('هل تريد تسجيل الخروج من لوحة التحكم؟')) {
                 isLoggedIn = false;
-                localStorage.removeItem('adminLoggedIn');
                 currentUser = null;
+                localStorage.removeItem('adminLoggedIn');
+                localStorage.removeItem('adminUser');
                 showLogin();
             }
         }
@@ -1755,11 +1907,64 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('dashboardScreen').style.display = 'block';
             
-            // إظهار عناصر المسؤول فقط
+            // تحديث ترحيب المسؤول
+            updateAdminWelcome();
+            
+            // التحكم بعرض عناصر القائمة الجانبية حسب صلاحية المستخدم
+            updateSidebarPermissions();
+        }
+        
+        // دالة تحديث ترحيب المسؤول
+        function updateAdminWelcome() {
+            if (currentUser) {
+                const welcomeElement = document.getElementById('adminWelcome');
+                const lastLoginElement = document.getElementById('adminLastLogin');
+                
+                welcomeElement.textContent = `مرحباً، ${currentUser.name}`;
+                
+                // تنسيق وقت آخر دخول
+                if (currentUser.loginTime) {
+                    const loginTime = new Date(currentUser.loginTime);
+                    const options = {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    };
+                    lastLoginElement.textContent = `آخر دخول: ${loginTime.toLocaleDateString('ar-EG', options)}`;
+                }
+            }
+        }
+        
+        // دالة تحديث صلاحيات القائمة الجانبية
+        function updateSidebarPermissions() {
             const adminOnlyElements = document.querySelectorAll('.admin-only');
-            adminOnlyElements.forEach(el => {
-                el.classList.add('visible');
-            });
+            
+            if (currentUser && currentUser.role === 'admin') {
+                // المسؤول يرى كل شيء
+                adminOnlyElements.forEach(el => {
+                    el.classList.add('visible');
+                });
+            } else if (currentUser && currentUser.role === 'moderator') {
+                // المشرف لا يرى بعض الأقسام
+                adminOnlyElements.forEach(el => {
+                    if (el.getAttribute('data-section') === 'users' || 
+                        el.getAttribute('data-section') === 'settings') {
+                        el.classList.add('hidden-for-supervisor');
+                        el.classList.remove('visible');
+                    } else {
+                        el.classList.add('visible');
+                    }
+                });
+            } else {
+                // المستخدم العادي لا يرى أي عناصر إدارية
+                adminOnlyElements.forEach(el => {
+                    el.classList.remove('visible');
+                    el.classList.add('hidden-for-supervisor');
+                });
+            }
         }
         
         // دالة عرض القسم المحدد
@@ -1780,7 +1985,7 @@
             }
             
             // إذا كان القسم هو المستخدمين، قم بتحميل المستخدمين
-            if (sectionId === 'users' && isLoggedIn) {
+            if (sectionId === 'users' && currentUser && currentUser.role === 'admin') {
                 loadUsers();
             }
         }
@@ -1827,14 +2032,27 @@
             }
         }
         
-        // دالة تصفية الشكاوى
+        // دالة تصفية الشكاوى مع مراعاة صلاحيات المشرف
         function filterComplaints() {
             const statusFilter = document.getElementById('filterStatus').value;
             const departmentFilter = document.getElementById('filterDepartment').value;
             const priorityFilter = document.getElementById('filterPriority').value;
             const searchText = document.getElementById('searchInput').value.toLowerCase();
             
-            filteredComplaints = allComplaints.filter(complaint => {
+            // تصفية أولية حسب صلاحيات المستخدم
+            let prelimFilteredComplaints = allComplaints;
+            
+            // إذا كان المستخدم مشرفاً وله أقسام محددة
+            if (currentUser && currentUser.role === 'moderator' && 
+                currentUser.allowedDepartments && currentUser.allowedDepartments.length > 0) {
+                
+                prelimFilteredComplaints = allComplaints.filter(complaint => {
+                    return currentUser.allowedDepartments.includes(complaint.department);
+                });
+            }
+            
+            // تطبيق المرشحات الإضافية
+            filteredComplaints = prelimFilteredComplaints.filter(complaint => {
                 // تطبيق مرشح الحالة
                 if (statusFilter && complaint.status !== statusFilter) {
                     return false;
@@ -1946,7 +2164,7 @@
                                     <i class="fas fa-reply"></i>
                                     رد
                                 </button>
-                                ${isLoggedIn ? `
+                                ${currentUser && currentUser.role === 'admin' ? `
                                 <button class="action-btn btn-delete" onclick="deleteComplaint('${complaint.key}')">
                                     <i class="fas fa-trash"></i>
                                     حذف
@@ -1964,7 +2182,19 @@
         // دالة عرض الشكاوى الأخيرة في لوحة التحكم
         function displayRecentComplaints() {
             const tableBody = document.getElementById('recentComplaintsTable');
-            const recentComplaints = allComplaints.slice(0, 5); // عرض أول 5 شكاوى فقط
+            
+            // تصفية حسب صلاحيات المستخدم
+            let recentComplaints = allComplaints;
+            
+            if (currentUser && currentUser.role === 'moderator' && 
+                currentUser.allowedDepartments && currentUser.allowedDepartments.length > 0) {
+                
+                recentComplaints = allComplaints.filter(complaint => {
+                    return currentUser.allowedDepartments.includes(complaint.department);
+                });
+            }
+            
+            recentComplaints = recentComplaints.slice(0, 5); // عرض أول 5 شكاوى فقط
             
             if (recentComplaints.length === 0) {
                 tableBody.innerHTML = `
@@ -2040,22 +2270,33 @@
             }
         }
         
-        // دالة تحديث إحصائيات لوحة التحكم
+        // دالة تحديث إحصائيات لوحة التحكم مع مراعاة صلاحيات المشرف
         function updateDashboardStats() {
-            // إحصائيات عامة
-            document.getElementById('totalComplaints').textContent = allComplaints.length;
+            // الشكاوى التي يمكن للمستخدم رؤيتها
+            let visibleComplaints = allComplaints;
             
-            const newComplaints = allComplaints.filter(c => c.status === 'جديدة').length;
-            const resolvedComplaints = allComplaints.filter(c => c.status === 'مكتملة' || c.status === 'تم الرد').length;
+            if (currentUser && currentUser.role === 'moderator' && 
+                currentUser.allowedDepartments && currentUser.allowedDepartments.length > 0) {
+                
+                visibleComplaints = allComplaints.filter(complaint => {
+                    return currentUser.allowedDepartments.includes(complaint.department);
+                });
+            }
+            
+            // إحصائيات عامة
+            document.getElementById('totalComplaints').textContent = visibleComplaints.length;
+            
+            const newComplaints = visibleComplaints.filter(c => c.status === 'جديدة').length;
+            const resolvedComplaints = visibleComplaints.filter(c => c.status === 'مكتملة' || c.status === 'تم الرد').length;
             
             document.getElementById('newComplaints').textContent = newComplaints;
             document.getElementById('resolvedComplaints').textContent = resolvedComplaints;
             
             // تحديث بطاقات الإحصائيات
             document.getElementById('statNew').textContent = newComplaints;
-            document.getElementById('statInProgress').textContent = allComplaints.filter(c => c.status === 'قيد المتابعة').length;
+            document.getElementById('statInProgress').textContent = visibleComplaints.filter(c => c.status === 'قيد المتابعة').length;
             document.getElementById('statResolved').textContent = resolvedComplaints;
-            document.getElementById('statClosed').textContent = allComplaints.filter(c => c.status === 'مغلقة').length;
+            document.getElementById('statClosed').textContent = visibleComplaints.filter(c => c.status === 'مغلقة').length;
             
             // تحديث الشكاوى الأخيرة
             displayRecentComplaints();
@@ -2063,7 +2304,17 @@
         
         // دالة تحديث الشارة في القائمة الجانبية
         function updateSidebarBadge() {
-            const newComplaints = allComplaints.filter(c => c.status === 'جديدة').length;
+            let visibleComplaints = allComplaints;
+            
+            if (currentUser && currentUser.role === 'moderator' && 
+                currentUser.allowedDepartments && currentUser.allowedDepartments.length > 0) {
+                
+                visibleComplaints = allComplaints.filter(complaint => {
+                    return currentUser.allowedDepartments.includes(complaint.department);
+                });
+            }
+            
+            const newComplaints = visibleComplaints.filter(c => c.status === 'جديدة').length;
             const badge = document.getElementById('complaintsBadge');
             
             if (newComplaints > 0) {
@@ -2076,7 +2327,17 @@
         
         // دالة التحقق من المشكلات الحرجة
         function checkCriticalProblems() {
-            const criticalComplaints = allComplaints.filter(complaint => 
+            let visibleComplaints = allComplaints;
+            
+            if (currentUser && currentUser.role === 'moderator' && 
+                currentUser.allowedDepartments && currentUser.allowedDepartments.length > 0) {
+                
+                visibleComplaints = allComplaints.filter(complaint => {
+                    return currentUser.allowedDepartments.includes(complaint.department);
+                });
+            }
+            
+            const criticalComplaints = visibleComplaints.filter(complaint => 
                 complaint.priority === 'فى غاية الأهمية' && 
                 (complaint.status === 'جديدة' || complaint.status === 'قيد المتابعة')
             );
@@ -2139,6 +2400,16 @@
                 return;
             }
             
+            // التحقق من صلاحيات المشرف
+            if (currentUser && currentUser.role === 'moderator' && 
+                currentUser.allowedDepartments && currentUser.allowedDepartments.length > 0) {
+                
+                if (!currentUser.allowedDepartments.includes(complaint.department)) {
+                    showMessage('ليس لديك صلاحية لعرض هذه الشكوى', 'error');
+                    return;
+                }
+            }
+            
             // تحديد فئة الأولوية
             let priorityClass = 'priority-normal';
             if (complaint.priority === 'مهمة') priorityClass = 'priority-important';
@@ -2146,7 +2417,7 @@
             
             // تنسيق التواريخ
             const createdAt = new Date(complaint.createdAt).toLocaleString('ar-EG');
-            const updatedAt = new Date(complaint.updatedAt).toLocaleString('ar-EG');
+            const updatedAt = new Date(complaint.updatedAt || complaint.createdAt).toLocaleString('ar-EG');
             
             // بناء الردود
             let responsesHTML = '';
@@ -2174,7 +2445,7 @@
                 <div class="no-print" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                     <button class="btn btn-primary" onclick="printComplaint('${complaint.key}')">
                         <i class="fas fa-print"></i>
-                        طباعة الشكوى
+                        طباعة الطلب كاملاً
                     </button>
                     <button class="btn btn-secondary" onclick="closeModal()">
                         <i class="fas fa-times"></i>
@@ -2184,93 +2455,152 @@
                 
                 <div class="print-section">
                     <div class="print-header">
-                        <div class="print-logo">نظام الشكاوى الموحد</div>
-                        <h2 style="margin: 10px 0;">تفاصيل الشكوى</h2>
-                        <p>تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')}</p>
+                        <div class="print-logo">نظام الشكاوى الموحد - محافظة الشرقية</div>
+                        <h2 style="margin: 10px 0;">تفاصيل الطلب الكاملة</h2>
+                        <p>رقم الطلب: <strong>${complaint.complaintNumber || 'غير متوفر'}</strong> | تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')}</p>
                     </div>
                     
-                    <div class="print-details">
-                        <div class="print-detail-item">
-                            <div class="print-detail-label">رقم الشكوى:</div>
-                            <div><strong>${complaint.complaintNumber || 'غير متوفر'}</strong></div>
-                        </div>
-                        <div class="print-detail-item">
-                            <div class="print-detail-label">الاسم:</div>
-                            <div>${complaint.fullName || 'غير متوفر'}</div>
-                        </div>
-                        <div class="print-detail-item">
-                            <div class="print-detail-label">الرقم القومي:</div>
-                            <div>${complaint.nationalId || 'غير متوفر'}</div>
-                        </div>
-                        <div class="print-detail-item">
-                            <div class="print-detail-label">الوحدة المحلية:</div>
-                            <div>${complaint.localUnit || 'غير متوفر'}</div>
-                        </div>
-                        <div class="print-detail-item">
-                            <div class="print-detail-label">العنوان:</div>
-                            <div>${complaint.address || 'غير متوفر'}</div>
-                        </div>
-                        <div class="print-detail-item">
-                            <div class="print-detail-label">رقم الهاتف:</div>
-                            <div>
-                                ${complaint.phone1 || 'غير متوفر'} 
-                                ${complaint.phone2 ? ' / ' + complaint.phone2 : ''}
-                                ${complaint.phone1 ? `
-                                    <div class="phone-actions">
-                                        <a href="tel:${complaint.phone1}" class="call-btn">
-                                            <i class="fas fa-phone"></i>
-                                            اتصال
-                                        </a>
-                                        <a href="https://wa.me/${complaint.phone1.replace(/\D/g, '')}" target="_blank" class="whatsapp-btn">
-                                            <i class="fab fa-whatsapp"></i>
-                                            واتساب
-                                        </a>
+                    <div class="print-details" style="grid-template-columns: repeat(3, 1fr);">
+                        <!-- معلومات المستخدم -->
+                        <div class="print-detail-item" style="grid-column: span 3; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <h3 style="color: #1a5fb4; margin-bottom: 10px;">معلومات مقدم الطلب</h3>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                                <div>
+                                    <div class="print-detail-label">الاسم:</div>
+                                    <div><strong>${complaint.fullName || 'غير متوفر'}</strong></div>
+                                </div>
+                                <div>
+                                    <div class="print-detail-label">الرقم القومي:</div>
+                                    <div>${complaint.nationalId || 'غير متوفر'}</div>
+                                </div>
+                                <div>
+                                    <div class="print-detail-label">الوحدة المحلية:</div>
+                                    <div>${complaint.localUnit || 'غير متوفر'}</div>
+                                </div>
+                                <div>
+                                    <div class="print-detail-label">العنوان:</div>
+                                    <div>${complaint.address || 'غير متوفر'}</div>
+                                </div>
+                                <div>
+                                    <div class="print-detail-label">رقم الهاتف:</div>
+                                    <div>
+                                        ${complaint.phone1 || 'غير متوفر'} 
+                                        ${complaint.phone2 ? ' / ' + complaint.phone2 : ''}
                                     </div>
-                                ` : ''}
+                                </div>
+                                <div>
+                                    <div class="print-detail-label">البريد الإلكتروني:</div>
+                                    <div>${complaint.email || 'غير متوفر'}</div>
+                                </div>
                             </div>
                         </div>
-                        <div class="print-detail-item">
-                            <div class="print-detail-label">القسم:</div>
-                            <div>${complaint.department || 'غير متوفر'}</div>
+                        
+                        <!-- معلومات الطلب -->
+                        <div class="print-detail-item" style="grid-column: span 3; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                            <h3 style="color: #1a5fb4; margin-bottom: 10px;">معلومات الطلب</h3>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                                <div>
+                                    <div class="print-detail-label">القسم:</div>
+                                    <div><strong>${complaint.department || 'غير متوفر'}</strong></div>
+                                </div>
+                                <div>
+                                    <div class="print-detail-label">نوع المشكلة:</div>
+                                    <div class="${priorityClass}" style="padding: 5px 10px; border-radius: 4px; display: inline-block;">${complaint.priority || 'عادية'}</div>
+                                </div>
+                                <div>
+                                    <div class="print-detail-label">الحالة:</div>
+                                    <div><strong>${complaint.status || 'جديدة'}</strong></div>
+                                </div>
+                                <div>
+                                    <div class="print-detail-label">رقم المرجع:</div>
+                                    <div>${complaint.referenceNumber || 'غير محدد'}</div>
+                                </div>
+                                <div>
+                                    <div class="print-detail-label">تاريخ الإرسال:</div>
+                                    <div>${createdAt}</div>
+                                </div>
+                                <div>
+                                    <div class="print-detail-label">آخر تحديث:</div>
+                                    <div>${updatedAt}</div>
+                                </div>
+                                <div>
+                                    <div class="print-detail-label">مدة المعالجة:</div>
+                                    <div>${calculateProcessingTime(complaint.createdAt, complaint.updatedAt || complaint.createdAt)}</div>
+                                </div>
+                                <div>
+                                    <div class="print-detail-label">الجهة المحالة إليها:</div>
+                                    <div>${complaint.assignedTo || 'قيد التحديد'}</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="print-detail-item">
-                            <div class="print-detail-label">نوع المشكلة:</div>
-                            <div class="${priorityClass}">${complaint.priority || 'عادية'}</div>
+                        
+                        <!-- تفاصيل المشكلة -->
+                        <div class="print-detail-item" style="grid-column: span 3; margin-top: 20px;">
+                            <div class="print-problem-details">
+                                <h3 style="margin-bottom: 15px; color: #1a5fb4; border-bottom: 2px solid #1a5fb4; padding-bottom: 10px;">تفاصيل المشكلة / الطلب</h3>
+                                <div style="white-space: pre-line; line-height: 1.8; font-size: 16px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd;">
+                                    ${complaint.problemDetails || 'لا توجد تفاصيل'}
+                                </div>
+                            </div>
                         </div>
-                        <div class="print-detail-item">
-                            <div class="print-detail-label">الحالة:</div>
-                            <div>${complaint.status || 'جديدة'}</div>
-                        </div>
-                        <div class="print-detail-item">
-                            <div class="print-detail-label">تاريخ الإرسال:</div>
-                            <div>${createdAt}</div>
-                        </div>
-                        <div class="print-detail-item">
-                            <div class="print-detail-label">آخر تحديث:</div>
-                            <div>${updatedAt}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="print-problem-details">
-                        <h3 style="margin-bottom: 15px; color: #1a5fb4;">تفاصيل المشكلة:</h3>
-                        <div style="white-space: pre-line;">${complaint.problemDetails || 'لا توجد تفاصيل'}</div>
-                    </div>
-                    
-                    ${complaint.responses && complaint.responses.length > 0 ? `
-                        <div class="print-problem-details" style="margin-top: 30px;">
-                            <h3 style="margin-bottom: 15px; color: #1a5fb4;">الردود والمتابعات:</h3>
-                            ${complaint.responses.map(response => {
-                                const responseDate = new Date(response.date).toLocaleString('ar-EG');
-                                return `
-                                    <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #ddd;">
-                                        <strong>${response.sender === 'admin' ? (response.adminName || 'المسؤول') : 'العميل'}</strong>
-                                        <div style="color: #666; font-size: 14px; margin: 5px 0;">${responseDate}</div>
-                                        <p style="margin-top: 10px;">${response.text}</p>
+                        
+                        <!-- المرفقات -->
+                        ${complaint.attachments && complaint.attachments.length > 0 ? `
+                            <div class="print-detail-item" style="grid-column: span 3; margin-top: 20px;">
+                                <div class="print-problem-details">
+                                    <h3 style="margin-bottom: 15px; color: #1a5fb4; border-bottom: 2px solid #1a5fb4; padding-bottom: 10px;">المرفقات</h3>
+                                    <div style="padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd;">
+                                        <ul>
+                                            ${complaint.attachments.map(attachment => `
+                                                <li style="margin-bottom: 10px;">
+                                                    <strong>${attachment.name || 'مرفق'}</strong> - ${attachment.type || 'غير معروف'}
+                                                    ${attachment.url ? `<br><small>${attachment.url}</small>` : ''}
+                                                </li>
+                                            `).join('')}
+                                        </ul>
                                     </div>
-                                `;
-                            }).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <!-- الردود والمتابعات -->
+                        ${complaint.responses && complaint.responses.length > 0 ? `
+                            <div class="print-detail-item" style="grid-column: span 3; margin-top: 20px;">
+                                <div class="print-problem-details">
+                                    <h3 style="margin-bottom: 15px; color: #1a5fb4; border-bottom: 2px solid #1a5fb4; padding-bottom: 10px;">سجل الردود والمتابعات</h3>
+                                    <div style="padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd;">
+                                        ${complaint.responses.map(response => {
+                                            const responseDate = new Date(response.date).toLocaleString('ar-EG');
+                                            const senderType = response.sender === 'admin' ? 'إداري' : 'مقدم الطلب';
+                                            const senderName = response.sender === 'admin' ? (response.adminName || 'المسؤول') : complaint.fullName;
+                                            
+                                            return `
+                                                <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; background: ${response.sender === 'admin' ? '#f8f9fa' : 'white'}; padding: 15px; border-radius: 6px;">
+                                                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                                        <strong style="color: #1a5fb4;">${senderName} (${senderType})</strong>
+                                                        <span style="color: #666; font-size: 14px;">${responseDate}</span>
+                                                    </div>
+                                                    <p style="margin-top: 10px; line-height: 1.6; background: white; padding: 10px; border-radius: 4px; border-right: 3px solid ${response.sender === 'admin' ? '#28a745' : '#6c757d'};">
+                                                        ${response.text}
+                                                    </p>
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <!-- ختم الجهة -->
+                        <div class="print-detail-item" style="grid-column: span 3; margin-top: 40px; text-align: left;">
+                            <div style="border-top: 2px solid #333; padding-top: 20px; text-align: center;">
+                                <p>ختم الجهة المعنية</p>
+                                <p style="margin-top: 30px;">_______________________</p>
+                                <p>التوقيع</p>
+                                <p style="margin-top: 30px;">تاريخ الإصدار: ${new Date().toLocaleDateString('ar-EG')}</p>
+                            </div>
                         </div>
-                    ` : ''}
+                    </div>
                 </div>
                 
                 <div class="responses-section no-print">
@@ -2310,6 +2640,24 @@
             document.getElementById('complaintDetailsModal').style.display = 'flex';
         }
         
+        // دالة حساب مدة المعالجة
+        function calculateProcessingTime(startDate, endDate) {
+            if (!startDate) return 'غير محدد';
+            
+            const start = new Date(startDate);
+            const end = endDate ? new Date(endDate) : new Date();
+            
+            const diffMs = end - start;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            
+            if (diffDays > 0) {
+                return `${diffDays} يوم و ${diffHours} ساعة`;
+            } else {
+                return `${diffHours} ساعة`;
+            }
+        }
+        
         // دالة طباعة الشكوى
         function printComplaint(complaintKey) {
             window.print();
@@ -2317,8 +2665,8 @@
         
         // دالة إرسال رد إداري
         async function submitAdminReply(complaintKey) {
-            if (!isLoggedIn) {
-                showMessage('يجب تسجيل الدخول كمسؤول لإرسال رد', 'error');
+            if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'moderator')) {
+                showMessage('يجب تسجيل الدخول كمسؤول أو مشرف لإرسال رد', 'error');
                 return;
             }
             
@@ -2337,6 +2685,14 @@
                 const snapshot = await complaintRef.once('value');
                 const currentData = snapshot.val();
                 
+                // التحقق من صلاحيات المشرف
+                if (currentUser.role === 'moderator' && currentUser.allowedDepartments) {
+                    if (!currentUser.allowedDepartments.includes(currentData.department)) {
+                        showMessage('ليس لديك صلاحية للرد على هذه الشكوى', 'error');
+                        return;
+                    }
+                }
+                
                 // إعداد التحديثات
                 const updates = {};
                 
@@ -2345,8 +2701,8 @@
                     const newReply = {
                         text: replyText,
                         date: new Date().toISOString(),
-                        sender: 'admin',
-                        adminName: 'المسؤول أحمد'
+                        sender: currentUser.role,
+                        adminName: currentUser.name
                     };
                     
                     const updatedResponses = currentData.responses ? [...currentData.responses, newReply] : [newReply];
@@ -2375,8 +2731,8 @@
                         allComplaints[complaintIndex].responses.push({
                             text: replyText,
                             date: new Date().toISOString(),
-                            sender: 'admin',
-                            adminName: 'المسؤول أحمد'
+                            sender: currentUser.role,
+                            adminName: currentUser.name
                         });
                     }
                     
@@ -2406,9 +2762,18 @@
         
         // دالة الرد على شكوى (فتح نموذج الرد)
         function replyToComplaint(complaintKey) {
-            if (!isLoggedIn) {
-                showMessage('يجب تسجيل الدخول كمسؤول للرد على الشكاوى', 'error');
+            if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'moderator')) {
+                showMessage('يجب تسجيل الدخول كمسؤول أو مشرف للرد على الشكاوى', 'error');
                 return;
+            }
+            
+            // التحقق من صلاحيات المشرف
+            const complaint = allComplaints.find(c => c.key === complaintKey);
+            if (currentUser.role === 'moderator' && currentUser.allowedDepartments) {
+                if (!currentUser.allowedDepartments.includes(complaint.department)) {
+                    showMessage('ليس لديك صلاحية للرد على هذه الشكوى', 'error');
+                    return;
+                }
             }
             
             // عرض تفاصيل الشكوى مع التركيز على نموذج الرد
@@ -2422,7 +2787,7 @@
         
         // دالة حذف شكوى
         async function deleteComplaint(complaintKey) {
-            if (!isLoggedIn) {
+            if (!currentUser || currentUser.role !== 'admin') {
                 showMessage('يجب تسجيل الدخول كمسؤول لحذف الشكاوى', 'error');
                 return;
             }
@@ -2456,7 +2821,7 @@
         
         // دالة تحميل المستخدمين
         async function loadUsers() {
-            if (!isLoggedIn) {
+            if (!currentUser || currentUser.role !== 'admin') {
                 showMessage('يجب تسجيل الدخول كمسؤول للوصول إلى إدارة المستخدمين', 'error');
                 return;
             }
@@ -2493,7 +2858,7 @@
             if (allUsers.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
                             <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 15px; display: block; opacity: 0.5;"></i>
                             لا يوجد مستخدمين مسجلين
                             <br>
@@ -2525,6 +2890,18 @@
                     statusBadge = '<span class="status-badge status-closed">موقوف</span>';
                 }
                 
+                // عرض الأقسام المسموح بها
+                let allowedDepartmentsText = 'جميع الأقسام';
+                if (user.role === 'moderator' && user.allowedDepartments && user.allowedDepartments.length > 0) {
+                    if (user.allowedDepartments.length === 1) {
+                        allowedDepartmentsText = user.allowedDepartments[0];
+                    } else if (user.allowedDepartments.length <= 3) {
+                        allowedDepartmentsText = user.allowedDepartments.join('، ');
+                    } else {
+                        allowedDepartmentsText = `${user.allowedDepartments.length} قسم`;
+                    }
+                }
+                
                 html += `
                     <tr>
                         <td>
@@ -2541,6 +2918,7 @@
                         <td>${user.email || 'غير محدد'}</td>
                         <td>${user.phone || 'غير محدد'}</td>
                         <td>${user.role === 'admin' ? 'مسؤول' : user.role === 'moderator' ? 'مشرف' : 'مستخدم'}</td>
+                        <td>${allowedDepartmentsText}</td>
                         <td>${statusBadge}</td>
                         <td>${lastActivity}</td>
                         <td>
@@ -2568,7 +2946,7 @@
         
         // دالة عرض نموذج إضافة مستخدم
         function showAddUserModal() {
-            if (!isLoggedIn) {
+            if (!currentUser || currentUser.role !== 'admin') {
                 showMessage('يجب تسجيل الدخول كمسؤول لإضافة مستخدمين', 'error');
                 return;
             }
@@ -2585,6 +2963,11 @@
                                 <div class="form-group">
                                     <label class="form-label">اسم المستخدم</label>
                                     <input type="text" class="form-control" id="userName" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">اسم المستخدم (للتسجيل)</label>
+                                    <input type="text" class="form-control" id="userUsername" required>
                                 </div>
                                 
                                 <div class="form-group">
@@ -2609,11 +2992,33 @@
                                 
                                 <div class="form-group">
                                     <label class="form-label">الدور</label>
-                                    <select class="form-control" id="userRole">
+                                    <select class="form-control" id="userRole" onchange="toggleDepartmentSelection()">
                                         <option value="user">مستخدم عادي</option>
                                         <option value="moderator">مشرف</option>
                                         <option value="admin">مسؤول</option>
                                     </select>
+                                </div>
+                                
+                                <div class="form-group" id="departmentSelection" style="display: none;">
+                                    <label class="form-label">الأقسام المسموح بها (للمشرفين)</label>
+                                    <div id="departmentsCheckboxList" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 10px;">
+                                        ${DEPARTMENTS.map(dept => `
+                                            <div style="margin-bottom: 8px;">
+                                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                                    <input type="checkbox" value="${dept}" style="margin-left: 8px;">
+                                                    ${dept}
+                                                </label>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <div style="margin-top: 10px;">
+                                        <button type="button" class="btn btn-secondary" onclick="selectAllDepartments()" style="padding: 5px 10px; font-size: 14px;">
+                                            تحديد الكل
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" onclick="deselectAllDepartments()" style="padding: 5px 10px; font-size: 14px; margin-right: 10px;">
+                                            إلغاء التحديد
+                                        </button>
+                                    </div>
                                 </div>
                                 
                                 <div class="form-group">
@@ -2648,11 +3053,43 @@
                 e.preventDefault();
                 await saveUser();
             });
+            
+            // تحفيز تغيير الدور لضبط عرض اختيار الأقسام
+            document.getElementById('userRole').dispatchEvent(new Event('change'));
+        }
+        
+        // دالة تبديل عرض اختيار الأقسام
+        function toggleDepartmentSelection() {
+            const role = document.getElementById('userRole').value;
+            const departmentSelection = document.getElementById('departmentSelection');
+            
+            if (role === 'moderator') {
+                departmentSelection.style.display = 'block';
+            } else {
+                departmentSelection.style.display = 'none';
+            }
+        }
+        
+        // دالة تحديد جميع الأقسام
+        function selectAllDepartments() {
+            const checkboxes = document.querySelectorAll('#departmentsCheckboxList input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        }
+        
+        // دالة إلغاء تحديد جميع الأقسام
+        function deselectAllDepartments() {
+            const checkboxes = document.querySelectorAll('#departmentsCheckboxList input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
         }
         
         // دالة حفظ المستخدم
         async function saveUser() {
             const name = document.getElementById('userName').value.trim();
+            const username = document.getElementById('userUsername').value.trim();
             const email = document.getElementById('userEmail').value.trim();
             const phone = document.getElementById('userPhone').value.trim();
             const password = document.getElementById('userPassword').value;
@@ -2660,36 +3097,132 @@
             const role = document.getElementById('userRole').value;
             const status = document.getElementById('userStatus').value;
             
+            // التحقق من صحة البيانات
+            if (!name || !username || !email || !phone || !password) {
+                showMessage('يرجى ملء جميع الحقول المطلوبة', 'error');
+                return;
+            }
+            
             // التحقق من كلمات المرور
             if (password !== confirmPassword) {
                 showMessage('كلمات المرور غير متطابقة', 'error');
                 return;
             }
             
+            // التحقق من صحة البريد الإلكتروني
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage('يرجى إدخال بريد إلكتروني صحيح', 'error');
+                return;
+            }
+            
+            // الحصول على الأقسام المختارة للمشرفين
+            let allowedDepartments = [];
+            if (role === 'moderator') {
+                const checkboxes = document.querySelectorAll('#departmentsCheckboxList input[type="checkbox"]:checked');
+                checkboxes.forEach(checkbox => {
+                    allowedDepartments.push(checkbox.value);
+                });
+                
+                if (allowedDepartments.length === 0) {
+                    showMessage('يرجى اختيار قسم واحد على الأقل للمشرف', 'error');
+                    return;
+                }
+            }
+            
             try {
+                // التحقق من عدم وجود مستخدم بنفس البريد الإلكتروني أو اسم المستخدم
                 const usersRef = database.ref('users');
+                const snapshot = await usersRef.once('value');
+                
+                let userExists = false;
+                if (snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        const user = childSnapshot.val();
+                        if (user.email === email) {
+                            showMessage('البريد الإلكتروني مسجل مسبقاً', 'error');
+                            userExists = true;
+                            return;
+                        }
+                        if (user.username === username) {
+                            showMessage('اسم المستخدم مسجل مسبقاً', 'error');
+                            userExists = true;
+                            return;
+                        }
+                    });
+                }
+                
+                if (userExists) return;
+                
+                // إنشاء معرف فريد للمستخدم
                 const newUserRef = usersRef.push();
+                const userId = newUserRef.key;
                 
                 const userData = {
+                    id: userId,
                     name: name,
+                    username: username,
                     email: email,
                     phone: phone,
                     password: btoa(password), // تشفير بسيط
                     role: role,
                     status: status,
+                    allowedDepartments: allowedDepartments,
                     createdAt: new Date().toISOString(),
-                    createdBy: currentUser ? currentUser.username : 'admin'
+                    createdBy: currentUser ? currentUser.name : 'admin',
+                    lastLogin: null,
+                    loginCount: 0,
+                    permissions: getDefaultPermissions(role)
                 };
                 
                 await newUserRef.set(userData);
                 
+                // تحديث قائمة المستخدمين المحلية
+                allUsers.push({...userData, key: userId});
+                
                 closeUserModal();
-                loadUsers();
-                showMessage('تم حفظ المستخدم بنجاح', 'success');
+                displayUsersTable();
+                showMessage('تم إضافة المستخدم بنجاح', 'success');
                 
             } catch (error) {
                 console.error('Error saving user:', error);
                 showMessage('حدث خطأ أثناء حفظ المستخدم', 'error');
+            }
+        }
+        
+        // دالة للحصول على صلاحيات افتراضية حسب الدور
+        function getDefaultPermissions(role) {
+            switch(role) {
+                case 'admin':
+                    return {
+                        canViewComplaints: true,
+                        canEditComplaints: true,
+                        canDeleteComplaints: true,
+                        canManageUsers: true,
+                        canViewReports: true,
+                        canExportData: true,
+                        canManageSettings: true
+                    };
+                case 'moderator':
+                    return {
+                        canViewComplaints: true,
+                        canEditComplaints: true,
+                        canDeleteComplaints: false,
+                        canManageUsers: false,
+                        canViewReports: true,
+                        canExportData: false,
+                        canManageSettings: false
+                    };
+                default: // user
+                    return {
+                        canViewComplaints: true,
+                        canEditComplaints: false,
+                        canDeleteComplaints: false,
+                        canManageUsers: false,
+                        canViewReports: false,
+                        canExportData: false,
+                        canManageSettings: false
+                    };
             }
         }
         
@@ -2709,7 +3242,11 @@
             
             try {
                 await database.ref('users/' + userKey).remove();
-                loadUsers();
+                
+                // تحديث القائمة المحلية
+                allUsers = allUsers.filter(user => user.key !== userKey);
+                
+                displayUsersTable();
                 showMessage('تم حذف المستخدم بنجاح', 'success');
             } catch (error) {
                 console.error('Error deleting user:', error);
@@ -2724,17 +3261,34 @@
             
             showAddUserModal();
             
+            // تغيير النص
+            document.querySelector('.modal-title').textContent = 'تعديل المستخدم';
+            document.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-save"></i> تحديث المستخدم';
+            
             // ملء الحقول بقيم المستخدم
             document.getElementById('userName').value = user.name || '';
+            document.getElementById('userUsername').value = user.username || '';
             document.getElementById('userEmail').value = user.email || '';
             document.getElementById('userPhone').value = user.phone || '';
             document.getElementById('userRole').value = user.role || 'user';
             document.getElementById('userStatus').value = user.status || 'active';
             
-            // تغيير النص والتأثير
-            document.querySelector('.modal-title').textContent = 'تعديل المستخدم';
+            // جعل حقول كلمة المرور غير إلزامية للتعديل
             document.getElementById('userPassword').required = false;
             document.getElementById('userConfirmPassword').required = false;
+            document.getElementById('userPassword').placeholder = 'اتركه فارغاً للحفاظ على كلمة المرور الحالية';
+            document.getElementById('userConfirmPassword').placeholder = 'اتركه فارغاً للحفاظ على كلمة المرور الحالية';
+            
+            // تحديد الأقسام للمشرفين
+            if (user.role === 'moderator' && user.allowedDepartments) {
+                const checkboxes = document.querySelectorAll('#departmentsCheckboxList input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = user.allowedDepartments.includes(checkbox.value);
+                });
+            }
+            
+            // تحديث عرض اختيار الأقسام
+            document.getElementById('userRole').dispatchEvent(new Event('change'));
             
             // تغيير دالة الحفظ
             const form = document.getElementById('addUserForm');
@@ -2747,6 +3301,7 @@
         // دالة تحديث المستخدم
         async function updateUser(userKey) {
             const name = document.getElementById('userName').value.trim();
+            const username = document.getElementById('userUsername').value.trim();
             const email = document.getElementById('userEmail').value.trim();
             const phone = document.getElementById('userPhone').value.trim();
             const password = document.getElementById('userPassword').value;
@@ -2756,12 +3311,31 @@
             try {
                 const updates = {
                     name: name,
+                    username: username,
                     email: email,
                     phone: phone,
                     role: role,
                     status: status,
                     updatedAt: new Date().toISOString()
                 };
+                
+                // الحصول على الأقسام المختارة للمشرفين
+                if (role === 'moderator') {
+                    const checkboxes = document.querySelectorAll('#departmentsCheckboxList input[type="checkbox"]:checked');
+                    const allowedDepartments = [];
+                    checkboxes.forEach(checkbox => {
+                        allowedDepartments.push(checkbox.value);
+                    });
+                    
+                    if (allowedDepartments.length === 0) {
+                        showMessage('يرجى اختيار قسم واحد على الأقل للمشرف', 'error');
+                        return;
+                    }
+                    
+                    updates.allowedDepartments = allowedDepartments;
+                } else {
+                    updates.allowedDepartments = [];
+                }
                 
                 // تحديث كلمة المرور فقط إذا تم إدخالها
                 if (password) {
@@ -2775,8 +3349,14 @@
                 
                 await database.ref('users/' + userKey).update(updates);
                 
+                // تحديث القائمة المحلية
+                const userIndex = allUsers.findIndex(u => u.key === userKey);
+                if (userIndex !== -1) {
+                    allUsers[userIndex] = {...allUsers[userIndex], ...updates};
+                }
+                
                 closeUserModal();
-                loadUsers();
+                displayUsersTable();
                 showMessage('تم تحديث المستخدم بنجاح', 'success');
                 
             } catch (error) {
