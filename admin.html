@@ -6,7 +6,6 @@
     <title>لوحة التحكم - نظام الشكاوى الموحد</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
         *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent}
         html{font-size:16px;scroll-behavior:smooth}
@@ -145,8 +144,31 @@
         input:checked + .toggle-slider{background-color:#1a5fb4}
         input:checked + .toggle-slider:before{transform:translateX(26px)}
         
+        /* إضافات جديدة للمزايا المطلوبة */
+        .mobile-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid #1a5fb4;display:flex;justify-content:space-around;padding:12px 10px;z-index:999;box-shadow:0 -5px 20px rgba(0,0,0,.1);display:none}
+        .mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:5px;color:#666;text-decoration:none;font-size:.8rem;flex:1;padding:8px 5px;border-radius:10px;transition:all .2s}
+        .mobile-nav-item.active{background:#1a5fb4;color:#fff}
+        .mobile-nav-icon{font-size:1.2rem}
+        .modal-header-controls{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
+        .btn-download-pdf{background:#27ae60;color:#fff}
+        .btn-reply{background:#9b59b6;color:#fff}
+        .btn-edit{background:#3498db;color:#fff}
+        .btn-delete{background:#e74c3c;color:#fff}
+        .btn-reset-password{background:#f39c12;color:#fff}
+        .modal-wide .modal-content{max-width:700px}
+        .form-row{display:flex;flex-wrap:wrap;gap:15px;margin-bottom:15px}
+        .form-group{flex:1;min-width:200px}
+        .user-departments{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+        .department-tag{background:#e3f2fd;color:#1565c0;padding:4px 12px;border-radius:20px;font-size:.85rem;display:inline-flex;align-items:center;gap:5px}
+        .department-tag i{cursor:pointer;font-size:.8rem}
+        .multi-select{min-height:120px;max-height:200px;overflow-y:auto}
+        .multi-select option{padding:10px;margin:5px 0;border-radius:5px}
+        .multi-select option:checked{background:#1a5fb4;color:#fff}
+        .settings-card{background:#fff;border-radius:15px;padding:25px;box-shadow:0 5px 20px rgba(0,0,0,.08);margin-bottom:20px}
+        .settings-card h3{color:#2c3e50;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #f0f0f0}
+        
         @media (max-width:768px){
-            .mobile-menu-btn{display:flex}
+            .mobile-menu-btn,.mobile-nav{display:flex}
             .cards-grid{grid-template-columns:1fr}
             .complaints-table th,.complaints-table td{padding:10px 8px;font-size:.85rem}
             .section-header{flex-direction:column;align-items:flex-start}
@@ -156,13 +178,17 @@
             .admin-text h3,.admin-text p{text-align:center}
             .logo{font-size:1.5rem}
             .subtitle{font-size:.9rem}
+            .modal-header-controls{flex-direction:column}
+            .modal-header-controls button{width:100%}
+            .form-row{flex-direction:column}
+            .form-group{width:100%}
         }
         @media (min-width:769px){
             .dashboard-grid{display:grid;grid-template-columns:280px 1fr}
             .sidebar{position:static;width:100%;height:auto;right:0;box-shadow:none;border-radius:15px}
             .sidebar-overlay{display:none !important}
             .close-sidebar{display:none}
-            .mobile-menu-btn{display:none}
+            .mobile-menu-btn,.mobile-nav{display:none}
         }
         @media (max-width:480px){
             .admin-stats{grid-template-columns:1fr}
@@ -496,7 +522,7 @@
                         <div class="section-header">
                             <h2 class="section-title">إدارة المستخدمين</h2>
                             <div class="section-controls">
-                                <button class="save-btn" onclick="addNewUser()">
+                                <button class="save-btn" onclick="showAddUserModal()">
                                     <i class="fas fa-user-plus"></i>
                                     إضافة مستخدم
                                 </button>
@@ -514,65 +540,99 @@
                             <h2 class="section-title">إعدادات النظام</h2>
                         </div>
 
-                        <form class="settings-form" id="settingsForm">
-                            <div class="setting-item">
-                                <label class="setting-label">اسم النظام</label>
-                                <input type="text" class="setting-input" id="systemName" value="نظام الشكاوى الموحد" required>
-                                <p class="setting-description">الاسم الذي يظهر في لوحة التحكم</p>
-                            </div>
+                        <div class="settings-card">
+                            <h3>إعدادات عامة</h3>
+                            <form class="settings-form" id="settingsForm">
+                                <div class="setting-item">
+                                    <label class="setting-label">اسم النظام</label>
+                                    <input type="text" class="setting-input" id="systemName" value="نظام الشكاوى الموحد" required>
+                                    <p class="setting-description">الاسم الذي يظهر في لوحة التحكم</p>
+                                </div>
 
-                            <div class="setting-item">
-                                <label class="setting-label">عنوان النظام</label>
-                                <input type="text" class="setting-input" id="systemTitle" value="لوحة التحكم الإدارية" required>
-                                <p class="setting-description">العنوان الذي يظهر في أعلى الصفحة</p>
-                            </div>
+                                <div class="setting-item">
+                                    <label class="setting-label">عنوان النظام</label>
+                                    <input type="text" class="setting-input" id="systemTitle" value="لوحة التحكم الإدارية" required>
+                                    <p class="setting-description">العنوان الذي يظهر في أعلى الصفحة</p>
+                                </div>
 
-                            <div class="setting-item">
-                                <label class="setting-label">عدد العناصر في الصفحة</label>
-                                <select class="setting-select" id="itemsPerPage">
-                                    <option value="10">10 عناصر</option>
-                                    <option value="25">25 عنصراً</option>
-                                    <option value="50">50 عنصراً</option>
-                                    <option value="100">100 عنصر</option>
-                                </select>
-                                <p class="setting-description">عدد الشكاوى المعروضة في كل صفحة</p>
-                            </div>
+                                <div class="setting-item">
+                                    <label class="setting-label">عدد العناصر في الصفحة</label>
+                                    <select class="setting-select" id="itemsPerPage">
+                                        <option value="10">10 عناصر</option>
+                                        <option value="25">25 عنصراً</option>
+                                        <option value="50">50 عنصراً</option>
+                                        <option value="100">100 عنصر</option>
+                                    </select>
+                                    <p class="setting-description">عدد الشكاوى المعروضة في كل صفحة</p>
+                                </div>
 
-                            <div class="setting-item">
-                                <label class="setting-label">تفعيل الإشعارات</label>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="enableNotifications" checked>
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <p class="setting-description">إرسال إشعارات عند وصول شكاوى جديدة</p>
-                            </div>
+                                <div class="setting-item">
+                                    <label class="setting-label">تفعيل الإشعارات</label>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="enableNotifications" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <p class="setting-description">إرسال إشعارات عند وصول شكاوى جديدة</p>
+                                </div>
 
-                            <div class="setting-item">
-                                <label class="setting-label">تفعيل التذكير التلقائي</label>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="enableReminders" checked>
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <p class="setting-description">تذكير تلقائي بالشكاوى المتأخرة</p>
-                            </div>
+                                <div class="setting-item">
+                                    <label class="setting-label">تفعيل التذكير التلقائي</label>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="enableReminders" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <p class="setting-description">تذكير تلقائي بالشكاوى المتأخرة</p>
+                                </div>
 
-                            <div class="setting-item">
-                                <label class="setting-label">رسالة الترحيب</label>
-                                <textarea class="setting-textarea" id="welcomeMessage">مرحباً بكم في نظام الشكاوى الموحد. نسعى دائماً لتحسين خدماتنا.</textarea>
-                                <p class="setting-description">الرسالة التي تظهر عند تسجيل الدخول</p>
-                            </div>
+                                <div class="setting-item">
+                                    <label class="setting-label">رسالة الترحيب</label>
+                                    <textarea class="setting-textarea" id="welcomeMessage">مرحباً بكم في نظام الشكاوى الموحد. نسعى دائماً لتحسين خدماتنا.</textarea>
+                                    <p class="setting-description">الرسالة التي تظهر عند تسجيل الدخول</p>
+                                </div>
 
-                            <div class="setting-item">
-                                <label class="setting-label">البريد الإلكتروني للإشعارات</label>
-                                <input type="email" class="setting-input" id="notificationEmail" placeholder="admin@example.com">
-                                <p class="setting-description">إرسال نسخة من الإشعارات إلى هذا البريد</p>
-                            </div>
+                                <div class="setting-item">
+                                    <label class="setting-label">البريد الإلكتروني للإشعارات</label>
+                                    <input type="email" class="setting-input" id="notificationEmail" placeholder="admin@example.com">
+                                    <p class="setting-description">إرسال نسخة من الإشعارات إلى هذا البريد</p>
+                                </div>
 
-                            <button type="submit" class="save-btn">
-                                <i class="fas fa-save"></i>
-                                حفظ الإعدادات
-                            </button>
-                        </form>
+                                <button type="submit" class="save-btn">
+                                    <i class="fas fa-save"></i>
+                                    حفظ الإعدادات
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="settings-card">
+                            <h3>إعدادات مكتب النائب</h3>
+                            <form class="settings-form" id="officeSettingsForm">
+                                <div class="setting-item">
+                                    <label class="setting-label">رقم مكتب النائب للواتساب</label>
+                                    <input type="text" class="setting-input" id="officeWhatsappNumber" placeholder="+201234567890" required>
+                                    <p class="setting-description">سيظهر هذا الرقم لمقدمي الطلبات للتواصل عبر الواتساب</p>
+                                </div>
+
+                                <div class="setting-item">
+                                    <label class="setting-label">اسم مكتب الرد الرسمي</label>
+                                    <input type="text" class="setting-input" id="officeReplyName" value="مكتب النائب أحمد الحديدي" required>
+                                    <p class="setting-description">الاسم الذي سيظهر في الردود الرسمية على الشكاوى</p>
+                                </div>
+
+                                <div class="setting-item">
+                                    <label class="setting-label">توقيع الرد الرسمي</label>
+                                    <textarea class="setting-textarea" id="officeReplySignature">وتفضلوا بقبول فائق الاحترام والتقدير،
+مكتب النائب أحمد الحديدي
+رقم الهاتف: 
+البريد الإلكتروني:</textarea>
+                                    <p class="setting-description">التوقيع الذي سيظهر في نهاية كل رد رسمي</p>
+                                </div>
+
+                                <button type="submit" class="save-btn">
+                                    <i class="fas fa-save"></i>
+                                    حفظ إعدادات المكتب
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
                     <!-- قسم التقارير -->
@@ -639,7 +699,7 @@
 
             <div class="footer">
                 <p>© 2026 نظام الشكاوى الموحد - لوحة التحكم الإدارية</p>
-                <p>جميع الحقوق محفوظة - الإصدار 2.1.0</p>
+                <p>جميع الحقوق محفوظة - الإصدار 3.0.0</p>
                 <p>
                     تم برمجة الموقع من
                     <a href="https://www.facebook.com/en.mohamed.nasr" target="_blank" rel="noopener">
@@ -651,19 +711,143 @@
         </div>
 
         <!-- نافذة تفاصيل الشكوى -->
-        <div class="complaint-details-modal" id="complaintDetailsModal">
+        <div class="complaint-details-modal modal-wide" id="complaintDetailsModal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 class="modal-title">تفاصيل الشكوى</h3>
                     <button class="close-modal" id="closeModal">&times;</button>
+                    <div class="modal-header-controls" id="modalHeaderControls">
+                        <!-- سيتم ملؤها بالجافاسكريبت -->
+                    </div>
                 </div>
                 <div class="modal-body" id="modalBody"></div>
+            </div>
+        </div>
+
+        <!-- نافذة إضافة/تعديل مستخدم -->
+        <div class="complaint-details-modal" id="userModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="userModalTitle">إضافة مستخدم جديد</h3>
+                    <button class="close-modal" onclick="closeUserModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="setting-label">اسم المستخدم (الذي سيظهر)</label>
+                                <input type="text" class="setting-input" id="userName" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">اسم المستخدم بالانجليزية للتسجيل</label>
+                                <input type="text" class="setting-input" id="userUsername" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="setting-label">البريد الإلكتروني</label>
+                                <input type="email" class="setting-input" id="userEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">رقم الهاتف</label>
+                                <input type="text" class="setting-input" id="userPhone">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="setting-label">كلمة السر</label>
+                                <input type="password" class="setting-input" id="userPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">تأكيد كلمة السر</label>
+                                <input type="password" class="setting-input" id="userConfirmPassword" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="setting-label">دور المستخدم</label>
+                            <select class="setting-select" id="userRole">
+                                <option value="user">مستخدم عادي</option>
+                                <option value="admin">مسؤول</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="setting-label">الأقسام المسؤول عنها</label>
+                            <select class="setting-select multi-select" id="userDepartments" multiple>
+                                <!-- سيتم ملؤها بالجافاسكريبت -->
+                            </select>
+                            <p class="setting-description">يمكن اختيار أكثر من قسم باستخدام زر Ctrl</p>
+                        </div>
+                        <div class="form-group">
+                            <div class="user-departments" id="selectedDepartments">
+                                <!-- سيتم ملؤها بالجافاسكريبت -->
+                            </div>
+                        </div>
+                        <input type="hidden" id="userId">
+                        <button type="submit" class="save-btn" style="width:100%;margin-top:20px">
+                            <i class="fas fa-save"></i>
+                            حفظ المستخدم
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة الرد على الشكوى -->
+        <div class="complaint-details-modal" id="replyModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">الرد على الشكوى</h3>
+                    <button class="close-modal" onclick="closeReplyModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="replyForm">
+                        <div class="form-group">
+                            <label class="setting-label">الرد الرسمي باسم مكتب النائب</label>
+                            <textarea class="setting-textarea" id="replyText" rows="8" placeholder="أدخل الرد الرسمي هنا..."></textarea>
+                        </div>
+                        <input type="hidden" id="replyComplaintId">
+                        <div class="modal-header-controls">
+                            <button type="submit" class="action-btn btn-reply" style="flex:1">
+                                <i class="fas fa-reply"></i>
+                                إرسال الرد
+                            </button>
+                            <button type="button" class="action-btn btn-secondary" onclick="closeReplyModal()" style="flex:1">
+                                <i class="fas fa-times"></i>
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
         <!-- شريط التحميل -->
         <div class="loading-overlay" id="loadingOverlay">
             <div class="loading-spinner"></div>
+        </div>
+
+        <!-- شريط التنقل للهواتف -->
+        <div class="mobile-nav" id="mobileNav">
+            <a href="#" class="mobile-nav-item active" onclick="showSection('dashboard'); updateMobileNav(this); return false;">
+                <i class="fas fa-tachometer-alt mobile-nav-icon"></i>
+                <span>لوحة التحكم</span>
+            </a>
+            <a href="#" class="mobile-nav-item" onclick="showSection('complaints'); updateMobileNav(this); return false;">
+                <i class="fas fa-file-alt mobile-nav-icon"></i>
+                <span>الشكاوى</span>
+            </a>
+            <a href="#" class="mobile-nav-item" onclick="if(currentUser && currentUser.role === 'admin'){showSection('users'); updateMobileNav(this);} else {showMessage('يجب تسجيل الدخول كمسؤول', 'error');} return false;">
+                <i class="fas fa-users mobile-nav-icon"></i>
+                <span>المستخدمين</span>
+            </a>
+            <a href="#" class="mobile-nav-item" onclick="showSection('settings'); updateMobileNav(this); return false;">
+                <i class="fas fa-cog mobile-nav-icon"></i>
+                <span>الإعدادات</span>
+            </a>
+            <a href="#" class="mobile-nav-item" onclick="showSection('reports'); updateMobileNav(this); return false;">
+                <i class="fas fa-chart-bar mobile-nav-icon"></i>
+                <span>التقارير</span>
+            </a>
         </div>
     </div>
 
@@ -695,6 +879,7 @@
         let currentPage = 1;
         let itemsPerPage = 10;
         let settings = {};
+        let officeSettings = {};
 
         document.addEventListener('DOMContentLoaded', () => {
             initApp();
@@ -723,6 +908,12 @@
             
             // إضافة مستمع للإعدادات
             document.getElementById('settingsForm').addEventListener('submit', saveSettings);
+            document.getElementById('officeSettingsForm').addEventListener('submit', saveOfficeSettings);
+            document.getElementById('userForm').addEventListener('submit', saveUser);
+            document.getElementById('replyForm').addEventListener('submit', sendReply);
+
+            // متابعة تغيير الأقسام للمستخدم
+            document.getElementById('userDepartments').addEventListener('change', updateSelectedDepartments);
 
             document.querySelectorAll('.menu-item').forEach(item => {
                 item.addEventListener('click', () => {
@@ -741,9 +932,9 @@
             loadUsers();
             loadDepartments();
             loadSettings();
+            loadOfficeSettings();
         }
 
-        // تسجيل الدخول ثابت admin / 742018
         function handleLogin(e) {
             e.preventDefault();
             const username = document.getElementById('username').value.trim();
@@ -876,6 +1067,7 @@
                     });
                 }
                 displayUsersGrid();
+                populateUserDepartments();
             } catch(err){
                 console.error(err);
             }
@@ -910,12 +1102,57 @@
             }
         }
 
+        async function loadOfficeSettings() {
+            try {
+                const snap = await database.ref('officeSettings').get();
+                if (snap.exists()) {
+                    officeSettings = snap.val();
+                    applyOfficeSettings();
+                } else {
+                    // إعدادات افتراضية
+                    officeSettings = {
+                        whatsappNumber: '+201234567890',
+                        replyName: 'مكتب النائب أحمد الحديدي',
+                        replySignature: 'وتفضلوا بقبول فائق الاحترام والتقدير،\nمكتب النائب أحمد الحديدي\nرقم الهاتف: \nالبريد الإلكتروني:'
+                    };
+                }
+            } catch(err){
+                console.error(err);
+            }
+        }
+
         function applySettings() {
             if (settings.systemName) {
+                document.getElementById('systemName').value = settings.systemName;
                 document.getElementById('adminWelcome').textContent = `مرحباً في ${settings.systemName}`;
             }
             if (settings.itemsPerPage) {
                 itemsPerPage = parseInt(settings.itemsPerPage) || 10;
+                document.getElementById('itemsPerPage').value = itemsPerPage;
+            }
+            if (settings.enableNotifications !== undefined) {
+                document.getElementById('enableNotifications').checked = settings.enableNotifications;
+            }
+            if (settings.enableReminders !== undefined) {
+                document.getElementById('enableReminders').checked = settings.enableReminders;
+            }
+            if (settings.welcomeMessage) {
+                document.getElementById('welcomeMessage').value = settings.welcomeMessage;
+            }
+            if (settings.notificationEmail) {
+                document.getElementById('notificationEmail').value = settings.notificationEmail;
+            }
+        }
+
+        function applyOfficeSettings() {
+            if (officeSettings.whatsappNumber) {
+                document.getElementById('officeWhatsappNumber').value = officeSettings.whatsappNumber;
+            }
+            if (officeSettings.replyName) {
+                document.getElementById('officeReplyName').value = officeSettings.replyName;
+            }
+            if (officeSettings.replySignature) {
+                document.getElementById('officeReplySignature').value = officeSettings.replySignature;
             }
         }
 
@@ -953,7 +1190,7 @@
                     startDate = new Date(now.setMonth(now.getMonth() - 1));
                     break;
                 default:
-                    startDate = new Date(0); // كل الفترات
+                    startDate = new Date(0);
             }
             
             const filtered = allComplaints.filter(c => new Date(c.createdAt) >= startDate);
@@ -1032,7 +1269,7 @@
             const tbody = document.getElementById('latestComplaintsBody');
             if (!tbody) return;
             
-            const latest = allComplaints.slice(0, 5); // آخر 5 شكاوى
+            const latest = allComplaints.slice(0, 5);
             
             if (!latest.length) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#666;">لا توجد شكاوى حديثة</td></tr>`;
@@ -1082,6 +1319,7 @@
             let html = '';
             allUsers.forEach(u => {
                 const roleColor = u.role === 'admin' ? '#e74c3c' : '#3498db';
+                const departments = u.departments ? u.departments.join(', ') : 'جميع الأقسام';
                 
                 html += `
                 <div class="user-card">
@@ -1094,11 +1332,19 @@
                             <span style="color:${roleColor};font-weight:600">${u.role === 'admin' ? 'مسؤول' : 'مستخدم'}</span>
                         </div>
                         <div class="user-email">${u.email || 'لا يوجد بريد إلكتروني'}</div>
-                        <div class="user-email">${u.phone || 'لا يوجد هاتف'}</div>
+                        <div class="user-email">${departments}</div>
                     </div>
-                    <button class="action-btn" style="background:#e74c3c;color:#fff" onclick="deleteUser('${u.key}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <div style="display:flex;gap:5px;">
+                        <button class="action-btn btn-edit" onclick="editUser('${u.key}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn btn-reset-password" onclick="resetUserPassword('${u.key}')">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="action-btn btn-delete" onclick="deleteUser('${u.key}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>`;
             });
             container.innerHTML = html;
@@ -1145,12 +1391,23 @@
             const select = document.getElementById('filterDepartment');
             if (!select) return;
             
-            // الحصول على جميع الأقسام الفريدة
             const departments = [...new Set(allComplaints.map(c => c.department).filter(Boolean))];
             
             let options = '<option value="">جميع الأقسام</option>';
             departments.forEach(dept => {
                 options += `<option value="${dept}">${dept}</option>`;
+            });
+            
+            select.innerHTML = options;
+        }
+
+        function populateUserDepartments() {
+            const select = document.getElementById('userDepartments');
+            if (!select) return;
+            
+            let options = '';
+            allDepartments.forEach(dept => {
+                options += `<option value="${dept.name}">${dept.name}</option>`;
             });
             
             select.innerHTML = options;
@@ -1163,19 +1420,13 @@
             const priority = document.getElementById('filterPriority').value;
             
             filteredComplaints = allComplaints.filter(c => {
-                // البحث
                 const searchMatch = !search || 
                     (c.complaintNumber && c.complaintNumber.toLowerCase().includes(search)) ||
                     (c.fullName && c.fullName.toLowerCase().includes(search)) ||
                     (c.problemDetails && c.problemDetails.toLowerCase().includes(search));
                 
-                // القسم
                 const departmentMatch = !department || c.department === department;
-                
-                // الحالة
                 const statusMatch = !status || c.status === status;
-                
-                // الأولوية
                 const priorityMatch = !priority || c.priority === priority;
                 
                 return searchMatch && departmentMatch && statusMatch && priorityMatch;
@@ -1203,7 +1454,6 @@
             if (newPage >= 1 && newPage <= totalPages) {
                 currentPage = newPage;
                 displayComplaintsTable();
-                // التمرير لأعلى الصفحة
                 document.querySelector('.main-content').scrollIntoView({behavior: 'smooth'});
             }
         }
@@ -1238,12 +1488,29 @@
             const createdAt = complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : '-';
             const updatedAt = complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : createdAt;
             
+            // زر تنزيل PDF
+            const downloadBtn = `<button class="action-btn btn-download-pdf" onclick="downloadComplaintPDF('${complaint.key}')">
+                <i class="fas fa-download"></i> تنزيل PDF
+            </button>`;
+            
+            // زر الرد باسم مكتب النائب
+            const replyBtn = `<button class="action-btn btn-reply" onclick="showReplyModal('${complaint.key}')">
+                <i class="fas fa-reply"></i> الرد باسم مكتب النائب
+            </button>`;
+            
+            // أزرار التحكم
+            const controlBtns = `
+                <button class="action-btn btn-edit" onclick="editComplaint('${complaint.key}')">
+                    <i class="fas fa-edit"></i> تعديل
+                </button>
+                <button class="action-btn btn-delete" onclick="deleteComplaint('${complaint.key}')">
+                    <i class="fas fa-trash"></i> حذف
+                </button>
+            `;
+            
+            document.getElementById('modalHeaderControls').innerHTML = downloadBtn + replyBtn + controlBtns;
+            
             modalBody.innerHTML = `
-                <div style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:10px;">
-                    <button class="btn btn-secondary" onclick="closeModal()">
-                        <i class="fas fa-times"></i> إغلاق
-                    </button>
-                </div>
                 <div class="details-grid">
                     <div class="detail-item">
                         <div class="detail-label">رقم الشكوى</div>
@@ -1288,7 +1555,11 @@
                     ${complaint.response ? `
                     <div class="detail-item">
                         <div class="detail-label">الرد الرسمي</div>
-                        <div style="white-space:pre-line;background:#e8f5e9;padding:15px;border-radius:8px;border-right:4px solid #2e7d32">${complaint.response}</div>
+                        <div style="white-space:pre-line;background:#e8f5e9;padding:15px;border-radius:8px;border-right:4px solid #2e7d32">
+                            <strong>${officeSettings.replyName || 'مكتب النائب أحمد الحديدي'}:</strong><br>
+                            ${complaint.response}<br><br>
+                            ${officeSettings.replySignature || ''}
+                        </div>
                     </div>
                     ` : ''}
                 </div>
@@ -1325,14 +1596,12 @@
                     updatedBy: currentUser.name
                 });
                 
-                // تحديث البيانات المحلية
                 const index = allComplaints.findIndex(c => c.key === complaintKey);
                 if (index !== -1) {
                     allComplaints[index].status = newStatus;
                     allComplaints[index].updatedAt = new Date().toISOString();
                 }
                 
-                // إعادة تحميل البيانات
                 updateDashboardStats();
                 updateDashboardCards();
                 displayComplaintsTable();
@@ -1348,36 +1617,310 @@
             }
         }
 
-        function addNewUser() {
-            const name = prompt('أدخل اسم المستخدم الجديد:');
-            if (!name) return;
+        function showAddUserModal() {
+            document.getElementById('userModalTitle').textContent = 'إضافة مستخدم جديد';
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = '';
+            document.getElementById('userDepartments').selectedIndex = -1;
+            updateSelectedDepartments();
+            document.getElementById('userModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function editUser(userKey) {
+            const user = allUsers.find(u => u.key === userKey);
+            if (!user) return;
             
-            const email = prompt('أدخل البريد الإلكتروني:');
-            const phone = prompt('أدخل رقم الهاتف:');
-            const role = confirm('هل تريد جعل هذا المستخدم مسؤولاً؟') ? 'admin' : 'user';
+            document.getElementById('userModalTitle').textContent = 'تعديل المستخدم';
+            document.getElementById('userId').value = userKey;
+            document.getElementById('userName').value = user.name || '';
+            document.getElementById('userUsername').value = user.username || '';
+            document.getElementById('userEmail').value = user.email || '';
+            document.getElementById('userPhone').value = user.phone || '';
+            document.getElementById('userRole').value = user.role || 'user';
             
-            showMessage('سيتم إضافة هذه الميزة في التحديثات القادمة', 'success');
-        }
-
-        function deleteUser(userKey) {
-            if (!confirm('هل تريد حذف هذا المستخدم؟')) return;
-            showMessage('سيتم إضافة هذه الميزة في التحديثات القادمة', 'success');
-        }
-
-        function addNewDepartment() {
-            const name = prompt('أدخل اسم القسم الجديد:');
-            if (!name) return;
+            const departmentsSelect = document.getElementById('userDepartments');
+            if (user.departments && Array.isArray(user.departments)) {
+                for (let i = 0; i < departmentsSelect.options.length; i++) {
+                    departmentsSelect.options[i].selected = user.departments.includes(departmentsSelect.options[i].value);
+                }
+            } else {
+                departmentsSelect.selectedIndex = -1;
+            }
             
-            showMessage('سيتم إضافة هذه الميزة في التحديثات القادمة', 'success');
+            updateSelectedDepartments();
+            document.getElementById('userPassword').required = false;
+            document.getElementById('userConfirmPassword').required = false;
+            document.getElementById('userModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
 
-        function editDepartment(deptKey) {
-            showMessage('سيتم إضافة هذه الميزة في التحديثات القادمة', 'success');
+        function updateSelectedDepartments() {
+            const select = document.getElementById('userDepartments');
+            const selectedContainer = document.getElementById('selectedDepartments');
+            const selected = Array.from(select.selectedOptions).map(opt => opt.value);
+            
+            let html = '';
+            selected.forEach(dept => {
+                html += `<span class="department-tag">${dept}</span>`;
+            });
+            
+            selectedContainer.innerHTML = html;
         }
 
-        function deleteDepartment(deptKey) {
-            if (!confirm('هل تريد حذف هذا القسم؟')) return;
-            showMessage('سيتم إضافة هذه الميزة في التحديثات القادمة', 'success');
+        async function saveUser(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('userId').value;
+            const name = document.getElementById('userName').value.trim();
+            const username = document.getElementById('userUsername').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+            const phone = document.getElementById('userPhone').value.trim();
+            const role = document.getElementById('userRole').value;
+            const password = document.getElementById('userPassword').value;
+            const confirmPassword = document.getElementById('userConfirmPassword').value;
+            const departmentsSelect = document.getElementById('userDepartments');
+            const departments = Array.from(departmentsSelect.selectedOptions).map(opt => opt.value);
+            
+            if (password && password !== confirmPassword) {
+                showMessage('كلمات السر غير متطابقة', 'error');
+                return;
+            }
+            
+            const userData = {
+                name,
+                username,
+                email,
+                phone,
+                role,
+                departments,
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentUser.name
+            };
+            
+            if (password) {
+                userData.password = password;
+            }
+            
+            try {
+                showLoading();
+                if (userId) {
+                    await database.ref(`users/${userId}`).update(userData);
+                } else {
+                    userData.createdAt = new Date().toISOString();
+                    await database.ref('users').push(userData);
+                }
+                
+                showMessage(`تم ${userId ? 'تحديث' : 'إضافة'} المستخدم بنجاح`, 'success');
+                closeUserModal();
+                loadUsers();
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حفظ المستخدم', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function resetUserPassword(userKey) {
+            const newPassword = prompt('أدخل كلمة السر الجديدة:');
+            if (!newPassword) return;
+            
+            try {
+                showLoading();
+                await database.ref(`users/${userKey}`).update({
+                    password: newPassword,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: currentUser.name
+                });
+                
+                showMessage('تم إعادة تعيين كلمة السر بنجاح', 'success');
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء إعادة تعيين كلمة السر', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteUser(userKey) {
+            if (!confirm('هل تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+            
+            try {
+                showLoading();
+                await database.ref(`users/${userKey}`).remove();
+                showMessage('تم حذف المستخدم بنجاح', 'success');
+                loadUsers();
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حذف المستخدم', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function closeUserModal() {
+            document.getElementById('userModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function showReplyModal(complaintKey) {
+            document.getElementById('replyComplaintId').value = complaintKey;
+            document.getElementById('replyModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        async function sendReply(e) {
+            e.preventDefault();
+            
+            const complaintKey = document.getElementById('replyComplaintId').value;
+            const replyText = document.getElementById('replyText').value.trim();
+            
+            if (!replyText) {
+                showMessage('يرجى كتابة نص الرد', 'error');
+                return;
+            }
+            
+            try {
+                showLoading();
+                await database.ref(`complaints/${complaintKey}`).update({
+                    response: replyText,
+                    status: 'تم الرد',
+                    updatedAt: new Date().toISOString(),
+                    respondedBy: currentUser.name,
+                    responseDate: new Date().toISOString()
+                });
+                
+                const index = allComplaints.findIndex(c => c.key === complaintKey);
+                if (index !== -1) {
+                    allComplaints[index].response = replyText;
+                    allComplaints[index].status = 'تم الرد';
+                    allComplaints[index].updatedAt = new Date().toISOString();
+                }
+                
+                showMessage('تم إرسال الرد بنجاح', 'success');
+                closeReplyModal();
+                closeModal();
+                updateDashboardStats();
+                displayComplaintsTable();
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء إرسال الرد', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function closeReplyModal() {
+            document.getElementById('replyModal').style.display = 'none';
+            document.getElementById('replyForm').reset();
+            document.body.style.overflow = 'auto';
+        }
+
+        async function downloadComplaintPDF(complaintKey) {
+            const complaint = allComplaints.find(c => c.key === complaintKey);
+            if (!complaint) return;
+            
+            try {
+                showLoading();
+                // إنشاء محتوى PDF
+                const htmlContent = `
+                    <!DOCTYPE html>
+                    <html dir="rtl">
+                    <head>
+                        <meta charset="UTF-8">
+                        <style>
+                            body { font-family: 'Cairo', sans-serif; padding: 20px; color: #333; }
+                            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1a5fb4; padding-bottom: 15px; }
+                            .header h1 { color: #1a5fb4; margin-bottom: 10px; }
+                            .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                            .info-table td { padding: 10px; border: 1px solid #ddd; }
+                            .info-table .label { background: #f8f9fa; font-weight: bold; width: 30%; }
+                            .details { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; border-right: 4px solid #1a5fb4; }
+                            .response { background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0; border-right: 4px solid #2e7d32; }
+                            .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 15px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>نظام الشكاوى الموحد</h1>
+                            <h2>تفاصيل الشكوى رقم: ${complaint.complaintNumber || ''}</h2>
+                            <p>تم إنشاء هذا التقرير في: ${new Date().toLocaleString('ar-EG')}</p>
+                        </div>
+                        
+                        <table class="info-table">
+                            <tr><td class="label">رقم الشكوى:</td><td>${complaint.complaintNumber || ''}</td></tr>
+                            <tr><td class="label">الاسم:</td><td>${complaint.fullName || ''}</td></tr>
+                            <tr><td class="label">الهاتف:</td><td>${complaint.phone || 'غير متوفر'}</td></tr>
+                            <tr><td class="label">البريد الإلكتروني:</td><td>${complaint.email || 'غير متوفر'}</td></tr>
+                            <tr><td class="label">القسم:</td><td>${complaint.department || ''}</td></tr>
+                            <tr><td class="label">نوع المشكلة:</td><td>${complaint.priority || ''}</td></tr>
+                            <tr><td class="label">الحالة:</td><td>${complaint.status || ''}</td></tr>
+                            <tr><td class="label">تاريخ الإرسال:</td><td>${complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : '-'}</td></tr>
+                            <tr><td class="label">آخر تحديث:</td><td>${complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : '-'}</td></tr>
+                        </table>
+                        
+                        <h3>تفاصيل المشكلة:</h3>
+                        <div class="details">${complaint.problemDetails || ''}</div>
+                        
+                        ${complaint.response ? `
+                        <h3>الرد الرسمي:</h3>
+                        <div class="response">
+                            <strong>${officeSettings.replyName || 'مكتب النائب أحمد الحديدي'}:</strong><br>
+                            ${complaint.response}<br><br>
+                            ${officeSettings.replySignature || ''}
+                        </div>
+                        ` : ''}
+                        
+                        <div class="footer">
+                            <p>© 2026 نظام الشكاوى الموحد - جميع الحقوق محفوظة</p>
+                            <p>رقم مكتب النائب للتواصل: ${officeSettings.whatsappNumber || '+201234567890'}</p>
+                        </div>
+                    </body>
+                    </html>
+                `;
+                
+                // فتح النافذة لطباعة PDF
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(htmlContent);
+                printWindow.document.close();
+                printWindow.print();
+                
+                showMessage('جاري تحضير ملف PDF للتنزيل', 'success');
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء إنشاء ملف PDF', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function editComplaint(complaintKey) {
+            showMessage('سيتم إضافة ميزة تعديل الشكوى في التحديثات القادمة', 'success');
+        }
+
+        async function deleteComplaint(complaintKey) {
+            if (!confirm('هل تريد حذف هذه الشكوى؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+            
+            try {
+                showLoading();
+                await database.ref(`complaints/${complaintKey}`).remove();
+                
+                const index = allComplaints.findIndex(c => c.key === complaintKey);
+                if (index !== -1) {
+                    allComplaints.splice(index, 1);
+                }
+                
+                showMessage('تم حذف الشكوى بنجاح', 'success');
+                closeModal();
+                updateDashboardStats();
+                displayComplaintsTable();
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حذف الشكوى', 'error');
+            } finally {
+                hideLoading();
+            }
         }
 
         async function saveSettings(e) {
@@ -1407,6 +1950,33 @@
             }
         }
 
+        async function saveOfficeSettings(e) {
+            e.preventDefault();
+            
+            const newOfficeSettings = {
+                whatsappNumber: document.getElementById('officeWhatsappNumber').value,
+                replyName: document.getElementById('officeReplyName').value,
+                replySignature: document.getElementById('officeReplySignature').value
+            };
+            
+            try {
+                showLoading();
+                await database.ref('officeSettings').set(newOfficeSettings);
+                officeSettings = newOfficeSettings;
+                applyOfficeSettings();
+                showMessage('تم حفظ إعدادات المكتب بنجاح', 'success');
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حفظ إعدادات المكتب', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function addNewDepartment() {
+            showMessage('سيتم إضافة هذه الميزة في التحديثات القادمة', 'success');
+        }
+
         function generateReports() {
             const period = document.getElementById('reportPeriod').value;
             const now = new Date();
@@ -1432,7 +2002,6 @@
             const completed = filtered.filter(c => c.status === 'مكتملة').length;
             const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
             
-            // حساب متوسط وقت المعالجة (بالأيام)
             let totalDays = 0;
             let count = 0;
             filtered.forEach(c => {
@@ -1445,8 +2014,6 @@
                 }
             });
             const avgTime = count > 0 ? Math.round(totalDays / count) : 0;
-            
-            // نسبة الرضا (افتراضية)
             const satisfactionRate = completionRate > 80 ? 95 : completionRate > 60 ? 85 : 70;
             
             document.getElementById('reportTotal').textContent = total;
@@ -1469,10 +2036,16 @@
             
             currentSection = sectionId;
             
-            // إذا كان قسم التقارير، قم بإنشاء التقارير
             if (sectionId === 'reports') {
                 generateReports();
             }
+        }
+
+        function updateMobileNav(clickedItem) {
+            document.querySelectorAll('.mobile-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            clickedItem.classList.add('active');
         }
 
         function openSidebar() {
