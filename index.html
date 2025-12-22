@@ -1475,7 +1475,7 @@
                             <i class="fas fa-id-card"></i>
                         </div>
                         <div class="search-option-title">بحث بالرقم القومي</div>
-                        <div class="search-option-desc">ابحق باستخدام الرقم القومي المكون من 14 رقمًا</div>
+                        <div class="search-option-desc">ابحث باستخدام الرقم القومي المكون من 14 رقمًا</div>
                         <div class="search-option-arrow">
                             <i class="fas fa-arrow-left"></i>
                         </div>
@@ -2239,7 +2239,7 @@
                     <p style="margin-bottom: 15px;">لإضافة رد على الشكوى، يرجى إدخال الرقم القومي المسجل في الشكوى للتحقق</p>
                     <div class="verify-input-group">
                         <input type="text" id="verifyNationalIdInput" class="verify-national-id-input" placeholder="أدخل الرقم القومي" maxlength="14">
-                        <button onclick="verifyNationalIdForReply('${complaint.nationalId}')" class="btn btn-client-reply" style="max-width: 200px;">
+                        <button onclick="verifyNationalId('${complaint.nationalId}')" class="btn btn-client-reply" style="max-width: 200px;">
                             <i class="fas fa-check-circle"></i>
                             التحقق
                         </button>
@@ -2355,8 +2355,8 @@
             });
         }
         
-        // دالة التحقق من الرقم القومي للرد
-        window.verifyNationalIdForReply = function(complaintNationalId) {
+        // دالة التحقق من الرقم القومي للرد (تم تغيير الاسم لمنع التداخل مع الدالة الموجودة)
+        window.verifyNationalId = function(complaintNationalId) {
             const inputNationalId = document.getElementById('verifyNationalIdInput').value.trim();
             
             if (!inputNationalId) {
