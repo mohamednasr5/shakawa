@@ -179,6 +179,82 @@
         .alert{background:#e8f4fd;color:#155724;padding:15px;border-radius:10px;margin-bottom:20px;border-right:4px solid #1a5fb4}
         .alert.error{background:#f8d7da;color:#721c24;border-color:#e74c3c}
         
+        /* إضافات جديدة لعرض الردود */
+        .responses-container {
+            margin: 25px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .responses-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .responses-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .response-item {
+            padding: 15px;
+            border-radius: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .response-admin {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border-right: 4px solid #28a745;
+            margin-right: 20px;
+        }
+        
+        .response-client {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-left: 4px solid #3498db;
+            margin-left: 20px;
+        }
+        
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .response-sender {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+        
+        .response-time {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .response-content {
+            white-space: pre-line;
+            line-height: 1.6;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         @media (max-width:768px){
             .mobile-menu-btn,.mobile-nav{display:flex}
             .cards-grid{grid-template-columns:1fr}
@@ -195,6 +271,8 @@
             .form-row{flex-direction:column}
             .form-group{width:100%}
             .edit-form-grid{grid-template-columns:1fr}
+            .response-admin { margin-right: 10px; }
+            .response-client { margin-left: 10px; }
         }
         @media (min-width:769px){
             .dashboard-grid{display:grid;grid-template-columns:280px 1fr}
@@ -1639,6 +1717,62 @@
             const createdAt = complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : '-';
             const updatedAt = complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : createdAt;
             
+            // تحميل الردود
+            const responses = complaint.responses || [];
+            
+            // إنشاء محتوى الردود
+            let responsesHTML = '';
+            
+            if (responses.length > 0) {
+                // فرز الردود حسب التاريخ من الأقدم للأحدث
+                responses.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                
+                responsesHTML = `
+                    <div class="responses-container">
+                        <h3 class="responses-title">
+                            <i class="fas fa-comments"></i> سجل المحادثة
+                        </h3>
+                        <div class="responses-list">
+                `;
+                
+                responses.forEach(response => {
+                    const isAdmin = response.type === 'admin';
+                    const date = new Date(response.timestamp).toLocaleString('ar-EG');
+                    
+                    responsesHTML += `
+                        <div class="response-item ${isAdmin ? 'response-admin' : 'response-client'}">
+                            <div class="response-header">
+                                <div class="response-sender">
+                                    <i class="fas ${isAdmin ? 'fa-user-tie' : 'fa-user'}"></i>
+                                    ${isAdmin ? (response.respondedBy || 'الإدارة') : complaint.fullName}
+                                </div>
+                                <div class="response-time">${date}</div>
+                            </div>
+                            <div class="response-content">
+                                ${response.message}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                responsesHTML += `
+                        </div>
+                    </div>
+                `;
+            } else {
+                responsesHTML = `
+                    <div class="responses-container">
+                        <h3 class="responses-title">
+                            <i class="fas fa-comments"></i> سجل المحادثة
+                        </h3>
+                        <div style="text-align: center; padding: 30px; color: #666;">
+                            <i class="far fa-comment-alt fa-2x" style="margin-bottom: 10px;"></i>
+                            <p style="font-weight: 600;">لا توجد ردود بعد</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
             // زر تنزيل PDF
             const downloadBtn = `<button class="action-btn btn-download-pdf" onclick="downloadComplaintPDF('${complaint.key}')">
                 <i class="fas fa-download"></i> تنزيل PDF
@@ -1719,17 +1853,10 @@
                         <div class="detail-label">تفاصيل المشكلة</div>
                         <div style="white-space:pre-line;background:#f8f9fa;padding:15px;border-radius:8px;border-right:4px solid #1a5fb4">${complaint.problemDetails || ''}</div>
                     </div>
-                    ${complaint.response ? `
-                    <div class="detail-item full-width">
-                        <div class="detail-label">الرد الرسمي</div>
-                        <div style="white-space:pre-line;background:#e8f5e9;padding:15px;border-radius:8px;border-right:4px solid #2e7d32">
-                            <strong>${officeSettings.replyName || 'مكتب النائب أحمد الحديدي'}:</strong><br>
-                            ${complaint.response}<br><br>
-                            ${officeSettings.replySignature || ''}
-                        </div>
-                    </div>
-                    ` : ''}
                 </div>
+                
+                ${responsesHTML}
+                
                 <div style="margin-top:20px;padding-top:20px;border-top:1px solid #eee">
                     <h4 style="margin-bottom:10px;color:#2c3e50">تغيير الحالة:</h4>
                     <div style="display:flex;flex-wrap:wrap;gap:10px">
@@ -2021,26 +2148,48 @@
             
             try {
                 showLoading();
+                
+                // الحصول على الشكوى الحالية
+                const complaintSnap = await database.ref(`complaints/${complaintKey}`).get();
+                if (!complaintSnap.exists()) {
+                    showMessage('لم يتم العثور على الشكوى', 'error');
+                    return;
+                }
+                
+                const complaint = complaintSnap.val();
+                const responses = complaint.responses || [];
+                
+                // إضافة رد الإدارة
+                responses.push({
+                    type: 'admin',
+                    message: replyText,
+                    timestamp: new Date().toISOString(),
+                    respondedBy: currentUser.name
+                });
+                
                 await database.ref(`complaints/${complaintKey}`).update({
-                    response: replyText,
+                    responses: responses,
                     status: 'تم الرد',
                     updatedAt: new Date().toISOString(),
                     respondedBy: currentUser.name,
                     responseDate: new Date().toISOString()
                 });
                 
+                showMessage('تم إرسال الرد بنجاح', 'success');
+                closeReplyModal();
+                closeModal();
+                
+                // تحديث البيانات المحلية
                 const index = allComplaints.findIndex(c => c.key === complaintKey);
                 if (index !== -1) {
-                    allComplaints[index].response = replyText;
+                    allComplaints[index].responses = responses;
                     allComplaints[index].status = 'تم الرد';
                     allComplaints[index].updatedAt = new Date().toISOString();
                 }
                 
-                showMessage('تم إرسال الرد بنجاح', 'success');
-                closeReplyModal();
-                closeModal();
-                updateDashboardStats();
-                displayComplaintsTable();
+                // إعادة تحميل العرض
+                viewComplaint(complaintKey);
+                
             } catch(err) {
                 console.error(err);
                 showMessage('حدث خطأ أثناء إرسال الرد', 'error');
@@ -2186,13 +2335,21 @@
                         <h3>تفاصيل المشكلة:</h3>
                         <div class="details">${complaint.problemDetails || ''}</div>
                         
-                        ${complaint.response ? `
-                        <h3>الرد الرسمي:</h3>
-                        <div class="response">
-                            <strong>${officeSettings.replyName || 'مكتب النائب أحمد الحديدي'}:</strong><br>
-                            ${complaint.response}<br><br>
-                            ${officeSettings.replySignature || ''}
-                        </div>
+                        ${complaint.responses && complaint.responses.length > 0 ? `
+                        <h3>سجل المحادثة:</h3>
+                        ${complaint.responses.map(response => {
+                            const isAdmin = response.type === 'admin';
+                            const date = new Date(response.timestamp).toLocaleString('ar-EG');
+                            return `
+                            <div class="response" style="margin: 10px 0; padding: 10px; border-right: 4px solid ${isAdmin ? '#28a745' : '#3498db'}; background: ${isAdmin ? '#d4edda' : '#e3f2fd'};">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <strong>${isAdmin ? (response.respondedBy || 'الإدارة') : complaint.fullName}</strong>
+                                    <small>${date}</small>
+                                </div>
+                                <div style="margin-top: 5px;">${response.message}</div>
+                            </div>
+                            `;
+                        }).join('')}
                         ` : ''}
                         
                         <div class="footer">
