@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>نظام الشكاوى الموحد</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- خطوط وأيقونات -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         :root {
             --primary-color: #1a5fb4;
@@ -15,11 +18,11 @@
             --danger-color: #dc3545;
             --light-color: #f8f9fa;
             --dark-color: #343a40;
-            --border-radius: 15px;
-            --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
+            --border-radius: 20px;
+            --box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -27,123 +30,253 @@
             font-family: 'Cairo', sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-        
+
         html {
             font-size: 16px;
             scroll-behavior: smooth;
         }
-        
+
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #333;
             line-height: 1.6;
             min-height: 100vh;
             overflow-x: hidden;
             padding-bottom: 20px;
+            position: relative;
         }
-        
+
+        /* خلفية متحركة */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.3), transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(75, 0, 130, 0.2), transparent 50%);
+            animation: gradientShift 15s ease infinite;
+            z-index: -1;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        /* جزيئات متحركة */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 15px;
             width: 100%;
+            position: relative;
+            z-index: 1;
         }
-        
-        /* تحسينات للرأس */
+
+        /* رأس الصفحة */
         header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             color: white;
-            padding: 20px 0;
+            padding: 30px 0;
             text-align: center;
-            border-radius: 0 0 20px 20px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-            margin-bottom: 20px;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
+
         header::before {
             content: '';
             position: absolute;
             top: 0;
-            left: 0;
-            right: 0;
+            left: -100%;
+            width: 200%;
             height: 5px;
-            background: linear-gradient(90deg, #ff7e5f, #feb47b, #86a8e7, #91eae4);
-            background-size: 400% 400%;
-            animation: gradientShift 8s ease infinite;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, 0.8),
+                transparent
+            );
+            animation: headerShine 3s infinite;
         }
-        
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+
+        @keyframes headerShine {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
-        
+
         .logo {
-            font-size: 1.8rem;
-            margin-bottom: 8px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             padding: 0 10px;
             line-height: 1.4;
+            font-weight: 800;
+            animation: fadeInDown 0.8s ease;
         }
-        
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .subtitle {
-            font-size: 1rem;
-            opacity: 0.9;
+            font-size: 1.1rem;
+            opacity: 0.95;
             max-width: 600px;
             margin: 0 auto;
             padding: 0 10px;
-            line-height: 1.5;
+            line-height: 1.6;
+            animation: fadeInUp 0.8s ease 0.2s both;
         }
-        
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* المحتوى الرئيسي */
         .main-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: calc(100vh - 200px);
-            padding: 15px;
+            min-height: calc(100vh - 250px);
+            padding: 20px;
+            animation: fadeIn 0.6s ease;
         }
-        
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
         .welcome-text {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
             max-width: 800px;
+            animation: scaleIn 0.6s ease 0.3s both;
         }
-        
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
         .welcome-text h2 {
-            color: var(--dark-color);
-            font-size: 1.8rem;
-            margin-bottom: 15px;
-            font-weight: 700;
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            font-weight: 800;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
-        
+
         .welcome-text p {
-            color: #555;
-            font-size: 1.1rem;
-            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.2rem;
+            line-height: 1.9;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
-        
-        /* تحسينات للمربعات للجوال */
+
+        /* المربعات ثلاثية الأبعاد */
         .boxes-container {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 40px;
             flex-wrap: wrap;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
             width: 100%;
+            perspective: 1500px;
         }
-        
+
         .box-wrapper {
             width: 100%;
-            max-width: 400px;
-            height: 350px;
-            perspective: 1000px;
+            max-width: 450px;
+            height: 400px;
             margin: 0 auto;
+            animation: floatIn 0.8s ease both;
         }
-        
+
+        .box-wrapper:nth-child(1) {
+            animation-delay: 0.4s;
+        }
+
+        .box-wrapper:nth-child(2) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes floatIn {
+            from {
+                opacity: 0;
+                transform: translateY(50px) rotateX(-15deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotateX(0);
+            }
+        }
+
         .action-box {
             width: 100%;
             height: 100%;
@@ -154,845 +287,809 @@
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
             touch-action: manipulation;
+            animation: pulse 3s infinite;
         }
-        
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            }
+            50% {
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        .action-box:hover {
+            transform: translateY(-15px) rotateX(5deg) rotateY(5deg);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+        }
+
         .action-box:active {
-            transform: scale(0.98);
+            transform: scale(0.97);
         }
-        
-        .box-front, .box-back {
-            position: absolute;
+
+        .box-content {
             width: 100%;
             height: 100%;
-            backface-visibility: hidden;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-radius: var(--border-radius);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 25px;
+            padding: 40px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
         }
-        
-        .box-front {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            color: #333;
-            z-index: 2;
+
+        .box-content::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent,
+                rgba(255, 255, 255, 0.1),
+                transparent
+            );
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
         }
-        
-        .box-back {
-            background: linear-gradient(135deg, var(--dark-color) 0%, var(--primary-color) 100%);
-            color: white;
-            transform: rotateY(180deg);
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .box-icon {
+            font-size: 5rem;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: iconBounce 2s infinite;
+            position: relative;
             z-index: 1;
         }
-        
-        .box-icon {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-            color: var(--primary-color);
+
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
-        
+
         .box-title {
-            font-size: 1.6rem;
-            font-weight: 700;
-            margin-bottom: 15px;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 20px;
             color: var(--dark-color);
+            position: relative;
+            z-index: 1;
         }
-        
+
         .box-description {
-            font-size: 1rem;
-            line-height: 1.6;
-            color: #666;
-            margin-bottom: 25px;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #555;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
         }
-        
+
         .box-button {
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
             border: none;
-            padding: 14px 30px;
+            padding: 18px 40px;
             border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: 0 5px 15px rgba(26, 95, 180, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            max-width: 250px;
-            justify-content: center;
-            touch-action: manipulation;
-        }
-        
-        .box-button:active {
-            transform: translateY(2px);
-        }
-        
-        /* القوائم المنسدلة */
-        .dropdown-menu {
-            position: fixed;
-            top: 50%;
-            left: 15px;
-            right: 15px;
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            margin-top: 15px;
-            padding: 20px;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-20px) translateX(0);
-            transition: var(--transition);
-            max-height: 70vh;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .dropdown-menu.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0) translateX(0);
-        }
-        
-        .dropdown-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--dark-color);
-            margin-bottom: 15px;
-            text-align: center;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        
-        .dropdown-options {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .dropdown-option {
-            padding: 16px 15px;
-            background: var(--light-color);
-            border-radius: 10px;
-            border: none;
-            font-size: 1.1rem;
-            text-align: right;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: #333;
-            width: 100%;
-            touch-action: manipulation;
-        }
-        
-        .dropdown-option:active {
-            background: #e9ecef;
-        }
-        
-        .dropdown-option i {
-            color: var(--primary-color);
             font-size: 1.2rem;
-        }
-        
-        /* زر العودة */
-        .back-button {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 14px 25px;
-            border-radius: 50px;
-            font-size: 1rem;
+            font-weight: 700;
             cursor: pointer;
             transition: var(--transition);
+            box-shadow: 0 8px 25px rgba(26, 95, 180, 0.4);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             width: 100%;
-            max-width: 300px;
-            margin: 0 auto 20px;
+            max-width: 280px;
             justify-content: center;
             touch-action: manipulation;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
         }
-        
-        .back-button:active {
-            transform: translateX(-5px);
+
+        .box-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
         }
-        
-        /* أقسام النماذج */
+
+        .box-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .box-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(26, 95, 180, 0.5);
+        }
+
+        .box-button:active {
+            transform: translateY(1px);
+        }
+
+        .box-button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .box-button i {
+            position: relative;
+            z-index: 1;
+            animation: arrowSlide 1.5s infinite;
+        }
+
+        @keyframes arrowSlide {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-5px); }
+        }
+
+        /* الأقسام المخفية */
         .hidden-section {
             display: none;
             width: 100%;
-            animation: fadeIn 0.5s ease forwards;
+            animation: slideIn 0.6s ease forwards;
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
-        
+
         .form-section, .search-section {
-            background: white;
-            padding: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 35px;
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
-            margin-bottom: 25px;
-            animation: fadeIn 0.5s ease forwards;
+            margin-bottom: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .form-section::before, .search-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--primary-color));
+            background-size: 200% 100%;
+            animation: gradientMove 3s infinite;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
         .form-section h2, .search-section h2 {
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             color: var(--dark-color);
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             text-align: center;
+            font-weight: 800;
         }
-        
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            animation: fadeInUp 0.5s ease both;
         }
-        
+
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.2s; }
+        .form-group:nth-child(3) { animation-delay: 0.3s; }
+        .form-group:nth-child(4) { animation-delay: 0.4s; }
+
         label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
+            margin-bottom: 10px;
+            font-weight: 700;
             color: var(--dark-color);
-            font-size: 1rem;
+            font-size: 1.05rem;
         }
-        
+
         input, select, textarea {
             width: 100%;
-            padding: 16px 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
+            padding: 18px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
             font-size: 16px;
             transition: var(--transition);
-            background: var(--light-color);
+            background: white;
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
         }
-        
+
         input:focus, select:focus, textarea:focus {
             border-color: var(--primary-color);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(26, 95, 180, 0.1);
+            box-shadow: 0 0 0 4px rgba(26, 95, 180, 0.1);
             background: white;
+            transform: translateY(-2px);
         }
-        
+
         textarea {
-            min-height: 150px;
+            min-height: 180px;
             resize: vertical;
         }
-        
+
         .char-count {
             text-align: left;
             font-size: 14px;
             color: #666;
-            margin-top: 5px;
+            margin-top: 8px;
+            font-weight: 600;
         }
-        
+
         .required::after {
             content: " *";
             color: var(--danger-color);
         }
-        
-        /* أعمدة النموذج */
+
         .form-row {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 20px;
+            margin-bottom: 25px;
         }
-        
+
         @media (min-width: 768px) {
             .form-row {
                 flex-direction: row;
             }
         }
-        
+
         .form-col {
             flex: 1;
             width: 100%;
         }
-        
-        /* الأزرار */
+
+        /* الأزرار العامة */
         .btn {
-            padding: 16px 30px;
+            padding: 18px 35px;
             border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
             cursor: pointer;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             width: 100%;
-            margin-top: 10px;
+            margin-top: 15px;
             touch-action: manipulation;
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .btn span, .btn i {
+            position: relative;
+            z-index: 1;
+        }
+
         .btn:active {
-            transform: translateY(2px);
+            transform: scale(0.98);
         }
-        
+
         .btn-primary {
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
+            box-shadow: 0 10px 30px rgba(26, 95, 180, 0.4);
         }
-        
+
+        .btn-primary:hover {
+            box-shadow: 0 15px 40px rgba(26, 95, 180, 0.5);
+            transform: translateY(-3px);
+        }
+
         .btn-search {
-            background: linear-gradient(to right, #3498db, #2d8fd5);
+            background: linear-gradient(135deg, #3498db, #2d8fd5);
             color: white;
+            box-shadow: 0 10px 30px rgba(52, 152, 219, 0.4);
         }
-        
+
+        .btn-search:hover {
+            box-shadow: 0 15px 40px rgba(52, 152, 219, 0.5);
+            transform: translateY(-3px);
+        }
+
         .btn-whatsapp {
-            background: linear-gradient(to right, #25D366, #128C7E);
+            background: linear-gradient(135deg, #25D366, #128C7E);
             color: white;
-            margin-top: 10px;
+            box-shadow: 0 10px 30px rgba(37, 211, 102, 0.4);
         }
-        
+
+        .btn-whatsapp:hover {
+            box-shadow: 0 15px 40px rgba(37, 211, 102, 0.5);
+            transform: translateY(-3px);
+        }
+
         .btn-documents {
-            background: linear-gradient(to right, #FF9800, #FF5722);
+            background: linear-gradient(135deg, #FF9800, #FF5722);
             color: white;
-            margin-top: 10px;
+            box-shadow: 0 10px 30px rgba(255, 152, 0, 0.4);
         }
-        
+
+        .btn-documents:hover {
+            box-shadow: 0 15px 40px rgba(255, 152, 0, 0.5);
+            transform: translateY(-3px);
+        }
+
         .btn-client-reply {
-            background: linear-gradient(to right, #6c757d, #5a6268);
+            background: linear-gradient(135deg, #6c757d, #5a6268);
             color: white;
-            margin-top: 10px;
+            box-shadow: 0 10px 30px rgba(108, 117, 125, 0.4);
         }
-        
+
+        .btn-client-reply:hover {
+            box-shadow: 0 15px 40px rgba(108, 117, 125, 0.5);
+            transform: translateY(-3px);
+        }
+
+        .back-button {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+            color: white;
+            border: none;
+            padding: 16px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            max-width: 350px;
+            margin: 0 auto 25px;
+            justify-content: center;
+            touch-action: manipulation;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+
+        .back-button:hover {
+            background: linear-gradient(135deg, #5a6268, #495057);
+            transform: translateX(-5px);
+            box-shadow: 0 10px 30px rgba(108, 117, 125, 0.4);
+        }
+
+        .back-button:active {
+            transform: translateX(-3px) scale(0.98);
+        }
+
         /* رسائل التنبيه */
         .message {
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
             text-align: center;
-            font-size: 1rem;
-            line-height: 1.6;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            font-weight: 600;
+            animation: slideIn 0.5s ease;
         }
-        
+
         .success {
-            background-color: #d4edda;
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
             color: #155724;
-            border: 1px solid #c3e6cb;
+            border: 2px solid #28a745;
+            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.2);
         }
-        
+
         .error {
-            background-color: #f8d7da;
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
             color: #721c24;
-            border: 1px solid #f5c6cb;
+            border: 2px solid #dc3545;
+            box-shadow: 0 10px 30px rgba(220, 53, 69, 0.2);
         }
-        
+
         /* تفاصيل الشكوى */
         .complaint-details {
-            background: white;
-            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 30px;
             border-radius: var(--border-radius);
-            margin-top: 20px;
+            margin-top: 25px;
             display: none;
-            animation: fadeIn 0.5s ease forwards;
+            animation: slideIn 0.6s ease forwards;
             box-shadow: var(--box-shadow);
+            border: 2px solid rgba(255, 255, 255, 0.5);
         }
-        
+
         .details-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 20px;
+            margin-bottom: 25px;
         }
-        
+
         @media (min-width: 768px) {
             .details-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-        
+
         .detail-item {
-            padding: 15px;
-            background: var(--light-color);
-            border-radius: 10px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            transition: var(--transition);
+            border: 1px solid #dee2e6;
         }
-        
+
+        .detail-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
         .detail-label {
-            font-weight: 700;
+            font-weight: 800;
             color: var(--primary-color);
-            margin-bottom: 8px;
-            font-size: 0.95rem;
+            margin-bottom: 10px;
+            font-size: 1rem;
         }
-        
+
         /* خيارات البحث */
         .search-options {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 25px;
         }
-        
+
         @media (min-width: 480px) {
             .search-options {
                 flex-direction: row;
                 flex-wrap: wrap;
             }
         }
-        
+
         .search-option {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             cursor: pointer;
-            padding: 12px 15px;
-            border-radius: 8px;
-            background: var(--light-color);
+            padding: 16px 20px;
+            border-radius: 15px;
+            background: white;
             transition: var(--transition);
             flex: 1;
-            min-width: 150px;
+            min-width: 180px;
             touch-action: manipulation;
+            border: 2px solid #e0e0e0;
         }
-        
+
+        .search-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
         .search-option.active {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 10px 25px rgba(26, 95, 180, 0.3);
         }
-        
+
         .search-option input {
             width: auto;
             margin: 0;
         }
-        
+
         /* إرسال المستندات */
         .documents-option {
-            background: var(--light-color);
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border: 2px solid #dee2e6;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 25px;
         }
-        
+
         .documents-checkbox {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 15px;
+            margin-bottom: 20px;
         }
-        
+
         .documents-checkbox input {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
         }
-        
+
         .documents-instructions {
-            background: #e8f5e9;
-            border-right: 4px solid #4caf50;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            margin-top: 15px;
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-right: 5px solid #4caf50;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            margin-top: 20px;
             display: none;
+            animation: slideIn 0.5s ease;
         }
-        
+
+        .documents-instructions.show {
+            display: block;
+        }
+
         /* الردود */
         .responses {
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 2px solid #f0f0f0;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 3px solid #e9ecef;
         }
-        
+
         .response {
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 15px;
             position: relative;
+            animation: slideIn 0.5s ease;
         }
-        
+
         .response-admin {
-            background-color: #d4edda;
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
             border: 2px solid var(--success-color);
         }
-        
+
         .response-client {
-            background-color: var(--light-color);
-            border-right: 4px solid #6c757d;
+            background: linear-gradient(135deg, #f8f9fa, #e9eceف);
+            border-right: 5px solid #6c757d;
         }
-        
+
         .response-date {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: #666;
-            margin-top: 8px;
+            margin-top: 10px;
             text-align: left;
+            font-weight: 600;
         }
-        
+
         /* قسم الرد */
         .reply-section {
-            background: var(--light-color);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            border: 1px solid #e9ecef;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 25px;
+            border: 2px solid #dee2e6;
         }
-        
+
         /* التذييل */
         .footer {
             text-align: center;
-            padding: 20px;
-            color: #666;
-            font-size: 0.9rem;
-            margin-top: 30px;
+            padding: 30px 20px;
+            color: white;
+            font-size: 1rem;
+            margin-top: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
-        
-        /* طبقات التغطية */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 999;
-            display: none;
-            animation: fadeIn 0.3s ease;
+
+        .footer p {
+            margin: 8px 0;
+            line-height: 1.8;
         }
-        
-        .overlay.show {
-            display: block;
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        
-        /* تحسينات للأجهزة الصغيرة */
+
+        .footer a:hover {
+            color: #ffd700;
+            transform: translateY(-2px);
+        }
+
+        .footer i {
+            font-size: 1.2rem;
+        }
+
+        /* تحسينات للموبايل */
         @media (max-width: 767px) {
             html {
                 font-size: 14px;
             }
-            
-            .container {
-                padding: 10px;
-            }
-            
+
             .logo {
-                font-size: 1.5rem;
+                font-size: 1.6rem;
             }
-            
+
             .subtitle {
-                font-size: 0.9rem;
+                font-size: 1rem;
             }
-            
+
             .welcome-text h2 {
-                font-size: 1.5rem;
+                font-size: 1.6rem;
             }
-            
-            .welcome-text p {
-                font-size: 1rem;
-            }
-            
+
             .box-wrapper {
-                height: 320px;
-                max-width: 350px;
+                height: 380px;
             }
-            
+
             .box-icon {
-                font-size: 3rem;
+                font-size: 4rem;
             }
-            
-            .box-title {
-                font-size: 1.4rem;
-            }
-            
-            .box-description {
-                font-size: 0.95rem;
-            }
-            
-            .box-button {
-                padding: 12px 25px;
-                font-size: 1rem;
-            }
-            
+
             .form-section, .search-section {
-                padding: 20px;
-            }
-            
-            .dropdown-menu {
-                left: 10px;
-                right: 10px;
-                padding: 15px;
-                max-height: 80vh;
-            }
-            
-            .dropdown-option {
-                padding: 14px 12px;
-                font-size: 1rem;
-            }
-            
-            .btn {
-                padding: 14px 20px;
-                font-size: 1rem;
-            }
-            
-            .back-button {
-                padding: 12px 20px;
-                max-width: 100%;
+                padding: 25px;
             }
         }
-        
+
         @media (max-width: 480px) {
             .logo {
-                font-size: 1.3rem;
-            }
-            
-            .box-wrapper {
-                height: 300px;
-            }
-            
-            .box-front, .box-back {
-                padding: 20px;
-            }
-            
-            .box-icon {
-                font-size: 2.5rem;
-            }
-            
-            .form-section h2, .search-section h2 {
                 font-size: 1.4rem;
             }
-            
-            input, select, textarea {
-                padding: 14px 12px;
-                font-size: 15px;
-            }
-            
-            .search-option {
-                min-width: 100%;
-            }
-        }
-        
-        @media (max-width: 360px) {
-            .logo {
-                font-size: 1.2rem;
-            }
-            
+
             .box-wrapper {
-                height: 280px;
+                height: 360px;
             }
-            
-            .box-button {
-                padding: 10px 20px;
-                font-size: 0.9rem;
+
+            .box-icon {
+                font-size: 3.5rem;
             }
         }
-        
+
         /* للشاشات الكبيرة */
         @media (min-width: 1200px) {
             .boxes-container {
-                gap: 40px;
+                gap: 50px;
             }
-            
+
             .box-wrapper {
-                max-width: 450px;
-                height: 380px;
+                max-width: 480px;
+                height: 420px;
             }
         }
-        
-        /* تحسينات لليدين */
-        @media (hover: hover) {
-            .action-box:hover {
-                transform: translateY(-10px);
-            }
-            
-            .box-button:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 8px 20px rgba(26, 95, 180, 0.4);
-            }
-            
-            .dropdown-option:hover {
-                background: #e9ecef;
-                transform: translateX(-5px);
-            }
-            
-            .back-button:hover {
-                background: #5a6268;
-                transform: translateX(-5px);
-            }
-        }
-        
-        /* تحسينات اللمس */
-        @media (hover: none) {
-            .action-box:active {
-                transform: scale(0.95);
-            }
-            
-            .box-button:active {
-                transform: translateY(2px);
-            }
-            
-            .dropdown-option:active {
-                background: #e9ecef;
-            }
-        }
-        
-        /* مساحة آمنة للشاشات الحديثة */
+
+        /* مساحة آمنة للأجهزة الحديثة */
         @supports (padding: max(0px)) {
             body, header, .container {
                 padding-left: max(15px, env(safe-area-inset-left));
                 padding-right: max(15px, env(safe-area-inset-right));
             }
-            
+
             body {
                 padding-bottom: max(20px, env(safe-area-inset-bottom));
-            }
-        }
-        
-        /* منع التكبير في حقول الإدخال على iOS */
-        @media (max-width: 767px) {
-            input, select, textarea {
-                font-size: 16px !important;
             }
         }
     </style>
 </head>
 <body>
+    <!-- الجزيئات المتحركة -->
+    <div class="particles" id="particles"></div>
+
     <header>
         <div class="container">
-            <h1 class="logo">نظام الشكاوى الموحد للنائب أحمد الحديدي</h1>
-            <p class="subtitle">خدمة إلكترونية لتقديم الشكاوى والمشكلات ومتابعتها</p>
+            <h1 class="logo">⚖️ نظام الشكاوى الموحد للنائب أحمد الحديدي</h1>
+            <p class="subtitle">خدمة إلكترونية متطورة لتقديم الشكاوى والمشكلات ومتابعتها بكل سهولة</p>
         </div>
     </header>
-    
+
     <div class="container">
-        <div class="main-container">
+        <!-- الصفحة الرئيسية -->
+        <div class="main-container" id="mainContainer">
             <div class="welcome-text">
-                <h2>مرحبًا بكم في نظام الشكاوى الموحد</h2>
-                <p>نظام إلكتروني متكامل لتقديم الشكاوى والمشكلات التي تواجهكم في مختلف المجالات، ومتابعة حالة الشكوى المقدمة حتى حلها. اختر الخدمة التي تريدها من خلال المربعات أدناه.</p>
+                <h2>✨ مرحبًا بكم في نظام الشكاوى الموحد ✨</h2>
+                <p>نظام إلكتروني متكامل وحديث لتقديم الشكاوى والمشكلات التي تواجهكم في مختلف المجالات، ومتابعة حالة الشكوى المقدمة حتى حلها بكل شفافية واحترافية.</p>
             </div>
-            
+
             <div class="boxes-container">
                 <!-- مربع تقديم الشكوى -->
                 <div class="box-wrapper">
                     <div class="action-box" id="submitBox">
-                        <div class="box-front">
+                        <div class="box-content">
                             <div class="box-icon">
                                 <i class="fas fa-file-alt"></i>
                             </div>
-                            <h3 class="box-title">تقديم طلب أو شكوى</h3>
-                            <p class="box-description">قدم شكوى أو طلب جديد في أي مجال من المجالات المتاحة ضمن النظام الإلكتروني</p>
+                            <h3 class="box-title">📝 تقديم طلب أو شكوى</h3>
+                            <p class="box-description">قدم شكوى أو طلب جديد في أي مجال من المجالات المتاحة بسهولة وسرعة</p>
                             <button class="box-button">
                                 <span>تقديم شكوى جديدة</span>
                                 <i class="fas fa-arrow-left"></i>
                             </button>
                         </div>
-                        <div class="box-back">
-                            <h3 style="margin-bottom: 20px;">تقديم الشكوى</h3>
-                            <p style="margin-bottom: 30px;">سيتم فتح نموذج إلكتروني لتقديم شكوى جديدة</p>
-                            <i class="fas fa-paper-plane" style="font-size: 3rem; margin-bottom: 20px;"></i>
-                        </div>
                     </div>
                 </div>
-                
+
                 <!-- مربع متابعة الشكوى -->
                 <div class="box-wrapper">
                     <div class="action-box" id="trackBox">
-                        <div class="box-front">
+                        <div class="box-content">
                             <div class="box-icon">
                                 <i class="fas fa-search"></i>
                             </div>
-                            <h3 class="box-title">متابعة طلب أو شكوى</h3>
+                            <h3 class="box-title">🔍 متابعة طلب أو شكوى</h3>
                             <p class="box-description">تابع حالة الشكوى المقدمة سابقًا عن طريق رقم الطلب أو الرقم القومي أو الاسم</p>
                             <button class="box-button">
                                 <span>متابعة شكوى</span>
                                 <i class="fas fa-arrow-left"></i>
                             </button>
                         </div>
-                        <div class="box-back">
-                            <h3 style="margin-bottom: 20px;">متابعة الشكوى</h3>
-                            <p style="margin-bottom: 30px;">ابحث عن شكوى مسبقة لمتابعتها ومعرفة حالتها</p>
-                            <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 20px;"></i>
-                        </div>
                     </div>
                 </div>
             </div>
-            
-            <p style="text-align: center; color: #666; max-width: 700px; margin-top: 20px; padding: 0 10px;">
-                يمكنك النقر على أي من المربعين أعلاه لبدء الخدمة المطلوبة. يتم معالجة جميع الشكاوى بسرية تامة وضمن الإجراءات النظامية المعتمدة.
+
+            <p style="text-align: center; color: white; max-width: 700px; margin-top: 30px; padding: 0 10px; font-size: 1.1rem; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);">
+                🔒 يتم معالجة جميع الشكاوى بسرية تامة وضمن الإجراءات النظامية المعتمدة
             </p>
         </div>
-        
-        <!-- طبقة التغطية -->
-        <div class="overlay" id="overlay"></div>
-        
-        <!-- القائمة المنسدلة لتقديم الشكوى -->
-        <div class="dropdown-menu" id="submitMenu">
-            <h4 class="dropdown-title">اختر نوع الشكوى</h4>
-            <div class="dropdown-options">
-                <button class="dropdown-option" data-type="قضاء ومحاكم">
-                    <span>مشكلة خاصة بالقضاء والمحاكم</span>
-                    <i class="fas fa-gavel"></i>
-                </button>
-                <button class="dropdown-option" data-type="مساعدة مالية">
-                    <span>مساعدة مالية</span>
-                    <i class="fas fa-hand-holding-usd"></i>
-                </button>
-                <button class="dropdown-option" data-type="صحة">
-                    <span>مشكلة خاصة بالصحة</span>
-                    <i class="fas fa-heartbeat"></i>
-                </button>
-                <button class="dropdown-option" data-type="مياه وصرف صحي">
-                    <span>مشكلات مياه الشرب والصرف الصحي</span>
-                    <i class="fas fa-tint"></i>
-                </button>
-                <button class="dropdown-option" data-type="تعليم">
-                    <span>مشكلة خاصة بالتعليم</span>
-                    <i class="fas fa-graduation-cap"></i>
-                </button>
-                <button class="dropdown-option" data-type="شرطة وداخلية">
-                    <span>مشكلة خاصة بالشرطة والداخلية</span>
-                    <i class="fas fa-shield-alt"></i>
-                </button>
-                <button class="dropdown-option" data-type="طارئة">
-                    <span>حالة طارئة</span>
-                    <i class="fas fa-exclamation-triangle"></i>
-                </button>
-                <button class="dropdown-option" data-type="أخرى">
-                    <span>مشكلات أخرى</span>
-                    <i class="fas fa-ellipsis-h"></i>
-                </button>
-            </div>
-        </div>
-        
-        <!-- القائمة المنسدلة لمتابعة الشكوى -->
-        <div class="dropdown-menu" id="trackMenu">
-            <h4 class="dropdown-title">ابحث عن شكوى</h4>
-            <div class="dropdown-options">
-                <button class="dropdown-option" data-search-type="number">
-                    <span>البحث برقم الشكوى</span>
-                    <i class="fas fa-hashtag"></i>
-                </button>
-                <button class="dropdown-option" data-search-type="nationalId">
-                    <span>البحث بالرقم القومي</span>
-                    <i class="fas fa-id-card"></i>
-                </button>
-                <button class="dropdown-option" data-search-type="name">
-                    <span>البحث بالاسم</span>
-                    <i class="fas fa-user"></i>
-                </button>
-            </div>
-        </div>
-        
-        <!-- قسم تقديم الشكوى (مخفي في البداية) -->
+
+        <!-- قسم تقديم الشكوى -->
         <div class="hidden-section" id="submitComplaintSection">
             <button class="back-button" id="backFromSubmit">
                 <i class="fas fa-arrow-right"></i>
                 <span>العودة للصفحة الرئيسية</span>
             </button>
-            
+
             <div class="form-section">
-                <h2>تقديم شكوى جديدة</h2>
-                
+                <h2>📋 تقديم شكوى جديدة</h2>
+
                 <div class="form-row">
                     <div class="form-col">
                         <label for="fullName" class="required">الاسم بالكامل (عربي)</label>
@@ -1001,16 +1098,19 @@
                     <div class="form-col">
                         <label for="nationalId" class="required">الرقم القومي</label>
                         <input type="text" id="nationalId" placeholder="14 رقم ويبدأ بـ 2 أو 3" maxlength="14">
-                        <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">يجب أن يكون 14 رقمًا ويبدأ بـ 2 أو 3</small>
+                        <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+                            يجب أن يكون 14 رقمًا ويبدأ بـ 2 أو 3
+                        </small>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="localUnit" class="required">بلد الإقامة</label>
                     <select id="localUnit">
                         <option value="">اختر الوحدة المحلية</option>
                         <option value="المنزلة">المنزلة</option>
                         <option value="المطرية">المطرية</option>
+                        <option value="الجلادة">الجلادة</option>
                         <option value="الفروسات">الفروسات</option>
                         <option value="أبو الأخضر">أبو الأخضر</option>
                         <option value="جديدة المنزلة">جديدة المنزلة</option>
@@ -1045,25 +1145,29 @@
                         <option value="النسايمة">النسايمة</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="address" class="required">العنوان بالتفصيل</label>
                     <input type="text" id="address" placeholder="أدخل العنوان التفصيلي">
                 </div>
-                
+
                 <div class="form-row">
                     <div class="form-col">
                         <label for="phone1" class="required">رقم الهاتف (1)</label>
                         <input type="tel" id="phone1" placeholder="مثال: 01012345678" maxlength="11">
-                        <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">يجب أن يكون 11 رقمًا ويبدأ بـ 01</small>
+                        <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+                            يجب أن يكون 11 رقمًا ويبدأ بـ 01
+                        </small>
                     </div>
                     <div class="form-col">
                         <label for="phone2">رقم الهاتف (2) - اختياري</label>
                         <input type="tel" id="phone2" placeholder="رقم هاتف إضافي" maxlength="11">
-                        <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">يجب أن يكون 11 رقمًا ويبدأ بـ 01 (اختياري)</small>
+                        <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+                            يجب أن يكون 11 رقمًا ويبدأ بـ 01 (اختياري)
+                        </small>
                     </div>
                 </div>
-                
+
                 <div class="form-row">
                     <div class="form-col">
                         <label for="department" class="required">القسم</label>
@@ -1089,428 +1193,121 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="problemDetails" class="required">تفاصيل المشكلة</label>
                     <textarea id="problemDetails" placeholder="أدخل تفاصيل المشكلة (حد أقصى 5000 حرف)" maxlength="5000"></textarea>
-                    <div class="char-count">عدد الأحرف: <span id="charCount">0</span> / 5000</div>
+                    <div class="char-count">
+                        عدد الأحرف: <span id="charCount">0</span> / 5000
+                    </div>
                 </div>
-                
-                <!-- قسم إرسال المستندات -->
+
                 <div class="documents-option">
                     <div class="documents-checkbox">
                         <input type="checkbox" id="sendDocuments" name="sendDocuments">
-                        <label for="sendDocuments">أريد إرسال مستندات داعمة للشكوى عبر واتساب</label>
+                        <label for="sendDocuments">📎 أريد إرسال مستندات داعمة للشكوى</label>
                     </div>
-                    
                     <div id="documentsInstructions" class="documents-instructions">
-                        <p><strong>تعليمات إرسال المستندات:</strong></p>
-                        <p>1. بعد إرسال الشكوى، سيظهر لك زر لإرسال المستندات عبر واتساب</p>
-                        <p>2. اضغط على الزر وسيتم فتح تطبيق واتساب مع رقم مكتب النائب</p>
-                        <p>3. أرسل صور المستندات المطلوبة مع ذكر رقم الشكوى</p>
-                        <p>4. سيتم تحديث حالة الشكوى في لوحة التحكم بأنك أرسلت مستندات</p>
+                        <p><strong>طريقة إرسال المستندات:</strong></p>
+                        <p>1. بعد إرسال الشكوى، سيتم التواصل معك عبر الواتساب أو الهاتف لتنسيق استلام المستندات.</p>
+                        <p>2. يمكنك إرسال الصور أو الملفات عبر الواتساب عند طلبها من قِبل فريق المكتب.</p>
+                        <p>3. يُفضّل أن تكون المستندات واضحة ومقروءة (صور عالية الجودة أو ملفات PDF).</p>
+                        <p>4. لا ترسل أي مستندات تحتوي معلومات حساسة إلا بعد التأكد من جهة الاتصال.</p>
                     </div>
                 </div>
-                
+
                 <button onclick="submitComplaint()" class="btn btn-primary">
-                    <i class="fas fa-paper-plane"></i> إرسال الشكوى
+                    <span>إرسال الشكوى الآن</span>
+                    <i class="fas fa-paper-plane"></i>
                 </button>
-                
+
                 <div id="message" class="message" style="display: none;"></div>
             </div>
         </div>
-        
-        <!-- قسم متابعة الشكوى (مخفي في البداية) -->
+
+        <!-- قسم متابعة الشكوى -->
         <div class="hidden-section" id="trackComplaintSection">
             <button class="back-button" id="backFromTrack">
                 <i class="fas fa-arrow-right"></i>
                 <span>العودة للصفحة الرئيسية</span>
             </button>
-            
+
             <div class="search-section">
-                <h2>البحث عن طلب</h2>
-                
+                <h2>🔍 متابعة شكوى سابقة</h2>
+
                 <div class="search-options" id="searchOptions">
                     <div class="search-option active" data-search-type="number">
                         <input type="radio" id="searchTypeNumber" name="searchType" value="number" checked>
-                        <label for="searchTypeNumber">بحث برقم الطلب</label>
+                        <label for="searchTypeNumber">البحث برقم الشكوى (JUD-00001)</label>
                     </div>
                     <div class="search-option" data-search-type="nationalId">
                         <input type="radio" id="searchTypeNationalId" name="searchType" value="nationalId">
-                        <label for="searchTypeNationalId">بحث بالرقم القومي</label>
+                        <label for="searchTypeNationalId">البحث بالرقم القومي</label>
                     </div>
                     <div class="search-option" data-search-type="name">
                         <input type="radio" id="searchTypeName" name="searchType" value="name">
-                        <label for="searchTypeName">بحث بالاسم</label>
+                        <label for="searchTypeName">البحث بالاسم بالكامل</label>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
-                    <input type="text" id="searchComplaint" placeholder="أدخل رقم الطلب للبحث عنه">
-                    <button onclick="searchComplaint()" class="btn btn-search">
-                        <i class="fas fa-search"></i> بحث
-                    </button>
+                    <input type="text" id="searchComplaint" placeholder="JUD-00001">
                 </div>
-            </div>
-            
-            <div id="complaintDetails" class="complaint-details">
-                <!-- سيتم عرض تفاصيل الشكوى هنا -->
+
+                <button onclick="searchComplaint()" class="btn btn-search">
+                    <span>بحث عن الشكوى</span>
+                    <i class="fas fa-search"></i>
+                </button>
+
+                <!-- تفاصيل الشكوى -->
+                <div id="complaintDetails" class="complaint-details"></div>
             </div>
         </div>
-        
+
+        <!-- التذييل -->
         <div class="footer">
-            <p>© 2026 نظام الشكاوى الموحد - جميع الحقوق محفوظة</p>
-            <p>هذا النظام برمجة مهندس محمد حماد</p>
+            <p>2026 - نظام الشكاوى الموحد للنائب أحمد الحديدي</p>
+            <p>
+                <i class="fas fa-code"></i>
+                <a href="https://www.facebook.com/en.mohamed.nasr" target="_blank">
+                    تطوير: محمد نصر <i class="fab fa-facebook"></i>
+                </a>
+            </p>
+            <p>📞 لخدمة المواطنين: يرجى استخدام النظام لتسجيل الشكوى بدقة لضمان سرعة المتابعة</p>
         </div>
     </div>
 
-    <!-- Firebase SDK - Compat Version -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
+
     <script>
-        // متغيرات للتحكم في حالة القوائم
-        let activeDropdown = null;
-        let activeBox = null;
+        /* إنشاء الجزيئات */
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 20;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 10 + 5;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                particle.style.animationDelay = (Math.random() * 5) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
         let currentComplaintKey = null;
         let currentComplaintData = null;
         let lastComplaintNumber = null;
-        
-        // عناصر DOM
-        const submitBox = document.getElementById('submitBox');
-        const trackBox = document.getElementById('trackBox');
-        const submitMenu = document.getElementById('submitMenu');
-        const trackMenu = document.getElementById('trackMenu');
-        const submitSection = document.getElementById('submitComplaintSection');
-        const trackSection = document.getElementById('trackComplaintSection');
-        const mainContainer = document.querySelector('.main-container');
-        const backFromSubmit = document.getElementById('backFromSubmit');
-        const backFromTrack = document.getElementById('backFromTrack');
-        const overlay = document.getElementById('overlay');
-        const searchOptions = document.getElementById('searchOptions');
-        const sendDocumentsCheckbox = document.getElementById('sendDocuments');
-        const documentsInstructions = document.getElementById('documentsInstructions');
-        const problemDetails = document.getElementById('problemDetails');
-        const charCount = document.getElementById('charCount');
-        const nationalIdInput = document.getElementById('nationalId');
-        const phone1Input = document.getElementById('phone1');
-        const phone2Input = document.getElementById('phone2');
-        
-        // تهيئة الأحداث
-        document.addEventListener('DOMContentLoaded', function() {
-            initApp();
-        });
-        
-        function initApp() {
-            // أحداث المربعات
-            submitBox.addEventListener('click', function(e) {
-                e.stopPropagation();
-                toggleDropdown('submit');
-            });
-            
-            trackBox.addEventListener('click', function(e) {
-                e.stopPropagation();
-                toggleDropdown('track');
-            });
-            
-            // إغلاق القوائم عند النقر خارجها
-            document.addEventListener('click', function(e) {
-                if (!submitMenu.contains(e.target) && !trackMenu.contains(e.target) && 
-                    !submitBox.contains(e.target) && !trackBox.contains(e.target)) {
-                    closeAllDropdowns();
-                }
-            });
-            
-            // منع إغلاق القوائم عند النقر عليها
-            submitMenu.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-            
-            trackMenu.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-            
-            // أحداث خيارات القوائم
-            document.querySelectorAll('#submitMenu .dropdown-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    const complaintType = this.getAttribute('data-type');
-                    openSubmitSection(complaintType);
-                });
-            });
-            
-            document.querySelectorAll('#trackMenu .dropdown-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    const searchType = this.getAttribute('data-search-type');
-                    openTrackSection(searchType);
-                });
-            });
-            
-            // أحداث خيارات البحث
-            document.querySelectorAll('.search-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    updateSearchOptions(this);
-                });
-            });
-            
-            // أحداث أزرار العودة
-            backFromSubmit.addEventListener('click', closeAllSections);
-            backFromTrack.addEventListener('click', closeAllSections);
-            
-            // حدث تغيير خانة إرسال المستندات
-            if (sendDocumentsCheckbox) {
-                sendDocumentsCheckbox.addEventListener('change', function() {
-                    documentsInstructions.classList.toggle('show', this.checked);
-                });
-            }
-            
-            // عداد الأحرف
-            if (problemDetails && charCount) {
-                problemDetails.addEventListener('input', function() {
-                    charCount.textContent = this.value.length;
-                });
-            }
-            
-            // التحقق من الرقم القومي أثناء الكتابة
-            if (nationalIdInput) {
-                nationalIdInput.addEventListener('input', validateNationalId);
-            }
-            
-            // التحقق من أرقام الهواتف
-            if (phone1Input) {
-                phone1Input.addEventListener('input', validatePhoneNumber);
-            }
-            
-            if (phone2Input) {
-                phone2Input.addEventListener('input', validatePhoneNumber);
-            }
-            
-            // تحسينات للجوال
-            setupMobileFeatures();
-        }
-        
-        function setupMobileFeatures() {
-            // منع التكبير المزدوج
-            let lastTouchEnd = 0;
-            document.addEventListener('touchend', function(event) {
-                const now = (new Date()).getTime();
-                if (now - lastTouchEnd <= 300) {
-                    event.preventDefault();
-                }
-                lastTouchEnd = now;
-            }, false);
-            
-            // تحسين أداء اللمس
-            document.body.addEventListener('touchstart', function() {}, { passive: true });
-            
-            // إضافة مساحة آمنة
-            const setSafeArea = () => {
-                if ('CSS' in window && CSS.supports('padding', 'env(safe-area-inset-bottom)')) {
-                    document.documentElement.style.setProperty(
-                        '--safe-area-bottom', 
-                        'env(safe-area-inset-bottom)'
-                    );
-                }
-            };
-            
-            setSafeArea();
-            window.addEventListener('resize', setSafeArea);
-        }
-        
-        function toggleDropdown(type) {
-            closeAllDropdowns();
-            
-            if (type === 'submit') {
-                submitMenu.classList.add('show');
-                overlay.classList.add('show');
-                activeDropdown = submitMenu;
-                activeBox = 'submit';
-                
-                // تحريك المربع قليلاً
-                submitBox.style.transform = 'translateY(-10px)';
-                trackBox.style.opacity = '0.7';
-            } else if (type === 'track') {
-                trackMenu.classList.add('show');
-                overlay.classList.add('show');
-                activeDropdown = trackMenu;
-                activeBox = 'track';
-                
-                // تحريك المربع قليلاً
-                trackBox.style.transform = 'translateY(-10px)';
-                submitBox.style.opacity = '0.7';
-            }
-        }
-        
-        function closeAllDropdowns() {
-            submitMenu.classList.remove('show');
-            trackMenu.classList.remove('show');
-            overlay.classList.remove('show');
-            
-            // إعادة المربعات إلى حالتها الأصلية
-            submitBox.style.transform = 'translateY(0)';
-            trackBox.style.transform = 'translateY(0)';
-            submitBox.style.opacity = '1';
-            trackBox.style.opacity = '1';
-            
-            activeDropdown = null;
-            activeBox = null;
-        }
-        
-        function updateSearchOptions(selectedOption) {
-            // إزالة النشاط من جميع الخيارات
-            document.querySelectorAll('.search-option').forEach(option => {
-                option.classList.remove('active');
-            });
-            
-            // إضافة النشاط للخيار المختار
-            selectedOption.classList.add('active');
-            
-            // تحديث الخيار المختار
-            const radio = selectedOption.querySelector('input');
-            radio.checked = true;
-            
-            // تحديث placeholder بناءً على نوع البحث
-            const searchInput = document.getElementById('searchComplaint');
-            const searchType = radio.value;
-            
-            if (searchType === 'number') {
-                searchInput.placeholder = 'أدخل رقم الطلب (مثال: JUD-00001)';
-            } else if (searchType === 'nationalId') {
-                searchInput.placeholder = 'أدخل الرقم القومي (14 رقمًا)';
-            } else if (searchType === 'name') {
-                searchInput.placeholder = 'أدخل الاسم بالكامل';
-            }
-        }
-        
-        function openSubmitSection(complaintType) {
-            closeAllDropdowns();
-            mainContainer.style.display = 'none';
-            submitSection.style.display = 'block';
-            
-            // تعيين نوع الشكوى في القائمة المنسدلة
-            const departmentSelect = document.getElementById('department');
-            for (let i = 0; i < departmentSelect.options.length; i++) {
-                const option = departmentSelect.options[i];
-                if (option.text.includes(complaintType) || complaintType.includes(option.text)) {
-                    departmentSelect.selectedIndex = i;
-                    break;
-                }
-            }
-            
-            // التمرير لأعلى
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        
-        function openTrackSection(searchType) {
-            closeAllDropdowns();
-            mainContainer.style.display = 'none';
-            trackSection.style.display = 'block';
-            
-            // تحديث خيارات البحث
-            const searchInput = document.getElementById('searchComplaint');
-            const targetOption = document.querySelector(`[data-search-type="${searchType}"]`);
-            
-            if (targetOption) {
-                updateSearchOptions(targetOption);
-            }
-            
-            // التمرير لأعلى
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        
-        function closeAllSections() {
-            submitSection.style.display = 'none';
-            trackSection.style.display = 'none';
-            mainContainer.style.display = 'block';
-            
-            // إعادة تعيين النماذج
-            resetForms();
-            
-            // التمرير لأعلى
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        
-        function resetForms() {
-            // إعادة تعيين نموذج تقديم الشكوى
-            if (submitSection.style.display !== 'none') {
-                document.getElementById('fullName').value = '';
-                document.getElementById('nationalId').value = '';
-                document.getElementById('localUnit').value = '';
-                document.getElementById('address').value = '';
-                document.getElementById('phone1').value = '';
-                document.getElementById('phone2').value = '';
-                document.getElementById('department').value = '';
-                document.getElementById('priority').value = '';
-                document.getElementById('problemDetails').value = '';
-                if (sendDocumentsCheckbox) sendDocumentsCheckbox.checked = false;
-                if (documentsInstructions) documentsInstructions.classList.remove('show');
-                if (charCount) charCount.textContent = '0';
-                if (document.getElementById('message')) {
-                    document.getElementById('message').style.display = 'none';
-                }
-            }
-            
-            // إعادة تعيين نموذج البحث
-            if (trackSection.style.display !== 'none') {
-                document.getElementById('searchComplaint').value = '';
-                document.getElementById('complaintDetails').style.display = 'none';
-                document.getElementById('complaintDetails').innerHTML = '';
-            }
-        }
-        
-        function validateNationalId() {
-            const value = this.value.trim();
-            if (value.length > 0) {
-                // منع إدخال أي شيء غير أرقام
-                this.value = value.replace(/\D/g, '');
-                
-                // التحقق من أول رقم
-                if (value.length >= 1) {
-                    const firstDigit = value.charAt(0);
-                    if (firstDigit !== '2' && firstDigit !== '3') {
-                        this.style.borderColor = '#e74c3c';
-                        this.style.boxShadow = '0 0 0 2px rgba(231, 76, 60, 0.2)';
-                    } else {
-                        this.style.borderColor = '#ddd';
-                        this.style.boxShadow = 'none';
-                    }
-                }
-                
-                // تحديد الطول الأقصى
-                if (value.length > 14) {
-                    this.value = value.substring(0, 14);
-                }
-            }
-        }
-        
-        function validatePhoneNumber() {
-            const value = this.value.trim();
-            if (value.length > 0) {
-                // منع إدخال أي شيء غير أرقام
-                this.value = value.replace(/\D/g, '');
-                
-                // التحقق من أن الرقم يبدأ بـ 01
-                if (value.length >= 2) {
-                    const firstTwoDigits = value.substring(0, 2);
-                    if (firstTwoDigits !== '01') {
-                        this.style.borderColor = '#e74c3c';
-                        this.style.boxShadow = '0 0 0 2px rgba(231, 76, 60, 0.2)';
-                    } else {
-                        this.style.borderColor = '#ddd';
-                        this.style.boxShadow = 'none';
-                    }
-                }
-                
-                // تحديد الطول الأقصى
-                if (value.length > 11) {
-                    this.value = value.substring(0, 11);
-                }
-            }
-        }
-        
-        // Your web app's Firebase configuration
+
+        // إعداد Firebase (استخدم بيانات مشروعك)
         const firebaseConfig = {
             apiKey: "AIzaSyBIIStbiZD0ZJ6su7C1bwZlBvqx-PP-t58",
             authDomain: "shakawa-e0a3c.firebaseapp.com",
+            databaseURL: "https://shakawa-e0a3c-default-rtdb.firebaseio.com",
             projectId: "shakawa-e0a3c",
             storageBucket: "shakawa-e0a3c.firebasestorage.app",
             messagingSenderId: "111620348664",
@@ -1518,22 +1315,494 @@
             measurementId: "G-SGNTJZDQ1L"
         };
 
-        // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        
-        // باقي الدوال (submitComplaint, searchComplaint, etc.) تبقى كما هي...
-        // يتم الحفاظ على نفس المنطق مع تعديلات طفيفة للتوافق مع التصميم الجديد
-        
-        window.submitComplaint = async function() {
-            // نفس منطق الدالة السابق مع تعديلات بسيطة للتوافق مع التصميم الجديد
-        };
-        
-        window.searchComplaint = async function() {
-            // نفس منطق الدالة السابق مع تعديلات بسيطة للتوافق مع التصميم الجديد
-        };
-        
-        // وظائف إضافية...
+
+        // عناصر DOM
+        const submitBox = document.getElementById('submitBox');
+        const trackBox = document.getElementById('trackBox');
+        const submitSection = document.getElementById('submitComplaintSection');
+        const trackSection = document.getElementById('trackComplaintSection');
+        const mainContainer = document.getElementById('mainContainer');
+        const backFromSubmit = document.getElementById('backFromSubmit');
+        const backFromTrack = document.getElementById('backFromTrack');
+        const sendDocumentsCheckbox = document.getElementById('sendDocuments');
+        const documentsInstructions = document.getElementById('documentsInstructions');
+        const problemDetails = document.getElementById('problemDetails');
+        const charCount = document.getElementById('charCount');
+        const nationalIdInput = document.getElementById('nationalId');
+        const phone1Input = document.getElementById('phone1');
+        const phone2Input = document.getElementById('phone2');
+
+        document.addEventListener('DOMContentLoaded', function () {
+            createParticles();
+
+            submitBox.addEventListener('click', openSubmitSection);
+            trackBox.addEventListener('click', openTrackSection);
+            backFromSubmit.addEventListener('click', closeAllSections);
+            backFromTrack.addEventListener('click', closeAllSections);
+
+            if (sendDocumentsCheckbox) {
+                sendDocumentsCheckbox.addEventListener('change', function () {
+                    if (this.checked) {
+                        documentsInstructions.classList.add('show');
+                    } else {
+                        documentsInstructions.classList.remove('show');
+                    }
+                });
+            }
+
+            if (problemDetails && charCount) {
+                problemDetails.addEventListener('input', function () {
+                    charCount.textContent = this.value.length;
+                });
+            }
+
+            // ضبط الرقم القومي (14 رقم فقط وأرقام فقط)
+            if (nationalIdInput) {
+                nationalIdInput.addEventListener('input', function () {
+                    let value = this.value.trim();
+                    value = value.replace(/\D/g, '');
+                    if (value.length > 14) {
+                        value = value.substring(0, 14);
+                    }
+                    this.value = value;
+                });
+            }
+
+            // تقييد أرقام الهاتف (11 رقم ويبدأ بـ 01)
+            [phone1Input, phone2Input].forEach(input => {
+                if (input) {
+                    input.addEventListener('input', function () {
+                        let value = this.value.trim();
+                        value = value.replace(/\D/g, '');
+                        if (value.length > 11) {
+                            value = value.substring(0, 11);
+                        }
+                        this.value = value;
+                    });
+                }
+            });
+
+            // خيارات البحث
+            document.querySelectorAll('.search-option').forEach(option => {
+                option.addEventListener('click', function () {
+                    document.querySelectorAll('.search-option').forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    const radio = this.querySelector('input');
+                    radio.checked = true;
+                    updateSearchPlaceholder(radio.value);
+                });
+            });
+
+            // placeholder الافتراضي للبحث
+            updateSearchPlaceholder('number');
+        });
+
+        function openSubmitSection() {
+            mainContainer.style.display = 'none';
+            submitSection.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openTrackSection() {
+            mainContainer.style.display = 'none';
+            trackSection.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function closeAllSections() {
+            submitSection.style.display = 'none';
+            trackSection.style.display = 'none';
+            mainContainer.style.display = 'block';
+            resetForms();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForms() {
+            // مسح فورم الشكوى
+            document.getElementById('fullName').value = '';
+            document.getElementById('nationalId').value = '';
+            document.getElementById('localUnit').value = '';
+            document.getElementById('address').value = '';
+            document.getElementById('phone1').value = '';
+            document.getElementById('phone2').value = '';
+            document.getElementById('department').value = '';
+            document.getElementById('priority').value = '';
+            document.getElementById('problemDetails').value = '';
+            if (charCount) charCount.textContent = '0';
+
+            if (sendDocumentsCheckbox) sendDocumentsCheckbox.checked = false;
+            if (documentsInstructions) documentsInstructions.classList.remove('show');
+
+            const message = document.getElementById('message');
+            if (message) {
+                message.style.display = 'none';
+                message.textContent = '';
+                message.className = 'message';
+            }
+
+            // مسح البحث
+            const searchInput = document.getElementById('searchComplaint');
+            const complaintDetails = document.getElementById('complaintDetails');
+            if (searchInput) searchInput.value = '';
+            if (complaintDetails) {
+                complaintDetails.style.display = 'none';
+                complaintDetails.innerHTML = '';
+            }
+        }
+
+        function updateSearchPlaceholder(type) {
+            const searchInput = document.getElementById('searchComplaint');
+            if (!searchInput) return;
+
+            if (type === 'number') {
+                searchInput.placeholder = 'JUD-00001';
+            } else if (type === 'nationalId') {
+                searchInput.placeholder = 'الرقم القومي المكون من 14 رقمًا';
+            } else if (type === 'name') {
+                searchInput.placeholder = 'الاسم بالكامل كما تم إدخاله في الشكوى';
+            }
+        }
+
+        function showMessage(type, text) {
+            const message = document.getElementById('message');
+            if (!message) return;
+            message.style.display = 'block';
+            message.textContent = text;
+            message.className = 'message ' + (type === 'error' ? 'error' : 'success');
+        }
+
+        async function generateComplaintNumber(department) {
+            // يتم إنشاء رقم شكوى متسلسل
+            const ref = database.ref('settings/lastComplaintNumber');
+            const snapshot = await ref.get();
+            let lastNumber = 0;
+            if (snapshot.exists()) {
+                lastNumber = snapshot.val();
+            }
+            lastNumber++;
+            await ref.set(lastNumber);
+            lastComplaintNumber = lastNumber;
+
+            const formatted = String(lastNumber).padStart(5, '0');
+            return 'JUD-' + formatted;
+        }
+
+        // إرسال الشكوى
+        async function submitComplaint() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const nationalId = document.getElementById('nationalId').value.trim();
+            const localUnit = document.getElementById('localUnit').value;
+            const address = document.getElementById('address').value.trim();
+            const phone1 = document.getElementById('phone1').value.trim();
+            const phone2 = document.getElementById('phone2').value.trim();
+            const department = document.getElementById('department').value;
+            const priority = document.getElementById('priority').value;
+            const problemDetailsText = document.getElementById('problemDetails').value.trim();
+            const sendDocs = document.getElementById('sendDocuments').checked;
+
+            // تحقق الحقول الأساسية
+            if (!fullName || !nationalId || !localUnit || !address || !phone1 || !department || !priority || !problemDetailsText) {
+                showMessage('error', 'يرجى ملء جميع الحقول الإلزامية قبل إرسال الشكوى.');
+                return;
+            }
+
+            // تحقق الرقم القومي
+            if (nationalId.length !== 14 || (nationalId[0] !== '2' && nationalId[0] !== '3')) {
+                showMessage('error', 'الرقم القومي يجب أن يكون 14 رقمًا ويبدأ بـ 2 أو 3.');
+                return;
+            }
+
+            // تحقق رقم الهاتف 1
+            if (phone1.length !== 11 || !phone1.startsWith('01')) {
+                showMessage('error', 'رقم الهاتف (1) يجب أن يكون 11 رقمًا ويبدأ بـ 01.');
+                return;
+            }
+
+            // تحقق رقم الهاتف 2 إن وُجد
+            if (phone2 && (phone2.length !== 11 || !phone2.startsWith('01'))) {
+                showMessage('error', 'رقم الهاتف (2) إن وجد يجب أن يكون 11 رقمًا ويبدأ بـ 01.');
+                return;
+            }
+
+            try {
+                const complaintRef = database.ref('complaints').push();
+                const complaintKey = complaintRef.key;
+                const timestamp = new Date().toISOString();
+                const complaintNumber = await generateComplaintNumber(department);
+
+                const complaintData = {
+                    complaintNumber: complaintNumber,
+                    fullName: fullName,
+                    nationalId: nationalId,
+                    localUnit: localUnit,
+                    address: address,
+                    phone1: phone1,
+                    phone2: phone2 || '',
+                    department: department,
+                    priority: priority,
+                    problemDetails: problemDetailsText,
+                    sendDocuments: sendDocs,
+                    status: 'قيد المراجعة',
+                    clientResponses: [],
+                    adminResponses: [],
+                    createdAt: timestamp,
+                    updatedAt: timestamp
+                };
+
+                await complaintRef.set(complaintData);
+
+                currentComplaintKey = complaintKey;
+                currentComplaintData = complaintData;
+
+                showMessage('success', 'تم إرسال الشكوى بنجاح. رقم الشكوى الخاص بك هو: ' + complaintNumber);
+
+                // ممكن هنا تضيف alert أو copy آلي للرقم
+            } catch (error) {
+                console.error(error);
+                showMessage('error', 'حدث خطأ أثناء إرسال الشكوى. حاول مرة أخرى لاحقًا.');
+            }
+        }
+
+        // عرض تفاصيل الشكوى في صفحة المتابعة
+        function renderComplaintDetails(complaint) {
+            const container = document.getElementById('complaintDetails');
+            if (!container) return;
+
+            if (!complaint) {
+                container.style.display = 'none';
+                container.innerHTML = '';
+                return;
+            }
+
+            container.style.display = 'block';
+
+            const createdAt = complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : 'غير متوفر';
+            const updatedAt = complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : 'غير متوفر';
+
+            let html = `
+                <h3 style="margin-bottom: 20px; font-weight: 800; color: var(--primary-color);">
+                    تفاصيل الشكوى رقم: ${complaint.complaintNumber || ''}
+                </h3>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">الاسم بالكامل</div>
+                        <div>${complaint.fullName || ''}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">الرقم القومي</div>
+                        <div>${complaint.nationalId || ''}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">بلد الإقامة</div>
+                        <div>${complaint.localUnit || ''}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">العنوان</div>
+                        <div>${complaint.address || ''}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">هاتف 1</div>
+                        <div>${complaint.phone1 || ''}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">هاتف 2</div>
+                        <div>${complaint.phone2 || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">القسم</div>
+                        <div>${complaint.department || ''}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">نوع المشكلة</div>
+                        <div>${complaint.priority || ''}</div>
+                    </div>
+                    <div class="detail-item" style="grid-column: 1 / -1;">
+                        <div class="detail-label">تفاصيل المشكلة</div>
+                        <div>${complaint.problemDetails || ''}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">حالة الشكوى</div>
+                        <div>${complaint.status || ''}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">تاريخ التقديم</div>
+                        <div>${createdAt}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">آخر تحديث</div>
+                        <div>${updatedAt}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">إرسال مستندات</div>
+                        <div>${complaint.sendDocuments ? 'نعم، يرغب بإرسال مستندات' : 'لا'}</div>
+                    </div>
+                </div>
+            `;
+
+            // الردود
+            html += `<div class="responses">`;
+
+            if (complaint.adminResponses && complaint.adminResponses.length > 0) {
+                complaint.adminResponses.forEach(res => {
+                    const date = res.date ? new Date(res.date).toLocaleString('ar-EG') : '';
+                    html += `
+                        <div class="response response-admin">
+                            <div><strong>رد المكتب:</strong></div>
+                            <div>${res.text || ''}</div>
+                            <div class="response-date">${date}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            if (complaint.clientResponses && complaint.clientResponses.length > 0) {
+                complaint.clientResponses.forEach(res => {
+                    const date = res.date ? new Date(res.date).toLocaleString('ar-EG') : '';
+                    html += `
+                        <div class="response response-client">
+                            <div><strong>رد المواطن:</strong></div>
+                            <div>${res.text || ''}</div>
+                            <div class="response-date">${date}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `</div>`;
+
+            // قسم الرد للمواطن
+            html += `
+                <div class="reply-section">
+                    <h4 style="margin-bottom: 15px;">✉️ إضافة رد/توضيح من المواطن</h4>
+                    <textarea id="clientReply" placeholder="اكتب ردك أو توضيح إضافي ليتم إرساله للمكتب" style="min-height: 120px;"></textarea>
+                    <button class="btn btn-client-reply" onclick="sendClientReply('${complaint.key || ''}')">
+                        <span>إرسال الرد</span>
+                        <i class="fas fa-reply"></i>
+                    </button>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // البحث عن شكوى
+        async function searchComplaint() {
+            const input = document.getElementById('searchComplaint').value.trim();
+            const activeOption = document.querySelector('.search-option.active input');
+            const type = activeOption ? activeOption.value : 'number';
+
+            const container = document.getElementById('complaintDetails');
+            if (!input) {
+                if (container) {
+                    container.style.display = 'none';
+                    container.innerHTML = '';
+                }
+                alert('يرجى إدخال بيانات البحث أولًا.');
+                return;
+            }
+
+            try {
+                let queryRef = database.ref('complaints');
+                if (type === 'number') {
+                    queryRef = queryRef.orderByChild('complaintNumber').equalTo(input);
+                } else if (type === 'nationalId') {
+                    queryRef = queryRef.orderByChild('nationalId').equalTo(input);
+                } else if (type === 'name') {
+                    queryRef = queryRef.orderByChild('fullName').equalTo(input);
+                }
+
+                const snapshot = await queryRef.get();
+
+                if (!snapshot.exists()) {
+                    if (container) {
+                        container.style.display = 'block';
+                        container.innerHTML = `<p style="font-weight:700; color:#dc3545;">لم يتم العثور على أي شكوى مطابقة لبيانات البحث.</p>`;
+                    }
+                    return;
+                }
+
+                let complaint = null;
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    complaint = {
+                        ...data,
+                        key: child.key
+                    };
+                });
+
+                currentComplaintKey = complaint.key;
+                currentComplaintData = complaint;
+
+                renderComplaintDetails(complaint);
+            } catch (error) {
+                console.error(error);
+                if (container) {
+                    container.style.display = 'block';
+                    container.innerHTML = `<p style="font-weight:700; color:#dc3545;">حدث خطأ أثناء البحث عن الشكوى. حاول مرة أخرى لاحقًا.</p>`;
+                }
+            }
+        }
+
+        // إرسال رد من المواطن
+        async function sendClientReply(key) {
+            const textarea = document.getElementById('clientReply');
+            if (!textarea) {
+                alert('حقل الرد غير موجود.');
+                return;
+            }
+
+            const text = textarea.value.trim();
+            if (!text) {
+                alert('يرجى كتابة الرد قبل الإرسال.');
+                return;
+            }
+
+            if (!key) {
+                alert('لا توجد شكوى محددة لإضافة الرد.');
+                return;
+            }
+
+            try {
+                const ref = database.ref('complaints/' + key + '/clientResponses');
+                const snapshot = await ref.get();
+                let responses = [];
+                if (snapshot.exists()) {
+                    responses = snapshot.val();
+                    if (!Array.isArray(responses)) {
+                        responses = [];
+                    }
+                }
+
+                const newResponse = {
+                    text: text,
+                    date: new Date().toISOString()
+                };
+                responses.push(newResponse);
+                await ref.set(responses);
+
+                textarea.value = '';
+
+                // تحديث updatedAt
+                await database.ref('complaints/' + key + '/updatedAt').set(new Date().toISOString());
+
+                // إعادة تحميل الشكوى
+                const complaintSnap = await database.ref('complaints/' + key).get();
+                if (complaintSnap.exists()) {
+                    const complaint = {
+                        ...complaintSnap.val(),
+                        key: key
+                    };
+                    renderComplaintDetails(complaint);
+                }
+
+                alert('تم إرسال الرد بنجاح.');
+            } catch (error) {
+                console.error(error);
+                alert('حدث خطأ أثناء إرسال الرد. حاول مرة أخرى لاحقًا.');
+            }
+        }
     </script>
 </body>
 </html>
