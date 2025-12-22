@@ -2214,18 +2214,69 @@
             // تحميل الردود
             const responses = complaint.responses || [];
             
-            let responsesHTML = '';
-            if (responses.length > 0) {
-                responsesHTML = `
+            // فصل الردود الرسمية (من الإدارة) عن ردود العملاء
+            const adminResponses = responses.filter(r => r.type === 'admin');
+            const clientResponses = responses.filter(r => r.type === 'client');
+            
+            // عرض الردود الرسمية مباشرة بعد تفاصيل المشكلة
+            let adminResponsesHTML = '';
+            if (adminResponses.length > 0) {
+                adminResponsesHTML = `
                     <div class="responses">
-                        <h3 style="color: var(--primary-color); margin-bottom: 20px;">📨 الردود</h3>
-                        ${responses.map(response => `
-                            <div class="response ${response.type === 'admin' ? 'response-admin' : 'response-client'}">
+                        <h3 style="color: var(--primary-color); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-comment-alt-check"></i> الردود الرسمية من الإدارة
+                        </h3>
+                        ${adminResponses.map(response => `
+                            <div class="response response-admin">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <strong>${response.type === 'admin' ? '📋 رد الإدارة' : '👤 رد العميل'}</strong>
-                                    <small style="color: #666;">${new Date(response.timestamp).toLocaleString('ar-EG')}</small>
+                                    <strong style="display: flex; align-items: center; gap: 8px;">
+                                        <i class="fas fa-user-tie"></i> رد الإدارة
+                                    </strong>
+                                    <small style="color: #666; font-weight: 600;">${new Date(response.timestamp).toLocaleString('ar-EG')}</small>
                                 </div>
-                                <div style="white-space: pre-line;">${response.message}</div>
+                                <div style="white-space: pre-line; line-height: 1.8; padding: 15px; background: rgba(212, 237, 218, 0.3); border-radius: 10px;">
+                                    ${response.message}
+                                </div>
+                                <div class="response-date">تم الرد في: ${new Date(response.timestamp).toLocaleString('ar-EG')}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                adminResponsesHTML = `
+                    <div class="responses">
+                        <h3 style="color: #6c757d; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <i class="far fa-comment-alt"></i> الردود الرسمية
+                        </h3>
+                        <div class="response" style="background: #f8f9fa; border: 2px dashed #dee2e6;">
+                            <div style="text-align: center; padding: 20px; color: #6c757d;">
+                                <i class="far fa-clock fa-2x" style="margin-bottom: 10px;"></i>
+                                <p style="font-size: 1.1rem; font-weight: 600;">لم يتم الرد على الشكوى بعد</p>
+                                <p>شكراً لتواصلك معنا، سيتم الرد عليك في أقرب وقت.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // عرض ردود العملاء (إذا وجدت)
+            let clientResponsesHTML = '';
+            if (clientResponses.length > 0) {
+                clientResponsesHTML = `
+                    <div class="responses">
+                        <h3 style="color: #6c757d; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-user-comments"></i> ردود العميل
+                        </h3>
+                        ${clientResponses.map(response => `
+                            <div class="response response-client">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <strong style="display: flex; align-items: center; gap: 8px;">
+                                        <i class="fas fa-user"></i> رد العميل
+                                    </strong>
+                                    <small style="color: #666; font-weight: 600;">${new Date(response.timestamp).toLocaleString('ar-EG')}</small>
+                                </div>
+                                <div style="white-space: pre-line; line-height: 1.8;">${response.message}</div>
+                                <div class="response-date">تم الإرسال في: ${new Date(response.timestamp).toLocaleString('ar-EG')}</div>
                             </div>
                         `).join('')}
                     </div>
@@ -2235,7 +2286,7 @@
             // إضافة قسم التحقق من الرقم القومي للرد
             const replyVerificationHTML = `
                 <div class="verify-national-id-container" id="verifyNationalIdContainer">
-                    <h3>🔐 التحقق من الرقم القومي للرد على الشكوى</h3>
+                    <h3><i class="fas fa-shield-alt"></i> التحقق من الرقم القومي للرد على الشكوى</h3>
                     <p style="margin-bottom: 15px;">لإضافة رد على الشكوى، يرجى إدخال الرقم القومي المسجل في الشكوى للتحقق</p>
                     <div class="verify-input-group">
                         <input type="text" id="verifyNationalIdInput" class="verify-national-id-input" placeholder="أدخل الرقم القومي" maxlength="14">
@@ -2248,7 +2299,7 @@
                 </div>
                 
                 <div class="reply-section" id="replySection" style="display: none;">
-                    <h3 style="color: var(--primary-color); margin-bottom: 20px;">✍️ إضافة رد على الشكوى</h3>
+                    <h3 style="color: var(--primary-color); margin-bottom: 20px;"><i class="fas fa-reply"></i> إضافة رد على الشكوى</h3>
                     <textarea id="clientReplyMessage" placeholder="اكتب ردك هنا..." rows="4" style="width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem;"></textarea>
                     <button onclick="submitClientReply('${complaint.key}')" class="btn btn-client-reply" style="margin-top: 15px;">
                         <i class="fas fa-paper-plane"></i>
@@ -2258,73 +2309,77 @@
             `;
             
             const detailsHTML = `
-                <h3 style="color: var(--primary-color); margin-bottom: 25px; text-align: center;">📄 تفاصيل الشكوى</h3>
+                <h3 style="color: var(--primary-color); margin-bottom: 25px; text-align: center;"><i class="fas fa-file-alt"></i> تفاصيل الشكوى</h3>
                 
                 <div class="details-grid">
                     <div class="detail-item">
-                        <div class="detail-label">رقم الشكوى</div>
+                        <div class="detail-label"><i class="fas fa-hashtag"></i> رقم الشكوى</div>
                         <div style="font-size: 1.3rem; font-weight: 800; color: var(--primary-color);">${complaint.complaintNumber || 'غير معروف'}</div>
                     </div>
                     
                     <div class="detail-item">
-                        <div class="detail-label">حالة الشكوى</div>
+                        <div class="detail-label"><i class="fas fa-tasks"></i> حالة الشكوى</div>
                         <div>
                             <span class="status-badge ${statusClass}" style="font-size: 1.1rem; padding: 8px 16px;">
+                                <i class="fas fa-circle" style="margin-left: 5px; font-size: 0.8rem;"></i>
                                 ${complaint.status || 'غير محدد'}
                             </span>
                         </div>
                     </div>
                     
                     <div class="detail-item">
-                        <div class="detail-label">الاسم بالكامل</div>
+                        <div class="detail-label"><i class="fas fa-user"></i> الاسم بالكامل</div>
                         <div>${complaint.fullName || 'غير معروف'}</div>
                     </div>
                     
                     <div class="detail-item">
-                        <div class="detail-label">الرقم القومي</div>
+                        <div class="detail-label"><i class="fas fa-id-card"></i> الرقم القومي</div>
                         <div style="font-family: monospace; font-size: 1.1rem; letter-spacing: 2px;">
                             ${formatNationalId(complaint.nationalId)}
                         </div>
                     </div>
                     
                     <div class="detail-item">
-                        <div class="detail-label">العنوان</div>
+                        <div class="detail-label"><i class="fas fa-map-marker-alt"></i> العنوان</div>
                         <div>${complaint.address || 'غير معروف'}</div>
                     </div>
                     
                     <div class="detail-item">
-                        <div class="detail-label">القسم</div>
+                        <div class="detail-label"><i class="fas fa-building"></i> القسم</div>
                         <div>${complaint.department || 'غير معروف'}</div>
                     </div>
                     
                     <div class="detail-item">
-                        <div class="detail-label">نوع المشكلة</div>
+                        <div class="detail-label"><i class="fas fa-exclamation-triangle"></i> نوع المشكلة</div>
                         <div>
                             <span class="priority-badge ${priorityClass}">
+                                <i class="fas fa-flag" style="margin-left: 5px;"></i>
                                 ${complaint.priority || 'غير محدد'}
                             </span>
                         </div>
                     </div>
                     
                     <div class="detail-item">
-                        <div class="detail-label">تاريخ التقديم</div>
+                        <div class="detail-label"><i class="far fa-calendar-plus"></i> تاريخ التقديم</div>
                         <div>${createdAt}</div>
                     </div>
                     
                     <div class="detail-item">
-                        <div class="detail-label">آخر تحديث</div>
+                        <div class="detail-label"><i class="far fa-calendar-check"></i> آخر تحديث</div>
                         <div>${updatedAt}</div>
                     </div>
                 </div>
                 
                 <div class="detail-item" style="grid-column: 1 / -1;">
-                    <div class="detail-label">تفاصيل المشكلة</div>
-                    <div style="white-space: pre-line; line-height: 1.8; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                    <div class="detail-label"><i class="fas fa-clipboard-list"></i> تفاصيل المشكلة</div>
+                    <div style="white-space: pre-line; line-height: 1.8; padding: 20px; background: #f8f9fa; border-radius: 10px; border-right: 5px solid var(--primary-color);">
                         ${complaint.problemDetails || 'لا توجد تفاصيل'}
                     </div>
                 </div>
                 
-                ${responsesHTML}
+                ${adminResponsesHTML}
+                
+                ${clientResponsesHTML}
                 
                 ${replyVerificationHTML}
                 
@@ -2355,7 +2410,7 @@
             });
         }
         
-        // دالة التحقق من الرقم القومي للرد (تم تغيير الاسم لمنع التداخل مع الدالة الموجودة)
+        // دالة التحقق من الرقم القومي للرد
         window.verifyNationalId = function(complaintNationalId) {
             const inputNationalId = document.getElementById('verifyNationalIdInput').value.trim();
             
@@ -2439,7 +2494,7 @@
             const detailsContainer = document.getElementById('complaintDetails');
             
             let complaintsHTML = `
-                <h3 style="color: var(--primary-color); margin-bottom: 25px; text-align: center;">🔍 نتائج البحث (${complaints.length} شكوى)</h3>
+                <h3 style="color: var(--primary-color); margin-bottom: 25px; text-align: center;"><i class="fas fa-search"></i> نتائج البحث (${complaints.length} شكوى)</h3>
                 <div style="display: grid; gap: 15px;">
             `;
             
@@ -2459,7 +2514,7 @@
                     <div class="detail-item" style="cursor: pointer;" onclick="displayComplaintDetails(${JSON.stringify(complaint).replace(/'/g, "\\'")})">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <div style="font-weight: 800; color: var(--primary-color); font-size: 1.1rem;">
-                                ${complaint.complaintNumber || 'غير معروف'}
+                                <i class="fas fa-hashtag"></i> ${complaint.complaintNumber || 'غير معروف'}
                             </div>
                             <span class="status-badge ${statusClass}">
                                 ${complaint.status || 'غير محدد'}
@@ -2467,20 +2522,20 @@
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <div>
-                                <strong>الاسم:</strong> ${complaint.fullName || 'غير معروف'}
+                                <strong><i class="fas fa-user"></i> الاسم:</strong> ${complaint.fullName || 'غير معروف'}
                             </div>
                             <div>
-                                <strong>القسم:</strong> ${complaint.department || 'غير معروف'}
+                                <strong><i class="fas fa-building"></i> القسم:</strong> ${complaint.department || 'غير معروف'}
                             </div>
                             <div>
-                                <strong>التاريخ:</strong> ${createdAt}
+                                <strong><i class="far fa-calendar"></i> التاريخ:</strong> ${createdAt}
                             </div>
                             <div>
-                                <strong>النوع:</strong> ${complaint.priority || 'غير محدد'}
+                                <strong><i class="fas fa-flag"></i> النوع:</strong> ${complaint.priority || 'غير محدد'}
                             </div>
                         </div>
                         <div style="margin-top: 15px; text-align: center; color: var(--primary-color); font-weight: 600;">
-                            <i class="fas fa-eye"></i> انقر لعرض التفاصيل
+                            <i class="fas fa-eye"></i> انقر لعرض التفاصيل والردود
                         </div>
                     </div>
                 `;
