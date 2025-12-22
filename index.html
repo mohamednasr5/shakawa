@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام الشكاوى الموحد</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             box-sizing: border-box;
@@ -14,9 +15,11 @@
         }
         
         body {
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             color: #333;
             line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
         
         .container {
@@ -28,37 +31,287 @@
         header {
             background: linear-gradient(135deg, #1a5fb4 0%, #2d8fd5 100%);
             color: white;
-            padding: 30px 0;
+            padding: 25px 0;
             text-align: center;
-            border-radius: 0 0 15px 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b, #86a8e7, #91eae4);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         
         .logo {
             font-size: 2.5rem;
             margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
         
         .subtitle {
             font-size: 1.2rem;
             opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
         }
         
-        .search-section {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            padding: 20px;
+        }
+        
+        .welcome-text {
+            text-align: center;
+            margin-bottom: 40px;
+            max-width: 800px;
+        }
+        
+        .welcome-text h2 {
+            color: #2c3e50;
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-text p {
+            color: #555;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+        
+        .boxes-container {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+            perspective: 1200px;
+        }
+        
+        .box-wrapper {
+            width: 320px;
+            height: 380px;
+            perspective: 1000px;
+        }
+        
+        .action-box {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .box-wrapper:hover .action-box {
+            transform: rotateY(15deg) rotateX(5deg) translateY(-15px);
+        }
+        
+        .action-box.clicked {
+            transform: rotateY(0) rotateX(0) translateY(-5px);
+        }
+        
+        .box-front, .box-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
             text-align: center;
         }
         
-        .form-section {
+        .box-front {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            color: #333;
+            z-index: 2;
+            transform: rotateY(0deg);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+        
+        .box-back {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            transform: rotateY(180deg);
+            z-index: 1;
+        }
+        
+        .box-icon {
+            font-size: 4rem;
+            margin-bottom: 25px;
+            color: #1a5fb4;
+            filter: drop-shadow(0 5px 10px rgba(26, 95, 180, 0.3));
+        }
+        
+        .box-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .box-description {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 25px;
+        }
+        
+        .box-button {
+            background: linear-gradient(to right, #1a5fb4, #2d8fd5);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(26, 95, 180, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .box-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(26, 95, 180, 0.4);
+        }
+        
+        .box-button i {
+            font-size: 1.2rem;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            margin-top: 20px;
+            padding: 20px;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 0;
+            overflow: hidden;
+        }
+        
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            max-height: 500px;
+        }
+        
+        .dropdown-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .dropdown-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .dropdown-option {
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            text-align: right;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #333;
+        }
+        
+        .dropdown-option:hover {
+            background: #e9ecef;
+            transform: translateX(-5px);
+        }
+        
+        .dropdown-option i {
+            color: #1a5fb4;
+        }
+        
+        .hidden-section {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .back-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .back-button:hover {
+            background: #5a6268;
+        }
+        
+        /* الأنماط الأصلية للنماذج (مع تعديلات بسيطة) */
+        .form-section, .search-section {
             background: white;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            animation: fadeIn 0.5s ease forwards;
         }
         
         .form-group {
@@ -129,38 +382,30 @@
         }
         
         .btn-primary {
-            background-color: #1a5fb4;
+            background: linear-gradient(to right, #1a5fb4, #2d8fd5);
             color: white;
         }
         
         .btn-primary:hover {
-            background-color: #155093;
-        }
-        
-        .btn-secondary {
-            background-color: #2ecc71;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #27ae60;
+            background: linear-gradient(to right, #155093, #1a5fb4);
         }
         
         .btn-search {
-            background-color: #3498db;
+            background: linear-gradient(to right, #3498db, #2d8fd5);
             color: white;
         }
         
         .btn-search:hover {
-            background-color: #2980b9;
+            background: linear-gradient(to right, #2980b9, #3498db);
         }
         
         .btn-admin {
-            background-color: #e74c3c;
+            background: linear-gradient(to right, #e74c3c, #c0392b);
             color: white;
             position: fixed;
             top: 20px;
             left: 20px;
+            z-index: 1000;
         }
         
         .message {
@@ -188,53 +433,19 @@
             border-radius: 10px;
             margin-top: 20px;
             display: none;
-        }
-        
-        .complaint-details h3 {
-            color: #1a5fb4;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
-        }
-        
-        .details-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        
-        .detail-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .detail-label {
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 5px;
-        }
-        
-        .responses {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #eee;
-        }
-        
-        .response {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border-right: 4px solid #3498db;
-        }
-        
-        .response-date {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-top: 5px;
+            animation: fadeIn 0.5s ease forwards;
         }
         
         @media (max-width: 768px) {
+            .boxes-container {
+                gap: 30px;
+            }
+            
+            .box-wrapper {
+                width: 280px;
+                height: 350px;
+            }
+            
             .form-row {
                 flex-direction: column;
                 gap: 0;
@@ -244,7 +455,7 @@
                 padding: 10px;
             }
             
-            .form-section {
+            .form-section, .search-section {
                 padding: 20px;
             }
             
@@ -256,16 +467,24 @@
             }
         }
         
-        .priority-normal {
-            color: #3498db;
+        @media (max-width: 640px) {
+            .boxes-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .box-wrapper {
+                width: 100%;
+                max-width: 320px;
+            }
         }
         
-        .priority-important {
-            color: #f39c12;
-        }
-        
-        .priority-critical {
-            color: #e74c3c;
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 30px;
         }
     </style>
 </head>
@@ -273,133 +492,271 @@
     <header>
         <div class="container">
             <h1 class="logo">نظام الشكاوى الموحد</h1>
-            <p class="subtitle">خدمة إلكترونية لتقديم الشكاوى والمشكلات</p>
+            <p class="subtitle">خدمة إلكترونية لتقديم الشكاوى والمشكلات ومتابعتها</p>
         </div>
     </header>
     
     <div class="container">
-        <a href="admin.html" class="btn btn-admin">لوحة التحكم</a>
+        <a href="admin.html" class="btn btn-admin"><i class="fas fa-cog"></i> لوحة التحكم</a>
         
-        <div class="search-section">
-            <h2>البحث عن طلب</h2>
-            <div class="form-group">
-                <input type="text" id="searchComplaint" placeholder="أدخل رقم الطلب للبحث عنه">
-                <button onclick="searchComplaint()" class="btn btn-search" style="margin-top: 15px; width: 200px;">بحث</button>
+        <div class="main-container">
+            <div class="welcome-text">
+                <h2>مرحبًا بكم في نظام الشكاوى الموحد</h2>
+                <p>نظام إلكتروني متكامل لتقديم الشكاوى والمشكلات التي تواجهكم في مختلف المجالات، ومتابعة حالة الشكوى المقدمة حتى حلها. اختر الخدمة التي تريدها من خلال المربعات أدناه.</p>
             </div>
+            
+            <div class="boxes-container">
+                <!-- مربع تقديم الشكوى -->
+                <div class="box-wrapper">
+                    <div class="action-box" id="submitBox">
+                        <div class="box-front">
+                            <div class="box-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <h3 class="box-title">تقديم طلب أو شكوى</h3>
+                            <p class="box-description">قدم شكوى أو طلب جديد في أي مجال من المجالات المتاحة ضمن النظام الإلكتروني</p>
+                            <button class="box-button">
+                                <span>تقديم شكوى جديدة</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                        </div>
+                        <div class="box-back">
+                            <h3 style="margin-bottom: 20px;">تقديم الشكوى</h3>
+                            <p style="margin-bottom: 30px;">سيتم فتح نموذج إلكتروني لتقديم شكوى جديدة</p>
+                            <i class="fas fa-paper-plane" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- القائمة العائمة لتقديم الشكوى -->
+                    <div class="dropdown-menu" id="submitMenu">
+                        <h4 class="dropdown-title">اختر نوع الشكوى</h4>
+                        <div class="dropdown-options">
+                            <button class="dropdown-option" data-type="قضاء ومحاكم">
+                                <span>مشكلة خاصة بالقضاء والمحاكم</span>
+                                <i class="fas fa-gavel"></i>
+                            </button>
+                            <button class="dropdown-option" data-type="مساعدة مالية">
+                                <span>مساعدة مالية</span>
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </button>
+                            <button class="dropdown-option" data-type="صحة">
+                                <span>مشكلة خاصة بالصحة</span>
+                                <i class="fas fa-heartbeat"></i>
+                            </button>
+                            <button class="dropdown-option" data-type="مياه وصرف صحي">
+                                <span>مشكلات مياه الشرب والصرف الصحي</span>
+                                <i class="fas fa-tint"></i>
+                            </button>
+                            <button class="dropdown-option" data-type="تعليم">
+                                <span>مشكلة خاصة بالتعليم</span>
+                                <i class="fas fa-graduation-cap"></i>
+                            </button>
+                            <button class="dropdown-option" data-type="شرطة وداخلية">
+                                <span>مشكلة خاصة بالشرطة والداخلية</span>
+                                <i class="fas fa-shield-alt"></i>
+                            </button>
+                            <button class="dropdown-option" data-type="طارئة">
+                                <span>حالة طارئة</span>
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </button>
+                            <button class="dropdown-option" data-type="أخرى">
+                                <span>مشكلات أخرى</span>
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- مربع متابعة الشكوى -->
+                <div class="box-wrapper">
+                    <div class="action-box" id="trackBox">
+                        <div class="box-front">
+                            <div class="box-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <h3 class="box-title">متابعة طلب أو شكوى</h3>
+                            <p class="box-description">تابع حالة الشكوى المقدمة سابقًا عن طريق رقم الطلب أو الرقم القومي</p>
+                            <button class="box-button">
+                                <span>متابعة شكوى</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                        </div>
+                        <div class="box-back">
+                            <h3 style="margin-bottom: 20px;">متابعة الشكوى</h3>
+                            <p style="margin-bottom: 30px;">ابحث عن شكوى مسبقة لمتابعتها ومعرفة حالتها</p>
+                            <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- القائمة العائمة لمتابعة الشكوى -->
+                    <div class="dropdown-menu" id="trackMenu">
+                        <h4 class="dropdown-title">ابحث عن شكوى</h4>
+                        <div class="dropdown-options">
+                            <button class="dropdown-option" data-search-type="number">
+                                <span>البحث برقم الشكوى</span>
+                                <i class="fas fa-hashtag"></i>
+                            </button>
+                            <button class="dropdown-option" data-search-type="nationalId">
+                                <span>البحث بالرقم القومي</span>
+                                <i class="fas fa-id-card"></i>
+                            </button>
+                            <button class="dropdown-option" data-search-type="phone">
+                                <span>البحث برقم الهاتف</span>
+                                <i class="fas fa-phone"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <p style="text-align: center; color: #666; max-width: 700px; margin-top: 20px;">
+                يمكنك النقر على أي من المربعين أعلاه لبدء الخدمة المطلوبة. يتم معالجة جميع الشكاوى بسرية تامة وضمن الإجراءات النظامية المعتمدة.
+            </p>
         </div>
         
-        <div class="form-section">
-            <h2 style="margin-bottom: 25px; color: #2c3e50;">تقديم شكوى جديدة</h2>
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <label for="fullName" class="required">الاسم بالكامل (عربي)</label>
-                    <input type="text" id="fullName" placeholder="أدخل الاسم باللغة العربية">
-                </div>
-                <div class="form-col">
-                    <label for="nationalId" class="required">الرقم القومي</label>
-                    <input type="text" id="nationalId" placeholder="14 رقم" maxlength="14">
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="localUnit" class="required">الوحدة المحلية</label>
-                <select id="localUnit">
-                    <option value="">اختر الوحدة المحلية</option>
-                    <option value="المنزلة">المنزلة</option>
-                    <option value="المطرية">المطرية</option>
-                    <option value="الفروسات">الفروسات</option>
-                    <option value="أبو الأخضر">أبو الأخضر</option>
-                    <option value="جديدة المنزلة">جديدة المنزلة</option>
-                    <option value="العامرة">العامرة</option>
-                    <option value="مصر الجديدة">مصر الجديدة</option>
-                    <option value="عرب زيدان">عرب زيدان</option>
-                    <option value="الستايتة">الستايتة</option>
-                    <option value="كفر حجاج">كفر حجاج</option>
-                    <option value="ميت خضير">ميت خضير</option>
-                    <option value="المواجد">المواجد</option>
-                    <option value="البصراط">البصراط</option>
-                    <option value="ميت شريف">ميت شريف</option>
-                    <option value="الطوابرة">الطوابرة</option>
-                    <option value="العمارنة">العمارنة</option>
-                    <option value="اولاد بانا">اولاد بانا</option>
-                    <option value="اولاد حانا">اولاد حانا</option>
-                    <option value="بحر حادوث">بحر حادوث</option>
-                    <option value="القزاقزة">القزاقزة</option>
-                    <option value="الحوتة">الحوتة</option>
-                    <option value="اولاد نور">اولاد نور</option>
-                    <option value="الخلايفة">الخلايفة</option>
-                    <option value="القطشة">القطشة</option>
-                    <option value="الجماملة">الجماملة</option>
-                    <option value="العزيزة">العزيزة</option>
-                    <option value="الأحمدية">الأحمدية</option>
-                    <option value="العربان">العربان</option>
-                    <option value="اولاد علم">اولاد علم</option>
-                    <option value="اولاد ناصر">اولاد ناصر</option>
-                    <option value="بني هلال">بني هلال</option>
-                    <option value="الشبول">الشبول</option>
-                    <option value="الرودة">الرودة</option>
-                    <option value="النسايمة">النسايمة</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="address" class="required">العنوان بالتفصيل</label>
-                <input type="text" id="address" placeholder="أدخل العنوان التفصيلي">
-            </div>
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <label for="phone1" class="required">رقم الهاتف (1)</label>
-                    <input type="tel" id="phone1" placeholder="مثال: 01012345678">
-                </div>
-                <div class="form-col">
-                    <label for="phone2">رقم الهاتف (2) - اختياري</label>
-                    <input type="tel" id="phone2" placeholder="رقم هاتف إضافي">
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <label for="department" class="required">القسم</label>
-                    <select id="department">
-                        <option value="">اختر القسم</option>
-                        <option value="مشكلة خاصة بالقضاء والمحاكم">مشكلة خاصة بالقضاء والمحاكم</option>
-                        <option value="مساعدة مالية">مساعدة مالية</option>
-                        <option value="مشكلة خاصة بالصحة">مشكلة خاصة بالصحة</option>
-                        <option value="مشكلات مياه الشرب والصرف الصحي">مشكلات مياه الشرب والصرف الصحي</option>
-                        <option value="مشكلة خاصة بالتعليم">مشكلة خاصة بالتعليم</option>
-                        <option value="مشكلة خاصة بالشرطة والداخلية">مشكلة خاصة بالشرطة والداخلية</option>
-                        <option value="حالة طارئة">حالة طارئة</option>
-                        <option value="مشكلات أخري">مشكلات أخري</option>
-                    </select>
-                </div>
-                <div class="form-col">
-                    <label for="priority" class="required">نوع المشكلة</label>
-                    <select id="priority">
-                        <option value="">اختر النوع</option>
-                        <option value="عادية">عادية</option>
-                        <option value="مهمة">مهمة</option>
-                        <option value="فى غاية الأهمية">فى غاية الأهمية</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="problemDetails" class="required">تفاصيل المشكلة</label>
-                <textarea id="problemDetails" placeholder="أدخل تفاصيل المشكلة (حد أقصى 5000 حرف)" maxlength="5000"></textarea>
-                <div class="char-count">عدد الأحرف: <span id="charCount">0</span> / 5000</div>
-            </div>
-            
-            <button onclick="submitComplaint()" class="btn btn-primary" style="width: 100%; font-size: 18px; padding: 16px;">
-                إرسال الشكوى
+        <!-- قسم تقديم الشكوى (مخفي في البداية) -->
+        <div class="hidden-section" id="submitComplaintSection">
+            <button class="back-button" id="backFromSubmit">
+                <i class="fas fa-arrow-right"></i>
+                <span>العودة للصفحة الرئيسية</span>
             </button>
             
-            <div id="message" class="message" style="display: none;"></div>
+            <div class="form-section">
+                <h2 style="margin-bottom: 25px; color: #2c3e50;">تقديم شكوى جديدة</h2>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="fullName" class="required">الاسم بالكامل (عربي)</label>
+                        <input type="text" id="fullName" placeholder="أدخل الاسم باللغة العربية">
+                    </div>
+                    <div class="form-col">
+                        <label for="nationalId" class="required">الرقم القومي</label>
+                        <input type="text" id="nationalId" placeholder="14 رقم" maxlength="14">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="localUnit" class="required">الوحدة المحلية</label>
+                    <select id="localUnit">
+                        <option value="">اختر الوحدة المحلية</option>
+                        <option value="المنزلة">المنزلة</option>
+                        <option value="المطرية">المطرية</option>
+                        <option value="الفروسات">الفروسات</option>
+                        <option value="أبو الأخضر">أبو الأخضر</option>
+                        <option value="جديدة المنزلة">جديدة المنزلة</option>
+                        <option value="العامرة">العامرة</option>
+                        <option value="مصر الجديدة">مصر الجديدة</option>
+                        <option value="عرب زيدان">عرب زيدان</option>
+                        <option value="الستايتة">الستايتة</option>
+                        <option value="كفر حجاج">كفر حجاج</option>
+                        <option value="ميت خضير">ميت خضير</option>
+                        <option value="المواجد">المواجد</option>
+                        <option value="البصراط">البصراط</option>
+                        <option value="ميت شريف">ميت شريف</option>
+                        <option value="الطوابرة">الطوابرة</option>
+                        <option value="العمارنة">العمارنة</option>
+                        <option value="اولاد بانا">اولاد بانا</option>
+                        <option value="اولاد حانا">اولاد حانا</option>
+                        <option value="بحر حادوث">بحر حادوث</option>
+                        <option value="القزاقزة">القزاقزة</option>
+                        <option value="الحوتة">الحوتة</option>
+                        <option value="اولاد نور">اولاد نور</option>
+                        <option value="الخلايفة">الخلايفة</option>
+                        <option value="القطشة">القطشة</option>
+                        <option value="الجماملة">الجماملة</option>
+                        <option value="العزيزة">العزيزة</option>
+                        <option value="الأحمدية">الأحمدية</option>
+                        <option value="العربان">العربان</option>
+                        <option value="اولاد علم">اولاد علم</option>
+                        <option value="اولاد ناصر">اولاد ناصر</option>
+                        <option value="بني هلال">بني هلال</option>
+                        <option value="الشبول">الشبول</option>
+                        <option value="الرودة">الرودة</option>
+                        <option value="النسايمة">النسايمة</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address" class="required">العنوان بالتفصيل</label>
+                    <input type="text" id="address" placeholder="أدخل العنوان التفصيلي">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="phone1" class="required">رقم الهاتف (1)</label>
+                        <input type="tel" id="phone1" placeholder="مثال: 01012345678">
+                    </div>
+                    <div class="form-col">
+                        <label for="phone2">رقم الهاتف (2) - اختياري</label>
+                        <input type="tel" id="phone2" placeholder="رقم هاتف إضافي">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="department" class="required">القسم</label>
+                        <select id="department">
+                            <option value="">اختر القسم</option>
+                            <option value="مشكلة خاصة بالقضاء والمحاكم">مشكلة خاصة بالقضاء والمحاكم</option>
+                            <option value="مساعدة مالية">مساعدة مالية</option>
+                            <option value="مشكلة خاصة بالصحة">مشكلة خاصة بالصحة</option>
+                            <option value="مشكلات مياه الشرب والصرف الصحي">مشكلات مياه الشرب والصرف الصحي</option>
+                            <option value="مشكلة خاصة بالتعليم">مشكلة خاصة بالتعليم</option>
+                            <option value="مشكلة خاصة بالشرطة والداخلية">مشكلة خاصة بالشرطة والداخلية</option>
+                            <option value="حالة طارئة">حالة طارئة</option>
+                            <option value="مشكلات أخري">مشكلات أخري</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="priority" class="required">نوع المشكلة</label>
+                        <select id="priority">
+                            <option value="">اختر النوع</option>
+                            <option value="عادية">عادية</option>
+                            <option value="مهمة">مهمة</option>
+                            <option value="فى غاية الأهمية">فى غاية الأهمية</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="problemDetails" class="required">تفاصيل المشكلة</label>
+                    <textarea id="problemDetails" placeholder="أدخل تفاصيل المشكلة (حد أقصى 5000 حرف)" maxlength="5000"></textarea>
+                    <div class="char-count">عدد الأحرف: <span id="charCount">0</span> / 5000</div>
+                </div>
+                
+                <button onclick="submitComplaint()" class="btn btn-primary" style="width: 100%; font-size: 18px; padding: 16px;">
+                    <i class="fas fa-paper-plane"></i> إرسال الشكوى
+                </button>
+                
+                <div id="message" class="message" style="display: none;"></div>
+            </div>
         </div>
         
-        <div id="complaintDetails" class="complaint-details">
-            <!-- سيتم عرض تفاصيل الشكوى هنا -->
+        <!-- قسم متابعة الشكوى (مخفي في البداية) -->
+        <div class="hidden-section" id="trackComplaintSection">
+            <button class="back-button" id="backFromTrack">
+                <i class="fas fa-arrow-right"></i>
+                <span>العودة للصفحة الرئيسية</span>
+            </button>
+            
+            <div class="search-section">
+                <h2>البحث عن طلب</h2>
+                <div class="form-group">
+                    <input type="text" id="searchComplaint" placeholder="أدخل رقم الطلب للبحث عنه">
+                    <button onclick="searchComplaint()" class="btn btn-search" style="margin-top: 15px; width: 200px;">
+                        <i class="fas fa-search"></i> بحث
+                    </button>
+                </div>
+            </div>
+            
+            <div id="complaintDetails" class="complaint-details">
+                <!-- سيتم عرض تفاصيل الشكوى هنا -->
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2023 نظام الشكاوى الموحد - جميع الحقوق محفوظة</p>
+            <p>هذه خدمة إلكترونية مقدمة لتسهيل تقديم ومتابعة الشكاوى</p>
         </div>
     </div>
 
@@ -408,13 +765,182 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <script>
+        // متغيرات للتحكم في حالة القوائم
+        let activeDropdown = null;
+        let activeBox = null;
+        
+        // تهيئة العناصر
+        const submitBox = document.getElementById('submitBox');
+        const trackBox = document.getElementById('trackBox');
+        const submitMenu = document.getElementById('submitMenu');
+        const trackMenu = document.getElementById('trackMenu');
+        const submitSection = document.getElementById('submitComplaintSection');
+        const trackSection = document.getElementById('trackComplaintSection');
+        const mainContainer = document.querySelector('.main-container');
+        const backFromSubmit = document.getElementById('backFromSubmit');
+        const backFromTrack = document.getElementById('backFromTrack');
+        
+        // إضافة مستمعي الأحداث للمربعات
+        submitBox.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // إذا كان المربع غير نشط، افتح القائمة
+            if (activeBox !== 'submit') {
+                closeAllDropdowns();
+                submitMenu.classList.add('show');
+                this.classList.add('clicked');
+                activeDropdown = submitMenu;
+                activeBox = 'submit';
+                
+                // إخفاء المربع الآخر مؤقتًا للحصول على تأثير أفضل
+                trackBox.style.opacity = '0.7';
+            } else {
+                // إذا كان المربع نشطًا بالفعل، أغلق القائمة
+                closeAllDropdowns();
+                this.classList.remove('clicked');
+                trackBox.style.opacity = '1';
+                activeBox = null;
+            }
+        });
+        
+        trackBox.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // إذا كان المربع غير نشط، افتح القائمة
+            if (activeBox !== 'track') {
+                closeAllDropdowns();
+                trackMenu.classList.add('show');
+                this.classList.add('clicked');
+                activeDropdown = trackMenu;
+                activeBox = 'track';
+                
+                // إخفاء المربع الآخر مؤقتًا للحصول على تأثير أفضل
+                submitBox.style.opacity = '0.7';
+            } else {
+                // إذا كان المربع نشطًا بالفعل، أغلق القائمة
+                closeAllDropdowns();
+                this.classList.remove('clicked');
+                submitBox.style.opacity = '1';
+                activeBox = null;
+            }
+        });
+        
+        // إغلاق جميع القوائم عند النقر في أي مكان آخر
+        document.addEventListener('click', function() {
+            closeAllDropdowns();
+            submitBox.classList.remove('clicked');
+            trackBox.classList.remove('clicked');
+            submitBox.style.opacity = '1';
+            trackBox.style.opacity = '1';
+            activeBox = null;
+        });
+        
+        // منع إغلاق القوائم عند النقر عليها
+        submitMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        trackMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        // إضافة مستمعي الأحداث لخيارات القائمة العائمة لتقديم الشكوى
+        const submitOptions = document.querySelectorAll('#submitMenu .dropdown-option');
+        submitOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const complaintType = this.getAttribute('data-type');
+                openSubmitSection(complaintType);
+            });
+        });
+        
+        // إضافة مستمعي الأحداث لخيارات القائمة العائمة لمتابعة الشكوى
+        const trackOptions = document.querySelectorAll('#trackMenu .dropdown-option');
+        trackOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const searchType = this.getAttribute('data-search-type');
+                openTrackSection(searchType);
+            });
+        });
+        
+        // أزرار العودة
+        backFromSubmit.addEventListener('click', function() {
+            closeAllSections();
+        });
+        
+        backFromTrack.addEventListener('click', function() {
+            closeAllSections();
+        });
+        
+        // دالة لإغلاق جميع القوائم
+        function closeAllDropdowns() {
+            submitMenu.classList.remove('show');
+            trackMenu.classList.remove('show');
+            activeDropdown = null;
+        }
+        
+        // دالة لفتح قسم تقديم الشكوى
+        function openSubmitSection(complaintType) {
+            closeAllDropdowns();
+            mainContainer.style.display = 'none';
+            submitSection.style.display = 'block';
+            
+            // تعيين نوع الشكوى في القائمة المنسدلة إذا كان متطابقًا
+            const departmentSelect = document.getElementById('department');
+            for (let i = 0; i < departmentSelect.options.length; i++) {
+                const option = departmentSelect.options[i];
+                if (option.text.includes(complaintType) || complaintType.includes(option.text)) {
+                    departmentSelect.selectedIndex = i;
+                    break;
+                }
+            }
+            
+            // إضافة تأثير للتمركز
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // دالة لفتح قسم متابعة الشكوى
+        function openTrackSection(searchType) {
+            closeAllDropdowns();
+            mainContainer.style.display = 'none';
+            trackSection.style.display = 'block';
+            
+            // تحديث نص placeholder بناءً على نوع البحث
+            const searchInput = document.getElementById('searchComplaint');
+            if (searchType === 'number') {
+                searchInput.placeholder = 'أدخل رقم الطلب للبحث عنه';
+            } else if (searchType === 'nationalId') {
+                searchInput.placeholder = 'أدخل الرقم القومي (14 رقمًا)';
+            } else if (searchType === 'phone') {
+                searchInput.placeholder = 'أدخل رقم الهاتف للبحث';
+            }
+            
+            // إضافة تأثير للتمركز
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // دالة لإغلاق جميع الأقسام والعودة للصفحة الرئيسية
+        function closeAllSections() {
+            submitSection.style.display = 'none';
+            trackSection.style.display = 'none';
+            mainContainer.style.display = 'block';
+            submitBox.classList.remove('clicked');
+            trackBox.classList.remove('clicked');
+            submitBox.style.opacity = '1';
+            trackBox.style.opacity = '1';
+            
+            // إضافة تأثير للتمركز
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
         // عداد الأحرف
         const problemDetails = document.getElementById('problemDetails');
         const charCount = document.getElementById('charCount');
         
-        problemDetails.addEventListener('input', function() {
-            charCount.textContent = this.value.length;
-        });
+        if (problemDetails) {
+            problemDetails.addEventListener('input', function() {
+                charCount.textContent = this.value.length;
+            });
+        }
         
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -516,7 +1042,7 @@
                 document.getElementById('department').value = '';
                 document.getElementById('priority').value = '';
                 document.getElementById('problemDetails').value = '';
-                charCount.textContent = '0';
+                if (charCount) charCount.textContent = '0';
                 
             } catch (error) {
                 console.error('Error submitting complaint:', error);
@@ -660,6 +1186,8 @@
         // دالة عرض الرسائل
         function showMessage(message, type) {
             const messageDiv = document.getElementById('message');
+            if (!messageDiv) return;
+            
             messageDiv.innerHTML = message;
             messageDiv.className = `message ${type}`;
             messageDiv.style.display = 'block';
