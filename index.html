@@ -488,7 +488,7 @@
             font-weight: 600;
         }
         
-        /* أنماط الردود */
+        /* أنماط الردود - تم التعديل */
         .responses {
             margin-top: 30px;
             padding-top: 20px;
@@ -502,10 +502,11 @@
             position: relative;
         }
         
-        /* رد الإدارة - أخضر */
+        /* رد الإدارة - إطار أخضر بالكامل كما طلب العميل */
         .response-admin {
             background-color: #d4edda;
-            border-right: 4px solid #28a745;
+            border: 2px solid #28a745;
+            color: #155724;
         }
         
         /* رد العميل - رمادي */
@@ -755,7 +756,7 @@
                     </div>
                     <div class="form-col">
                         <label for="nationalId" class="required">الرقم القومي</label>
-                        <input type="text" id="nationalId" placeholder="14 رقم" maxlength="14">
+                        <input type="text" id="nationalId" placeholder="14 رقم ويبدأ بـ 2 أو 3" maxlength="14">
                     </div>
                 </div>
                 
@@ -1146,6 +1147,27 @@
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         
+        // دالة التحقق من الرقم القومي المصري
+        function validateEgyptianNationalId(nationalId) {
+            // التحقق من الطول
+            if (nationalId.length !== 14) {
+                return { valid: false, message: 'الرقم القومي يجب أن يكون 14 رقمًا' };
+            }
+            
+            // التحقق من أن جميع الأحرف أرقام
+            if (!/^\d+$/.test(nationalId)) {
+                return { valid: false, message: 'الرقم القومي يجب أن يحتوي على أرقام فقط' };
+            }
+            
+            // التحقق من أن الرقم يبدأ بـ 2 أو 3
+            const firstDigit = nationalId.charAt(0);
+            if (firstDigit !== '2' && firstDigit !== '3') {
+                return { valid: false, message: 'الرقم القومي يجب أن يبدأ بـ 2 أو 3' };
+            }
+            
+            return { valid: true, message: '' };
+        }
+        
         // دالة إرسال الشكوى
         window.submitComplaint = async function() {
             // التحقق من البيانات
@@ -1165,8 +1187,10 @@
                 return;
             }
             
-            if (nationalId.length !== 14) {
-                showMessage('الرقم القومي يجب أن يكون 14 رقمًا', 'error');
+            // التحقق من صحة الرقم القومي
+            const nationalIdValidation = validateEgyptianNationalId(nationalId);
+            if (!nationalIdValidation.valid) {
+                showMessage(nationalIdValidation.message, 'error');
                 return;
             }
             
@@ -1309,6 +1333,14 @@
             }
         };
         
+        // دالة لتقنيع الرقم القومي (إظهار آخر 4 أرقام فقط)
+        function maskNationalId(nationalId) {
+            if (!nationalId || nationalId.length !== 14) {
+                return nationalId;
+            }
+            return '××××××××××' + nationalId.slice(-4);
+        }
+        
         // دالة عرض تفاصيل الشكوى
         function displayComplaintDetails(complaint, key) {
             const detailsDiv = document.getElementById('complaintDetails');
@@ -1322,7 +1354,7 @@
             const createdAt = new Date(complaint.createdAt).toLocaleString('ar-EG');
             const updatedAt = new Date(complaint.updatedAt).toLocaleString('ar-EG');
             
-            // بناء الردود مع تمييز الألوان
+            // بناء الردود مع تمييز الألوان - رد المسؤول أخضر بالكامل
             let responsesHTML = '';
             if (complaint.responses && complaint.responses.length > 0) {
                 complaint.responses.forEach(response => {
@@ -1355,6 +1387,9 @@
             const whatsappMessage = `طلب رقم ${complaint.complaintNumber}`;
             const whatsappURL = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`;
             
+            // عرض الرقم القومي مقنعاً (آخر 4 أرقام فقط)
+            const maskedNationalId = maskNationalId(complaint.nationalId);
+            
             detailsDiv.innerHTML = `
                 <h3>تفاصيل الشكوى - رقم ${complaint.complaintNumber}</h3>
                 <div class="details-grid">
@@ -1364,7 +1399,7 @@
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">الرقم القومي:</div>
-                        <div>${complaint.nationalId}</div>
+                        <div>${maskedNationalId}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">الوحدة المحلية:</div>
@@ -1558,6 +1593,28 @@
                 'مشكلات أخري': 'OTH'
             };
             return codes[department] || 'GEN';
+        }
+        
+        // التحقق من الرقم القومي أثناء الكتابة
+        const nationalIdInput = document.getElementById('nationalId');
+        if (nationalIdInput) {
+            nationalIdInput.addEventListener('input', function() {
+                const value = this.value.trim();
+                if (value.length > 0) {
+                    // منع إدخال أي شيء غير أرقام
+                    this.value = value.replace(/\D/g, '');
+                    
+                    // التحقق من أول رقم
+                    if (value.length >= 1) {
+                        const firstDigit = value.charAt(0);
+                        if (firstDigit !== '2' && firstDigit !== '3') {
+                            this.style.borderColor = '#e74c3c';
+                        } else {
+                            this.style.borderColor = '#ddd';
+                        }
+                    }
+                }
+            });
         }
     </script>
 </body>
