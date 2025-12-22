@@ -2425,7 +2425,7 @@
                 complaint.responses.forEach(response => {
                     const responseDate = new Date(response.date).toLocaleString('ar-EG');
                     const responseClass = response.sender === 'admin' ? 'response-admin' : 'response-client';
-                    const senderName = response.sender === 'admin' ? (response.adminName || 'المسؤول') : 'العميل';
+                    const senderName = response.sender === 'admin' ? (response.adminName || 'المسؤول') : 'مكتب الحاج أحمد الحديدي';
                     
                     responsesHTML += `
                         <div class="response-item ${responseClass}">
