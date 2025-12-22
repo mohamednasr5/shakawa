@@ -426,11 +426,12 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-
+    <!-- Firebase SDK - Compat Version -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <script>
+        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBIIStbiZD0ZJ6su7C1bwZlBvqx-PP-t58",
             authDomain: "shakawa-e0a3c.firebaseapp.com",
@@ -441,14 +442,13 @@
             measurementId: "G-SGNTJZDQ1L"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
         const adminPassword = "742018";
         
         let currentComplaintKey = null;
         let allComplaints = [];
-        
-        window.database = database;
         
         // عند تحميل الصفحة، تظهر نافذة كلمة المرور
         document.addEventListener('DOMContentLoaded', function() {
@@ -471,8 +471,8 @@
         };
         
         function startRealtimeUpdates() {
-            const complaintsRef = ref(database, 'complaints');
-            onValue(complaintsRef, (snapshot) => {
+            const complaintsRef = database.ref('complaints');
+            complaintsRef.on('value', (snapshot) => {
                 loadStats();
                 loadComplaints();
             });
@@ -480,8 +480,8 @@
         
         async function loadStats() {
             try {
-                const complaintsRef = ref(database, 'complaints');
-                const snapshot = await get(complaintsRef);
+                const complaintsRef = database.ref('complaints');
+                const snapshot = await complaintsRef.once('value');
                 
                 if (!snapshot.exists()) {
                     document.getElementById('statsContainer').innerHTML = '<p>لا توجد إحصائيات</p>';
@@ -493,7 +493,7 @@
                     'مساعدة مالية': 0,
                     'مشكلة خاصة بالصحة': 0,
                     'مشكلات مياه الشرب والصرف الصحي': 0,
-                    'مشكلة خاصة بالالتعليم': 0,
+                    'مشكلة خاصة بالتعليم': 0,
                     'مشكلة خاصة بالشرطة والداخلية': 0,
                     'حالة طارئة': 0,
                     'مشكلات أخري': 0
@@ -539,7 +539,7 @@
                     </div>
                     <div class="stat-card">
                         <h3>إجمالي الشكاوى</h3>
-                        <div class="stat-number" style="color: #9b59b6">${snapshot.size}</div>
+                        <div class="stat-number" style="color: #9b59b6">${snapshot.numChildren()}</div>
                     </div>
                 `;
                 
@@ -552,8 +552,8 @@
         
         async function loadComplaints(filter = null) {
             try {
-                const complaintsRef = ref(database, 'complaints');
-                const snapshot = await get(complaintsRef);
+                const complaintsRef = database.ref('complaints');
+                const snapshot = await complaintsRef.once('value');
                 
                 if (!snapshot.exists()) {
                     document.getElementById('complaintsList').innerHTML = '<p style="text-align: center; padding: 20px;">لا توجد شكاوى</p>';
@@ -646,8 +646,8 @@
         
         window.viewComplaint = async function(key) {
             try {
-                const complaintRef = ref(database, `complaints/${key}`);
-                const snapshot = await get(complaintRef);
+                const complaintRef = database.ref(`complaints/${key}`);
+                const snapshot = await complaintRef.once('value');
                 
                 if (!snapshot.exists()) {
                     alert('الشكوى غير موجودة');
@@ -737,8 +737,8 @@
             }
             
             try {
-                const complaintRef = ref(database, `complaints/${currentComplaintKey}`);
-                const snapshot = await get(complaintRef);
+                const complaintRef = database.ref(`complaints/${currentComplaintKey}`);
+                const snapshot = await complaintRef.once('value');
                 const complaint = snapshot.val();
                 
                 const responses = complaint.responses || [];
@@ -748,7 +748,7 @@
                     date: new Date().toISOString()
                 });
                 
-                await update(complaintRef, {
+                await complaintRef.update({
                     responses: responses,
                     updatedAt: new Date().toISOString()
                 });
@@ -767,8 +767,8 @@
             const newStatus = document.getElementById('statusSelect').value;
             
             try {
-                const complaintRef = ref(database, `complaints/${currentComplaintKey}`);
-                await update(complaintRef, {
+                const complaintRef = database.ref(`complaints/${currentComplaintKey}`);
+                await complaintRef.update({
                     status: newStatus,
                     updatedAt: new Date().toISOString()
                 });
@@ -799,8 +799,8 @@
                     return;
                 }
                 
-                const complaintRef = ref(database, `complaints/${currentComplaintKey}`);
-                await remove(complaintRef);
+                const complaintRef = database.ref(`complaints/${currentComplaintKey}`);
+                await complaintRef.remove();
                 
                 alert('تم حذف الشكوى بنجاح');
                 closeDeleteModal();
@@ -843,8 +843,8 @@
         
         window.printComplaint = async function(key) {
             try {
-                const complaintRef = ref(database, `complaints/${key}`);
-                const snapshot = await get(complaintRef);
+                const complaintRef = database.ref(`complaints/${key}`);
+                const snapshot = await complaintRef.once('value');
                 
                 if (!snapshot.exists()) {
                     alert('الشكوى غير موجودة');
