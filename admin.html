@@ -973,6 +973,7 @@
                     <td class="actions">
                         <button class="action-btn btn-view" onclick="viewComplaint('${c.key}')"><i class="fas fa-eye"></i></button>
                         <button class="action-btn btn-edit" onclick="editComplaint('${c.key}')"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn btn-delete" onclick="deleteComplaint('${c.key}')"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>`;
             });
@@ -1382,238 +1383,330 @@
                 departments,
                 updatedAt: new Date().toISOString(),
                 updatedBy: currentUser.name
-           }; if (password) userData.password = password; try { showLoading(); if (userId) {
-await database.ref(users/${userId}).update(userData);
-} else {
-userData.createdAt = new Date().toISOString();
-await database.ref('users').push(userData);
-}
-showMessage(تم ${userId ? 'تحديث' : 'إضافة'} المستخدم بنجاح, 'success');
-closeUserModal();
-} catch(err) {
-console.error(err);
-showMessage('حدث خطأ أثناء حفظ المستخدم', 'error');
-} finally {
-hideLoading();
-}
-}
-async function resetUserPassword(userKey) {
-const newPassword = prompt('أدخل كلمة السر الجديدة:');
-if (!newPassword) return;
-try {
-showLoading();
-await database.ref(users/${userKey}).update({
-password: newPassword,
-updatedAt: new Date().toISOString(),
-updatedBy: currentUser.name
-});
-showMessage('تم إعادة تعيين كلمة السر بنجاح', 'success');
-} catch(err) {
-console.error(err);
-showMessage('حدث خطأ أثناء إعادة تعيين كلمة السر', 'error');
-} finally {
-hideLoading();
-}
-}
-async function deleteUser(userKey) {
-if (!confirm('هل تريد حذف هذا المستخدم؟')) return;
-try {
-showLoading();
-await database.ref(users/${userKey}).remove();
-showMessage('تم حذف المستخدم بنجاح', 'success');
-} catch(err) {
-console.error(err);
-showMessage('حدث خطأ أثناء حذف المستخدم', 'error');
-} finally {
-hideLoading();
-}
-}
-function closeUserModal() {
-document.getElementById('userModal').style.display = 'none';
-document.body.style.overflow = 'auto';
-}
-function showReplyModal(complaintKey) {
-document.getElementById('replyComplaintId').value = complaintKey;
-document.getElementById('replyModal').style.display = 'flex';
-document.body.style.overflow = 'hidden';
-}
-async function sendReply(e) {
-e.preventDefault();
-const complaintKey = document.getElementById('replyComplaintId').value;
-const replyText = document.getElementById('replyText').value.trim();
-if (!replyText) return showMessage('يرجى كتابة نص الرد', 'error');
-try {
-showLoading();
-const complaintSnap = await database.ref(complaints/${complaintKey}).get();
-const complaint = complaintSnap.val();
-const responses = complaint.responses || [];
-responses.push({
-type: 'admin',
-message: replyText,
-timestamp: new Date().toISOString(),
-respondedBy: currentUser.name
-});
-await database.ref(complaints/${complaintKey}).update({
-responses,
-status: 'تم الرد',
-updatedAt: new Date().toISOString(),
-respondedBy: currentUser.name,
-responseDate: new Date().toISOString()
-});
-showMessage('تم إرسال الرد بنجاح', 'success');
-closeReplyModal();
-closeModal();
-viewComplaint(complaintKey);
-} catch(err) {
-console.error(err);
-showMessage('حدث خطأ أثناء إرسال الرد', 'error');
-} finally {
-hideLoading();
-}
-}
-function closeReplyModal() {
-document.getElementById('replyModal').style.display = 'none';
-document.body.style.overflow = 'auto';
-}
-function showAddDepartmentModal() {
-document.getElementById('departmentModalTitle').textContent = 'إضافة قسم جديد';
-document.getElementById('departmentForm').reset();
-document.getElementById('departmentId').value = '';
-document.getElementById('departmentModal').style.display = 'flex';
-document.body.style.overflow = 'hidden';
-}
-function editDepartment(departmentKey) {
-const department = allDepartments.find(d => d.key === departmentKey);
-if (!department) return;
-document.getElementById('departmentModalTitle').textContent = 'تعديل القسم';
-document.getElementById('departmentId').value = departmentKey;
-document.getElementById('departmentName').value = department.name || '';
-document.getElementById('departmentDescription').value = department.description || '';
-document.getElementById('departmentEmail').value = department.email || '';
-document.getElementById('departmentModal').style.display = 'flex';
-document.body.style.overflow = 'hidden';
-}
-async function saveDepartment(e) {
-e.preventDefault();
-const departmentId = document.getElementById('departmentId').value;
-const departmentData = {
-name: document.getElementById('departmentName').value.trim(),
-description: document.getElementById('departmentDescription').value.trim(),
-email: document.getElementById('departmentEmail').value.trim(),
-updatedAt: new Date().toISOString(),
-updatedBy: currentUser.name
-};
-try {
-showLoading();
-if (departmentId) {
-await database.ref(departments/${departmentId}).update(departmentData);
-} else {
-departmentData.createdAt = new Date().toISOString();
-await database.ref('departments').push(departmentData);
-}
-showMessage(تم ${departmentId ? 'تحديث' : 'إضافة'} القسم بنجاح, 'success');
-closeDepartmentModal();
-} catch(err) {
-console.error(err);
-showMessage('حدث خطأ أثناء حفظ القسم', 'error');
-} finally {
-hideLoading();
-}
-}
-async function deleteDepartment(departmentKey) {
-if (!confirm('هل تريد حذف هذا القسم؟')) return;
-try {
-showLoading();
-await database.ref(departments/${departmentKey}).remove();
-showMessage('تم حذف القسم بنجاح', 'success');
-} catch(err) {
-console.error(err);
-showMessage('حدث خطأ أثناء حذف القسم', 'error');
-} finally {
-hideLoading();
-}
-}
-function closeDepartmentModal() {
-document.getElementById('departmentModal').style.display = 'none';
-document.body.style.overflow = 'auto';
-}
-async function downloadComplaintPDF(complaintKey) {
-const complaint = allComplaints.find(c => c.key === complaintKey);
-if (!complaint) return;
-try {
-showLoading();
-// يمكن إضافة jsPDF هنا إذا لزم الأمر
-alert('ميزة التنزيل PDF قيد التطوير');
-} catch(err) {
-console.error(err);
-showMessage('حدث خطأ أثناء تنزيل PDF', 'error');
-} finally {
-hideLoading();
-}
-}
-function showMessage(text, type = 'success') {
-const msg = document.createElement('div');
-msg.className = message ${type === 'error' ? 'error' : ''};
-msg.textContent = text;
-document.body.appendChild(msg);
-setTimeout(() => msg.remove(), 3000);
-}
-function showLoading() {
-document.getElementById('loadingOverlay').style.display = 'flex';
-}
-function hideLoading() {
-document.getElementById('loadingOverlay').style.display = 'none';
-}
-function showSection(section) {
-document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-document.getElementById(section + 'Section').classList.add('active');
-currentSection = section;
-if (section === 'complaints') displayComplaintsTable();
-if (section === 'users') displayUsersGrid();
-if (section === 'departments') displayDepartmentsGrid();
-if (section === 'reports') generateReports();
-document.querySelector('.main-content').scrollTop = 0;
-}
-function openSidebar() {
-document.getElementById('sidebar').classList.add('active');
-document.getElementById('sidebarOverlay').style.display = 'block';
-}
-function closeSidebar() {
-document.getElementById('sidebar').classList.remove('active');
-document.getElementById('sidebarOverlay').style.display = 'none';
-}
-function updateMobileNav(link) {
-document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
-link.classList.add('active');
-}
-function generateReports() {
-// كود التقارير هنا
-showMessage('التقارير قيد التطوير');
-}
-function closeModal() {
-document.getElementById('complaintDetailsModal').style.display = 'none';
-document.body.style.overflow = 'auto';
-}
-function exportComplaints() {
-// كود التصدير هنا
-showMessage('ميزة التصدير قيد التطوير');
-}
-function saveSettings(e) {
-e.preventDefault();
-// كود الحفظ هنا
-showMessage('تم حفظ الإعدادات', 'success');
-}
-function saveOfficeSettings(e) {
-e.preventDefault();
-// كود الحفظ هنا
-showMessage('تم حفظ إعدادات المكتب', 'success');
-}
-function deleteComplaint(key) {
-if (confirm('حذف الشكوى؟')) {
-database.ref('complaints/' + key).remove();
-showMessage('تم الحذف');
-}
-}
-</script>
+            };
+            if (password) userData.password = password;
+            try {
+                showLoading();
+                if (userId) {
+                    await database.ref(`users/${userId}`).update(userData);
+                } else {
+                    userData.createdAt = new Date().toISOString();
+                    await database.ref('users').push(userData);
+                }
+                showMessage(`تم ${userId ? 'تحديث' : 'إضافة'} المستخدم بنجاح`, 'success');
+                closeUserModal();
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حفظ المستخدم', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function resetUserPassword(userKey) {
+            const newPassword = prompt('أدخل كلمة السر الجديدة:');
+            if (!newPassword) return;
+            try {
+                showLoading();
+                await database.ref(`users/${userKey}`).update({
+                    password: newPassword,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: currentUser.name
+                });
+                showMessage('تم إعادة تعيين كلمة السر بنجاح', 'success');
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء إعادة تعيين كلمة السر', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteUser(userKey) {
+            if (!confirm('هل تريد حذف هذا المستخدم؟')) return;
+            try {
+                showLoading();
+                await database.ref(`users/${userKey}`).remove();
+                showMessage('تم حذف المستخدم بنجاح', 'success');
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حذف المستخدم', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function closeUserModal() {
+            document.getElementById('userModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function showReplyModal(complaintKey) {
+            document.getElementById('replyComplaintId').value = complaintKey;
+            document.getElementById('replyModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        async function sendReply(e) {
+            e.preventDefault();
+            const complaintKey = document.getElementById('replyComplaintId').value;
+            const replyText = document.getElementById('replyText').value.trim();
+            if (!replyText) return showMessage('يرجى كتابة نص الرد', 'error');
+            try {
+                showLoading();
+                const complaintSnap = await database.ref(`complaints/${complaintKey}`).get();
+                const complaint = complaintSnap.val();
+                const responses = complaint.responses || [];
+                responses.push({
+                    type: 'admin',
+                    message: replyText,
+                    timestamp: new Date().toISOString(),
+                    respondedBy: currentUser.name
+                });
+                await database.ref(`complaints/${complaintKey}`).update({
+                    responses,
+                    status: 'تم الرد',
+                    updatedAt: new Date().toISOString(),
+                    respondedBy: currentUser.name,
+                    responseDate: new Date().toISOString()
+                });
+                showMessage('تم إرسال الرد بنجاح', 'success');
+                closeReplyModal();
+                closeModal();
+                viewComplaint(complaintKey);
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء إرسال الرد', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function closeReplyModal() {
+            document.getElementById('replyModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function showAddDepartmentModal() {
+            document.getElementById('departmentModalTitle').textContent = 'إضافة قسم جديد';
+            document.getElementById('departmentForm').reset();
+            document.getElementById('departmentId').value = '';
+            document.getElementById('departmentModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function editDepartment(departmentKey) {
+            const department = allDepartments.find(d => d.key === departmentKey);
+            if (!department) return;
+            document.getElementById('departmentModalTitle').textContent = 'تعديل القسم';
+            document.getElementById('departmentId').value = departmentKey;
+            document.getElementById('departmentName').value = department.name || '';
+            document.getElementById('departmentDescription').value = department.description || '';
+            document.getElementById('departmentEmail').value = department.email || '';
+            document.getElementById('departmentModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        async function saveDepartment(e) {
+            e.preventDefault();
+            const departmentId = document.getElementById('departmentId').value;
+            const departmentData = {
+                name: document.getElementById('departmentName').value.trim(),
+                description: document.getElementById('departmentDescription').value.trim(),
+                email: document.getElementById('departmentEmail').value.trim(),
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentUser.name
+            };
+            try {
+                showLoading();
+                if (departmentId) {
+                    await database.ref(`departments/${departmentId}`).update(departmentData);
+                } else {
+                    departmentData.createdAt = new Date().toISOString();
+                    await database.ref('departments').push(departmentData);
+                }
+                showMessage(`تم ${departmentId ? 'تحديث' : 'إضافة'} القسم بنجاح`, 'success');
+                closeDepartmentModal();
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حفظ القسم', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteDepartment(departmentKey) {
+            if (!confirm('هل تريد حذف هذا القسم؟')) return;
+            try {
+                showLoading();
+                await database.ref(`departments/${departmentKey}`).remove();
+                showMessage('تم حذف القسم بنجاح', 'success');
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حذف القسم', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function closeDepartmentModal() {
+            document.getElementById('departmentModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        async function downloadComplaintPDF(complaintKey) {
+            const complaint = allComplaints.find(c => c.key === complaintKey);
+            if (!complaint) return;
+            try {
+                showLoading();
+                // يمكن إضافة jsPDF هنا إذا لزم الأمر
+                alert('ميزة التنزيل PDF قيد التطوير');
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء تنزيل PDF', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteComplaint(complaintKey) {
+            if (!confirm('هل تريد حذف هذه الشكوى؟')) return;
+            try {
+                showLoading();
+                await database.ref(`complaints/${complaintKey}`).remove();
+                showMessage('تم حذف الشكوى بنجاح', 'success');
+                closeModal();
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حذف الشكوى', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function viewDocument(url, name) {
+            window.open(url, '_blank');
+        }
+
+        function showMessage(text, type = 'success') {
+            const msg = document.createElement('div');
+            msg.className = `message ${type === 'error' ? 'error' : ''}`;
+            msg.textContent = text;
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 3000);
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(section + 'Section').classList.add('active');
+            currentSection = section;
+            if (section === 'complaints') displayComplaintsTable();
+            if (section === 'users') displayUsersGrid();
+            if (section === 'departments') displayDepartmentsGrid();
+            if (section === 'reports') generateReports();
+            document.querySelector('.main-content').scrollTop = 0;
+        }
+
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('active');
+            document.getElementById('sidebarOverlay').style.display = 'block';
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebarOverlay').style.display = 'none';
+        }
+
+        function closeModal() {
+            document.getElementById('complaintDetailsModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function updateMobileNav(link) {
+            document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
+            link.classList.add('active');
+        }
+
+        function generateReports() {
+            const period = document.getElementById('reportPeriod').value;
+            const now = new Date();
+            let startDate;
+            switch(period) {
+                case 'week': startDate = new Date(now.setDate(now.getDate() - 7)); break;
+                case 'month': startDate = new Date(now.setMonth(now.getMonth() - 1)); break;
+                case 'quarter': startDate = new Date(now.setMonth(now.getMonth() - 3)); break;
+                case 'year': startDate = new Date(now.setFullYear(now.getFullYear() - 1)); break;
+                default: startDate = new Date(now.setDate(now.getDate() - 7));
+            }
+            const filtered = allComplaints.filter(c => new Date(c.createdAt) >= startDate);
+            const completed = filtered.filter(c => c.status === 'مكتملة' || c.status === 'تم الرد').length;
+            const total = filtered.length;
+            const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+            const avgTime = total > 0 ? Math.round(total / 7) : 0;
+            const satisfaction = total > 0 ? Math.round((completed / total) * 100) : 0;
+            document.getElementById('reportTotal').textContent = total;
+            document.getElementById('reportCompletionRate').textContent = completionRate + '%';
+            document.getElementById('reportAvgTime').textContent = avgTime + ' يوم';
+            document.getElementById('reportSatisfaction').textContent = satisfaction + '%';
+            showMessage('تم تحديث التقارير', 'success');
+        }
+
+        function exportComplaints() {
+            showMessage('ميزة التصدير قيد التطوير', 'info');
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+            const settingsData = {
+                systemName: document.getElementById('systemName').value,
+                itemsPerPage: document.getElementById('itemsPerPage').value,
+                enableNotifications: document.getElementById('enableNotifications').checked,
+                enableReminders: document.getElementById('enableReminders').checked,
+                welcomeMessage: document.getElementById('welcomeMessage').value,
+                notificationEmail: document.getElementById('notificationEmail').value,
+                updatedAt: new Date().toISOString()
+            };
+            try {
+                showLoading();
+                await database.ref('settings').set(settingsData);
+                settings = settingsData;
+                showMessage('تم حفظ الإعدادات بنجاح', 'success');
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حفظ الإعدادات', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function saveOfficeSettings(e) {
+            e.preventDefault();
+            const officeSettingsData = {
+                whatsappNumber: document.getElementById('officeWhatsappNumber').value,
+                replyName: document.getElementById('officeReplyName').value,
+                replySignature: document.getElementById('officeReplySignature').value,
+                updatedAt: new Date().toISOString()
+            };
+            try {
+                showLoading();
+                await database.ref('officeSettings').set(officeSettingsData);
+                officeSettings = officeSettingsData;
+                showMessage('تم حفظ إعدادات المكتب بنجاح', 'success');
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حفظ إعدادات المكتب', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+    </script>
 </body>
 </html>
