@@ -783,84 +783,84 @@
             font-size: 1rem;
         }
         
-        /* إعادة تصميم خيارات البحث */
-        .search-options-container {
-            display: flex;
-            flex-direction: column;
+        /* تحسين خيارات البحث */
+        .search-options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
         
-        .search-option-btn {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-            cursor: pointer;
-            padding: 20px;
-            border-radius: 15px;
+        .search-option-card {
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            transition: var(--transition);
             border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
             touch-action: manipulation;
+            position: relative;
+            overflow: hidden;
         }
         
-        .search-option-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        .search-option-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary-color);
         }
         
-        .search-option-btn.active {
+        .search-option-card.active {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
             border-color: var(--primary-color);
-            box-shadow: 0 10px 30px rgba(26, 95, 180, 0.3);
+            box-shadow: 0 15px 40px rgba(26, 95, 180, 0.3);
         }
         
-        .search-option-content {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex: 1;
+        .search-option-card.active .search-option-icon {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+        
+        .search-option-card.active .search-option-title {
+            color: white;
+        }
+        
+        .search-option-card.active .search-option-desc {
+            color: rgba(255, 255, 255, 0.9);
         }
         
         .search-option-icon {
-            font-size: 1.5rem;
-            width: 50px;
-            height: 50px;
+            width: 70px;
+            height: 70px;
+            background: rgba(26, 95, 180, 0.1);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-        }
-        
-        .search-option-btn.active .search-option-icon {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .search-option-info {
-            flex: 1;
-        }
-        
-        .search-option-title {
-            font-weight: 800;
-            font-size: 1.2rem;
-            margin-bottom: 5px;
-        }
-        
-        .search-option-desc {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-        
-        .search-option-arrow {
-            font-size: 1.3rem;
+            margin: 0 auto 20px;
+            font-size: 1.8rem;
+            color: var(--primary-color);
             transition: var(--transition);
         }
         
-        .search-option-btn.active .search-option-arrow {
-            transform: rotate(180deg);
+        .search-option-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: var(--dark-color);
+        }
+        
+        .search-option-desc {
+            font-size: 0.95rem;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .search-option-arrow {
+            font-size: 1.2rem;
+            transition: var(--transition);
         }
         
         .search-input-container {
@@ -873,59 +873,25 @@
             display: block;
         }
         
-        .search-input-wrapper {
-            position: relative;
-        }
-        
-        .search-input {
+        /* تصميم حقل البحث النظيف */
+        .clean-search-input {
             width: 100%;
-            padding: 18px 20px 18px 60px;
+            padding: 20px;
             border: 2px solid #e0e0e0;
             border-radius: 15px;
             font-size: 1.1rem;
             transition: var(--transition);
             background: white;
+            text-align: center;
+            margin-bottom: 20px;
         }
         
-        /* التحديث: إبقاء الرموز ظاهرة أثناء الكتابة */
-        .search-input-with-prefix {
-            position: relative;
-            width: 100%;
-        }
-        
-        .search-input-with-prefix input {
-            padding: 18px 20px 18px 70px;
-        }
-        
-        .search-prefix {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #555;
-            z-index: 2;
-            background: transparent;
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .search-input:focus {
+        .clean-search-input:focus {
             border-color: var(--primary-color);
             outline: none;
             box-shadow: 0 0 0 4px rgba(26, 95, 180, 0.1);
-        }
-        
-        .search-input-icon {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.3rem;
-            color: var(--primary-color);
+            background: white;
+            transform: translateY(-2px);
         }
         
         .search-btn-container {
@@ -1028,15 +994,16 @@
         
         .verify-input-group {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 15px;
             align-items: center;
             justify-content: center;
             margin-top: 15px;
         }
         
         .verify-national-id-input {
-            flex: 1;
-            max-width: 300px;
+            width: 100%;
+            max-width: 400px;
             padding: 15px;
             border: 2px solid #e0e0e0;
             border-radius: 10px;
@@ -1044,6 +1011,16 @@
             text-align: center;
             letter-spacing: 2px;
             font-family: monospace;
+        }
+        
+        @media (min-width: 768px) {
+            .verify-input-group {
+                flex-direction: row;
+            }
+            
+            .verify-national-id-input {
+                max-width: 300px;
+            }
         }
         
         /* رمز المشكلة */
@@ -1167,14 +1144,18 @@
                 padding: 25px;
             }
             
-            .search-option-btn {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
+            .search-options-grid {
+                grid-template-columns: 1fr;
             }
             
-            .search-option-content {
-                width: 100%;
+            .search-option-card {
+                padding: 20px;
+            }
+            
+            .search-option-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
             }
             
             .verify-input-group {
@@ -1199,10 +1180,19 @@
                 font-size: 3.5rem;
             }
             
+            .form-section, .search-section {
+                padding: 20px;
+            }
+            
             .search-option-icon {
-                width: 40px;
-                height: 40px;
+                width: 50px;
+                height: 50px;
                 font-size: 1.2rem;
+            }
+            
+            .btn {
+                padding: 16px 25px;
+                font-size: 1.1rem;
             }
         }
         
@@ -1215,6 +1205,10 @@
             .box-wrapper {
                 max-width: 480px;
                 height: 420px;
+            }
+            
+            .search-options-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
         
@@ -1229,11 +1223,44 @@
                 padding-bottom: max(20px, env(safe-area-inset-bottom));
             }
         }
+        
+        /* مؤشر تحميل */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <!-- الجزيئات المتحركة -->
     <div class="particles" id="particles"></div>
+    
+    <!-- مؤشر التحميل -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
     
     <header>
         <div class="container">
@@ -1375,15 +1402,7 @@
                     <div class="form-col">
                         <label for="department" class="required">القسم</label>
                         <select id="department">
-                            <option value="">اختر القسم</option>
-                            <option value="مشكلة خاصة بالقضاء والمحاكم">مشكلة خاصة بالقضاء والمحاكم</option>
-                            <option value="مساعدة مالية">مساعدة مالية</option>
-                            <option value="مشكلة خاصة بالصحة">مشكلة خاصة بالصحة</option>
-                            <option value="مشكلات مياه الشرب والصرف الصحي">مشكلات مياه الشرب والصرف الصحي</option>
-                            <option value="مشكلة خاصة بالتعليم">مشكلة خاصة بالتعليم</option>
-                            <option value="مشكلة خاصة بالشرطة والداخلية">مشكلة خاصة بالشرطة والداخلية</option>
-                            <option value="حالة طارئة">حالة طارئة</option>
-                            <option value="مشكلات أخري">مشكلات أخري</option>
+                            <option value="">جاري تحميل الأقسام...</option>
                         </select>
                     </div>
                     <div class="form-col">
@@ -1427,7 +1446,7 @@
             </div>
         </div>
         
-        <!-- قسم متابعة الشكوى - تم إعادة تصميمه -->
+        <!-- قسم متابعة الشكوى - التصميم الجديد -->
         <div class="hidden-section" id="trackComplaintSection">
             <button class="back-button" id="backFromTrack">
                 <i class="fas fa-arrow-right"></i>
@@ -1437,101 +1456,74 @@
             <div class="search-section">
                 <h2>🔎 البحث عن طلب</h2>
                 
-                <div class="search-options-container">
-                    <!-- زر البحث برقم الطلب -->
-                    <div class="search-option-btn active" data-search-type="number" id="searchByNumberBtn">
-                        <div class="search-option-content">
-                            <div class="search-option-icon">
-                                <i class="fas fa-hashtag"></i>
-                            </div>
-                            <div class="search-option-info">
-                                <div class="search-option-title">بحث برقم الطلب</div>
-                                <div class="search-option-desc">ابحث باستخدام رقم الطلب المخصص (مثال: JUD-00001)</div>
-                            </div>
+                <div class="search-options-grid">
+                    <!-- بطاقة البحث برقم الطلب -->
+                    <div class="search-option-card active" data-search-type="number" id="searchByNumberBtn">
+                        <div class="search-option-icon">
+                            <i class="fas fa-hashtag"></i>
                         </div>
+                        <div class="search-option-title">بحث برقم الطلب</div>
+                        <div class="search-option-desc">ابحث باستخدام رقم الطلب المخصص (مثال: JUD-00001)</div>
                         <div class="search-option-arrow">
-                            <i class="fas fa-chevron-down"></i>
+                            <i class="fas fa-arrow-left"></i>
                         </div>
                     </div>
                     
-                    <!-- حقل البحث برقم الطلب مع إضافة # -->
-                    <div class="search-input-container active" id="numberSearchContainer">
-                        <div class="search-input-with-prefix">
-                            <div class="search-prefix">
-                                <i class="fas fa-hashtag"></i>
-                            </div>
-                            <input type="text" id="searchByNumber" class="search-input" placeholder="أدخل رقم الطلب (مثال: JUD-00001)">
+                    <!-- بطاقة البحث بالرقم القومي -->
+                    <div class="search-option-card" data-search-type="nationalId" id="searchByNationalIdBtn">
+                        <div class="search-option-icon">
+                            <i class="fas fa-id-card"></i>
                         </div>
-                        <div class="search-btn-container">
-                            <button onclick="searchByComplaintNumber()" class="btn btn-search">
-                                <span>بحث برقم الطلب</span>
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- زر البحث بالرقم القومي -->
-                    <div class="search-option-btn" data-search-type="nationalId" id="searchByNationalIdBtn">
-                        <div class="search-option-content">
-                            <div class="search-option-icon">
-                                <i class="fas fa-id-card"></i>
-                            </div>
-                            <div class="search-option-info">
-                                <div class="search-option-title">بحث بالرقم القومي</div>
-                                <div class="search-option-desc">ابحث باستخدام الرقم القومي المكون من 14 رقمًا</div>
-                            </div>
-                        </div>
+                        <div class="search-option-title">بحث بالرقم القومي</div>
+                        <div class="search-option-desc">ابحث باستخدام الرقم القومي المكون من 14 رقمًا</div>
                         <div class="search-option-arrow">
-                            <i class="fas fa-chevron-down"></i>
+                            <i class="fas fa-arrow-left"></i>
                         </div>
                     </div>
                     
-                    <!-- حقل البحث بالرقم القومي مع إضافة رمز الشخص -->
-                    <div class="search-input-container" id="nationalIdSearchContainer">
-                        <div class="search-input-with-prefix">
-                            <div class="search-prefix">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <input type="text" id="searchByNationalId" class="search-input" placeholder="أدخل الرقم القومي (14 رقمًا)" maxlength="14">
+                    <!-- بطاقة البحث بالاسم -->
+                    <div class="search-option-card" data-search-type="name" id="searchByNameBtn">
+                        <div class="search-option-icon">
+                            <i class="fas fa-user"></i>
                         </div>
-                        <div class="search-btn-container">
-                            <button onclick="searchByNationalId()" class="btn btn-search">
-                                <span>بحث بالرقم القومي</span>
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- زر البحث بالاسم -->
-                    <div class="search-option-btn" data-search-type="name" id="searchByNameBtn">
-                        <div class="search-option-content">
-                            <div class="search-option-icon">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="search-option-info">
-                                <div class="search-option-title">بحث بالاسم</div>
-                                <div class="search-option-desc">ابحث باستخدام الاسم الثلاثي أو رباعي (الاسم + الأب + الجد + العائلة)</div>
-                            </div>
-                        </div>
+                        <div class="search-option-title">بحث بالاسم</div>
+                        <div class="search-option-desc">ابحث باستخدام الاسم الثلاثي أو رباعي</div>
                         <div class="search-option-arrow">
-                            <i class="fas fa-chevron-down"></i>
+                            <i class="fas fa-arrow-left"></i>
                         </div>
                     </div>
-                    
-                    <!-- حقل البحث بالاسم مع إضافة رمز الشخص -->
-                    <div class="search-input-container" id="nameSearchContainer">
-                        <div class="search-input-with-prefix">
-                            <div class="search-prefix">
-                                <i class="fas fa-user-circle"></i>
-                            </div>
-                            <input type="text" id="searchByName" class="search-input" placeholder="أدخل الاسم (ثلاثي على الأقل: الاسم + الأب + الجد)">
-                        </div>
-                        <div class="search-btn-container">
-                            <button onclick="searchByName()" class="btn btn-search">
-                                <span>بحث بالاسم</span>
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
+                </div>
+                
+                <!-- حقل البحث برقم الطلب -->
+                <div class="search-input-container active" id="numberSearchContainer">
+                    <input type="text" id="searchByNumber" class="clean-search-input" placeholder="أدخل رقم الطلب (مثال: JUD-00001)">
+                    <div class="search-btn-container">
+                        <button onclick="searchByComplaintNumber()" class="btn btn-search">
+                            <span>بحث برقم الطلب</span>
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- حقل البحث بالرقم القومي -->
+                <div class="search-input-container" id="nationalIdSearchContainer">
+                    <input type="text" id="searchByNationalId" class="clean-search-input" placeholder="أدخل الرقم القومي (14 رقمًا)" maxlength="14">
+                    <div class="search-btn-container">
+                        <button onclick="searchByNationalId()" class="btn btn-search">
+                            <span>بحث بالرقم القومي</span>
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- حقل البحث بالاسم -->
+                <div class="search-input-container" id="nameSearchContainer">
+                    <input type="text" id="searchByName" class="clean-search-input" placeholder="أدخل الاسم (ثلاثي على الأقل: الاسم + الأب + الجد)">
+                    <div class="search-btn-container">
+                        <button onclick="searchByName()" class="btn btn-search">
+                            <span>بحث بالاسم</span>
+                            <i class="fas fa-search"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1583,6 +1575,7 @@
         let currentComplaintData = null;
         let lastComplaintNumber = null;
         let clientReplyEnabled = false;
+        let departmentsList = [];
         
         // Firebase Configuration
         const firebaseConfig = {
@@ -1614,6 +1607,8 @@
         const nationalIdInput = document.getElementById('nationalId');
         const phone1Input = document.getElementById('phone1');
         const phone2Input = document.getElementById('phone2');
+        const departmentSelect = document.getElementById('department');
+        const loadingOverlay = document.getElementById('loadingOverlay');
         
         // عناصر البحث الجديدة
         const searchByNumberBtn = document.getElementById('searchByNumberBtn');
@@ -1629,6 +1624,9 @@
         });
         
         function initApp() {
+            // تحميل الأقسام من Firebase
+            loadDepartments();
+            
             // الانتقال المباشر عند الضغط على المربعات
             submitBox.addEventListener('click', function() {
                 openSubmitSection();
@@ -1702,6 +1700,75 @@
             });
         }
         
+        async function loadDepartments() {
+            try {
+                showLoading(true);
+                const snapshot = await database.ref('departments').get();
+                departmentsList = [];
+                
+                if (snapshot.exists()) {
+                    snapshot.forEach(childSnapshot => {
+                        const department = childSnapshot.val();
+                        departmentsList.push({
+                            name: department.name,
+                            key: childSnapshot.key
+                        });
+                    });
+                }
+                
+                // تحميل الأقسام الافتراضية إذا لم يكن هناك أقسام
+                if (departmentsList.length === 0) {
+                    departmentsList = [
+                        { name: "مشكلة خاصة بالقضاء والمحاكم" },
+                        { name: "مساعدة مالية" },
+                        { name: "مشكلة خاصة بالصحة" },
+                        { name: "مشكلات مياه الشرب والصرف الصحي" },
+                        { name: "مشكلة خاصة بالتعليم" },
+                        { name: "مشكلة خاصة بالشرطة والداخلية" },
+                        { name: "حالة طارئة" },
+                        { name: "مشكلات أخري" }
+                    ];
+                }
+                
+                // ترتيب الأقسام أبجديًا
+                departmentsList.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+                
+                // تحديث القائمة المنسدلة
+                updateDepartmentSelect();
+                
+            } catch (error) {
+                console.error('Error loading departments:', error);
+                showMessage('error', 'حدث خطأ أثناء تحميل الأقسام. يرجى المحاولة مرة أخرى.');
+                
+                // استخدام الأقسام الافتراضية في حالة الخطأ
+                departmentsList = [
+                    { name: "مشكلة خاصة بالقضاء والمحاكم" },
+                    { name: "مساعدة مالية" },
+                    { name: "مشكلة خاصة بالصحة" },
+                    { name: "مشكلات مياه الشرب والصرف الصحي" },
+                    { name: "مشكلة خاصة بالتعليم" },
+                    { name: "مشكلة خاصة بالشرطة والداخلية" },
+                    { name: "حالة طارئة" },
+                    { name: "مشكلات أخري" }
+                ];
+                
+                updateDepartmentSelect();
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        function updateDepartmentSelect() {
+            if (!departmentSelect) return;
+            
+            let options = '<option value="">اختر القسم</option>';
+            departmentsList.forEach(dept => {
+                options += `<option value="${dept.name}">${dept.name}</option>`;
+            });
+            
+            departmentSelect.innerHTML = options;
+        }
+        
         function setupSearchButtons() {
             // أحداث أزرار البحث
             searchByNumberBtn.addEventListener('click', function() {
@@ -1718,7 +1785,7 @@
         }
         
         function activateSearchOption(type) {
-            // إلغاء تفعيل جميع الأزرار
+            // إلغاء تفعيل جميع البطاقات
             [searchByNumberBtn, searchByNationalIdBtn, searchByNameBtn].forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -1728,36 +1795,57 @@
                 container.classList.remove('active');
             });
             
-            // تفعيل الزر المحدد وإظهار حقل البحث الخاص به
+            // تفعيل البطاقة المحددة وإظهار حقل البحث الخاص بها
             switch(type) {
                 case 'number':
                     searchByNumberBtn.classList.add('active');
                     numberSearchContainer.classList.add('active');
-                    document.getElementById('searchByNumber').focus();
+                    setTimeout(() => {
+                        document.getElementById('searchByNumber').focus();
+                    }, 300);
                     break;
                 case 'nationalId':
                     searchByNationalIdBtn.classList.add('active');
                     nationalIdSearchContainer.classList.add('active');
-                    document.getElementById('searchByNationalId').focus();
+                    setTimeout(() => {
+                        document.getElementById('searchByNationalId').focus();
+                    }, 300);
                     break;
                 case 'name':
                     searchByNameBtn.classList.add('active');
                     nameSearchContainer.classList.add('active');
-                    document.getElementById('searchByName').focus();
+                    setTimeout(() => {
+                        document.getElementById('searchByName').focus();
+                    }, 300);
                     break;
             }
+            
+            // مسح جميع حقول البحث
+            document.getElementById('searchByNumber').value = '';
+            document.getElementById('searchByNationalId').value = '';
+            document.getElementById('searchByName').value = '';
+            
+            // إخفاء نتائج البحث السابقة
+            document.getElementById('complaintDetails').style.display = 'none';
+            document.getElementById('complaintDetails').innerHTML = '';
         }
         
         function openSubmitSection() {
             mainContainer.style.display = 'none';
             submitSection.style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // تحميل الأقسام عند فتح قسم التقديم
+            loadDepartments();
         }
         
         function openTrackSection() {
             mainContainer.style.display = 'none';
             trackSection.style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // إعادة تعيين إلى البحث برقم الطلب
+            activateSearchOption('number');
         }
         
         function closeAllSections() {
@@ -1837,6 +1925,7 @@
             }
             
             try {
+                showLoading(true);
                 const complaintRef = database.ref('complaints').push();
                 const complaintKey = complaintRef.key;
                 const timestamp = new Date().toISOString();
@@ -1910,6 +1999,8 @@
             } catch (error) {
                 console.error('Error submitting complaint:', error);
                 showMessage('error', 'حدث خطأ أثناء تقديم الشكوى. يرجى المحاولة مرة أخرى.');
+            } finally {
+                showLoading(false);
             }
         };
         
@@ -1961,7 +2052,7 @@
             const complaintNumber = document.getElementById('searchByNumber').value.trim();
             
             if (!complaintNumber) {
-                showMessage('error', 'يرجى إدخال رقم الطلب');
+                showSearchResult('error', 'يرجى إدخال رقم الطلب');
                 return;
             }
             
@@ -1973,12 +2064,12 @@
             const nationalId = document.getElementById('searchByNationalId').value.trim();
             
             if (!nationalId) {
-                showMessage('error', 'يرجى إدخال الرقم القومي');
+                showSearchResult('error', 'يرجى إدخال الرقم القومي');
                 return;
             }
             
             if (nationalId.length !== 14) {
-                showMessage('error', 'الرقم القومي يجب أن يكون 14 رقمًا');
+                showSearchResult('error', 'الرقم القومي يجب أن يكون 14 رقمًا');
                 return;
             }
             
@@ -1990,14 +2081,14 @@
             const name = document.getElementById('searchByName').value.trim();
             
             if (!name) {
-                showMessage('error', 'يرجى إدخال الاسم');
+                showSearchResult('error', 'يرجى إدخال الاسم');
                 return;
             }
             
             // تحقق أن الاسم يحتوي على ثلاثة أجزاء على الأقل (ثلاثي)
             const nameParts = name.split(/\s+/).filter(part => part.length > 0);
             if (nameParts.length < 3) {
-                showMessage('error', 'يرجى إدخال الاسم ثلاثي على الأقل (الاسم + الأب + الجد)');
+                showSearchResult('error', 'يرجى إدخال الاسم ثلاثي على الأقل (الاسم + الأب + الجد)');
                 return;
             }
             
@@ -2302,6 +2393,7 @@
             }
             
             try {
+                showLoading(true);
                 // الحصول على الشكوى الحالية
                 const snapshot = await database.ref(`complaints/${complaintKey}`).get();
                 if (!snapshot.exists()) {
@@ -2335,6 +2427,8 @@
             } catch (error) {
                 console.error('Error submitting reply:', error);
                 showSearchResult('error', 'حدث خطأ أثناء إرسال الرد. يرجى المحاولة مرة أخرى');
+            } finally {
+                showLoading(false);
             }
         };
         
@@ -2486,23 +2580,11 @@
         
         function showLoading(show) {
             if (show) {
-                // يمكنك إضافة مؤشر تحميل هنا
-                document.getElementById('complaintDetails').innerHTML = `
-                    <div style="text-align: center; padding: 40px;">
-                        <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                        <p style="margin-top: 20px; color: #666;">جاري البحث...</p>
-                    </div>
-                `;
-                document.getElementById('complaintDetails').style.display = 'block';
+                loadingOverlay.style.display = 'flex';
+            } else {
+                loadingOverlay.style.display = 'none';
             }
         }
     </script>
-    
-    <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
 </body>
 </html>
