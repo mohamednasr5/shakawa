@@ -28,6 +28,95 @@
             padding: 20px;
         }
         
+        /* أنماط تسجيل الدخول */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-box {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .login-logo {
+            font-size: 2.5rem;
+            color: #1a5fb4;
+            margin-bottom: 10px;
+        }
+        
+        .login-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .login-form .form-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        
+        .login-form .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .login-form .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        .login-form .form-control:focus {
+            border-color: #1a5fb4;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(26, 95, 180, 0.2);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(to right, #1a5fb4, #2d8fd5);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .login-btn:hover {
+            background: linear-gradient(to right, #155093, #1a5fb4);
+        }
+        
+        .login-error {
+            color: #e74c3c;
+            margin-top: 15px;
+            padding: 10px;
+            background: #fde8e8;
+            border-radius: 6px;
+            display: none;
+        }
+        
+        /* أنماط لوحة التحكم */
         header {
             background: linear-gradient(135deg, #1a5fb4 0%, #2d8fd5 100%);
             color: white;
@@ -825,6 +914,165 @@
             margin-top: 50px;
         }
         
+        /* أنماط نافذة إضافة مستخدم */
+        .user-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .user-modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        /* أنماط زر اتصال وواتساب */
+        .phone-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .call-btn, .whatsapp-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        
+        .call-btn {
+            background: #28a745;
+            color: white;
+        }
+        
+        .call-btn:hover {
+            background: #218838;
+        }
+        
+        .whatsapp-btn {
+            background: #25D366;
+            color: white;
+        }
+        
+        .whatsapp-btn:hover {
+            background: #1da851;
+        }
+        
+        /* أنماط المشكلات الحرجة */
+        .complaint-row.critical {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            animation: blinkCritical 1s infinite;
+            position: relative;
+        }
+        
+        .complaint-row.critical::before {
+            content: '!';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #dc3545;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        @keyframes blinkCritical {
+            0%, 100% { background-color: rgba(220, 53, 69, 0.1); }
+            50% { background-color: rgba(220, 53, 69, 0.2); }
+        }
+        
+        /* أنماط طباعة الشكوى */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-section, .print-section * {
+                visibility: visible;
+            }
+            .print-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 20px;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        .print-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+        
+        .print-logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .print-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .print-detail-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .print-detail-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .print-problem-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-right: 4px solid #1a5fb4;
+        }
+        
+        .admin-only {
+            display: none;
+        }
+        
+        .admin-only.visible {
+            display: inline-flex;
+        }
+        
         @media (max-width: 1200px) {
             .dashboard-grid {
                 grid-template-columns: 1fr;
@@ -872,459 +1120,491 @@
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1 class="logo">لوحة التحكم - نظام الشكاوى الموحد</h1>
-            <p class="subtitle">إدارة الشكاوى والطلبات المقدمة من المواطنين</p>
-        </div>
-    </header>
-    
-    <div class="container">
-        <div class="admin-bar">
-            <div class="admin-info">
-                <div class="admin-avatar">
-                    <i class="fas fa-user-shield"></i>
-                </div>
-                <div>
-                    <h3 style="margin-bottom: 5px;">مرحباً، المسؤول أحمد</h3>
-                    <p style="opacity: 0.9; font-size: 0.9rem;">آخر دخول: اليوم الساعة 10:30 صباحاً</p>
-                </div>
+    <!-- شاشة تسجيل الدخول -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <div class="login-logo">
+                <i class="fas fa-user-shield"></i>
             </div>
-            
-            <div class="admin-stats">
-                <div class="stat-box">
-                    <div class="stat-value" id="totalComplaints">0</div>
-                    <div class="stat-label">إجمالي الشكاوى</div>
+            <h2 class="login-title">تسجيل دخول المسؤول</h2>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label class="form-label">اسم المستخدم</label>
+                    <input type="text" class="form-control" id="username" placeholder="أدخل اسم المستخدم" required>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="newComplaints">0</div>
-                    <div class="stat-label">شكاوى جديدة</div>
+                <div class="form-group">
+                    <label class="form-label">كلمة المرور</label>
+                    <input type="password" class="form-control" id="password" placeholder="أدخل كلمة المرور" required>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="resolvedComplaints">0</div>
-                    <div class="stat-label">تم حلها</div>
+                <div class="login-error" id="loginError">
+                    اسم المستخدم أو كلمة المرور غير صحيحة
                 </div>
-            </div>
-            
-            <button class="logout-btn" id="logoutBtn">
-                <i class="fas fa-sign-out-alt"></i>
-                تسجيل الخروج
-            </button>
-        </div>
-        
-        <div class="dashboard-grid">
-            <div class="sidebar">
-                <h3 class="sidebar-title">القائمة الرئيسية</h3>
-                <ul class="sidebar-menu">
-                    <li class="menu-item active" data-section="dashboard">
-                        <i class="fas fa-tachometer-alt menu-icon"></i>
-                        <span>لوحة التحكم</span>
-                    </li>
-                    <li class="menu-item" data-section="complaints">
-                        <i class="fas fa-file-alt menu-icon"></i>
-                        <span>إدارة الشكاوى</span>
-                        <span class="badge" id="complaintsBadge" style="background: #e74c3c; color: white; border-radius: 10px; padding: 2px 8px; font-size: 0.8rem; margin-right: auto;">0</span>
-                    </li>
-                    <li class="menu-item" data-section="users">
-                        <i class="fas fa-users menu-icon"></i>
-                        <span>المستخدمين</span>
-                    </li>
-                    <li class="menu-item" data-section="reports">
-                        <i class="fas fa-chart-bar menu-icon"></i>
-                        <span>التقارير والإحصائيات</span>
-                    </li>
-                    <li class="menu-item" data-section="settings">
-                        <i class="fas fa-cog menu-icon"></i>
-                        <span>الإعدادات</span>
-                    </li>
-                </ul>
-            </div>
-            
-            <div class="main-content">
-                <!-- قسم لوحة التحكم -->
-                <div id="dashboardSection" class="content-section">
-                    <div class="content-header">
-                        <h2 class="content-title">لوحة التحكم</h2>
-                        <div>
-                            <button class="btn btn-export">
-                                <i class="fas fa-download"></i>
-                                تصدير تقرير
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-card new">
-                            <div class="stat-icon new">
-                                <i class="fas fa-file-alt"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3 id="statNew">0</h3>
-                                <p>شكاوى جديدة</p>
-                            </div>
-                        </div>
-                        <div class="stat-card progress">
-                            <div class="stat-icon progress">
-                                <i class="fas fa-spinner"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3 id="statInProgress">0</h3>
-                                <p>قيد المتابعة</p>
-                            </div>
-                        </div>
-                        <div class="stat-card resolved">
-                            <div class="stat-icon resolved">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3 id="statResolved">0</h3>
-                                <p>تم حلها</p>
-                            </div>
-                        </div>
-                        <div class="stat-card closed">
-                            <div class="stat-icon closed">
-                                <i class="fas fa-archive"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3 id="statClosed">0</h3>
-                                <p>مغلقة</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="charts-container">
-                        <div class="chart-card">
-                            <h3 class="chart-title">توزيع الشكاوى حسب القسم</h3>
-                            <div class="chart-placeholder">
-                                <i class="fas fa-chart-pie" style="font-size: 2rem; margin-left: 10px;"></i>
-                                <span>رسم بياني لتوزيع الشكاوى حسب القسم</span>
-                            </div>
-                        </div>
-                        <div class="chart-card">
-                            <h3 class="chart-title">الشكاوى خلال الشهر</h3>
-                            <div class="chart-placeholder">
-                                <i class="fas fa-chart-line" style="font-size: 2rem; margin-left: 10px;"></i>
-                                <span>رسم بياني لعدد الشكاوى خلال الشهر</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="content-header" style="margin-top: 40px;">
-                        <h2 class="content-title">آخر الشكاوى</h2>
-                        <button class="btn btn-primary" onclick="showSection('complaints')">
-                            <i class="fas fa-eye"></i>
-                            عرض الكل
-                        </button>
-                    </div>
-                    
-                    <div class="complaints-table-container">
-                        <table class="complaints-table">
-                            <thead>
-                                <tr>
-                                    <th>رقم الشكوى</th>
-                                    <th>الاسم</th>
-                                    <th>القسم</th>
-                                    <th>الحالة</th>
-                                    <th>التاريخ</th>
-                                    <th>الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recentComplaintsTable">
-                                <!-- سيتم ملؤها بواسطة JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <!-- قسم إدارة الشكاوى -->
-                <div id="complaintsSection" class="content-section" style="display: none;">
-                    <div class="content-header">
-                        <h2 class="content-title">إدارة الشكاوى</h2>
-                        <button class="btn btn-primary" id="refreshComplaints">
-                            <i class="fas fa-sync-alt"></i>
-                            تحديث القائمة
-                        </button>
-                    </div>
-                    
-                    <div class="filters-container">
-                        <div class="filter-group">
-                            <label class="filter-label">حالة الشكوى</label>
-                            <select class="filter-select" id="filterStatus">
-                                <option value="">جميع الحالات</option>
-                                <option value="جديدة">جديدة</option>
-                                <option value="قيد المتابعة">قيد المتابعة</option>
-                                <option value="تم الرد">تم الرد</option>
-                                <option value="مكتملة">مكتملة</option>
-                                <option value="مغلقة">مغلقة</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label class="filter-label">القسم</label>
-                            <select class="filter-select" id="filterDepartment">
-                                <option value="">جميع الأقسام</option>
-                                <option value="مشكلة خاصة بالقضاء والمحاكم">مشكلة خاصة بالقضاء والمحاكم</option>
-                                <option value="مساعدة مالية">مساعدة مالية</option>
-                                <option value="مشكلة خاصة بالصحة">مشكلة خاصة بالصحة</option>
-                                <option value="مشكلات مياه الشرب والصرف الصحي">مشكلات مياه الشرب والصرف الصحي</option>
-                                <option value="مشكلة خاصة بالتعليم">مشكلة خاصة بالتعليم</option>
-                                <option value="مشكلة خاصة بالشرطة والداخلية">مشكلة خاصة بالشرطة والداخلية</option>
-                                <option value="حالة طارئة">حالة طارئة</option>
-                                <option value="مشكلات أخرى">مشكلات أخرى</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label class="filter-label">نوع المشكلة</label>
-                            <select class="filter-select" id="filterPriority">
-                                <option value="">جميع الأنواع</option>
-                                <option value="عادية">عادية</option>
-                                <option value="مهمة">مهمة</option>
-                                <option value="فى غاية الأهمية">فى غاية الأهمية</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group search-box">
-                            <label class="filter-label">بحث</label>
-                            <div style="position: relative;">
-                                <input type="text" class="search-input" id="searchInput" placeholder="ابحث برقم الشكوى أو الاسم...">
-                                <i class="fas fa-search search-icon"></i>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="complaints-table-container">
-                        <table class="complaints-table">
-                            <thead>
-                                <tr>
-                                    <th>رقم الشكوى</th>
-                                    <th>الاسم</th>
-                                    <th>الرقم القومي</th>
-                                    <th>القسم</th>
-                                    <th>نوع المشكلة</th>
-                                    <th>الحالة</th>
-                                    <th>التاريخ</th>
-                                    <th>الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="complaintsTable">
-                                <!-- سيتم ملؤها بواسطة JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="pagination">
-                        <button class="page-btn" id="prevPage">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                        <span class="page-info">الصفحة <span id="currentPage">1</span> من <span id="totalPages">1</span></span>
-                        <button class="page-btn" id="nextPage">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- قسم المستخدمين -->
-                <div id="usersSection" class="content-section" style="display: none;">
-                    <div class="content-header">
-                        <h2 class="content-title">إدارة المستخدمين</h2>
-                        <button class="btn btn-primary">
-                            <i class="fas fa-user-plus"></i>
-                            إضافة مستخدم
-                        </button>
-                    </div>
-                    
-                    <div class="users-table-container">
-                        <table class="users-table">
-                            <thead>
-                                <tr>
-                                    <th>الاسم</th>
-                                    <th>البريد الإلكتروني</th>
-                                    <th>رقم الهاتف</th>
-                                    <th>عدد الشكاوى</th>
-                                    <th>آخر نشاط</th>
-                                    <th>الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTable">
-                                <tr>
-                                    <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
-                                        <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 15px; display: block; opacity: 0.5;"></i>
-                                        سيتم عرض بيانات المستخدمين هنا
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <!-- قسم التقارير والإحصائيات -->
-                <div id="reportsSection" class="content-section" style="display: none;">
-                    <div class="content-header">
-                        <h2 class="content-title">التقارير والإحصائيات</h2>
-                        <div>
-                            <button class="btn btn-export" style="margin-left: 10px;">
-                                <i class="fas fa-file-pdf"></i>
-                                تصدير PDF
-                            </button>
-                            <button class="btn btn-export">
-                                <i class="fas fa-file-excel"></i>
-                                تصدير Excel
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="filters-container">
-                        <div class="filter-group">
-                            <label class="filter-label">الفترة الزمنية</label>
-                            <select class="filter-select" id="reportPeriod">
-                                <option value="week">آخر أسبوع</option>
-                                <option value="month">آخر شهر</option>
-                                <option value="quarter">آخر 3 أشهر</option>
-                                <option value="year">آخر سنة</option>
-                                <option value="custom">مخصص</option>
-                            </select>
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label class="filter-label">من تاريخ</label>
-                            <input type="date" class="filter-select" id="reportFromDate">
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label class="filter-label">إلى تاريخ</label>
-                            <input type="date" class="filter-select" id="reportToDate">
-                        </div>
-                        
-                        <div class="filter-group">
-                            <label class="filter-label">&nbsp;</label>
-                            <button class="btn btn-primary" style="height: 42px;">
-                                <i class="fas fa-filter"></i>
-                                تطبيق التصفية
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="charts-container">
-                        <div class="chart-card">
-                            <h3 class="chart-title">توزيع الشكاوى حسب الحالة</h3>
-                            <div class="chart-placeholder">
-                                <i class="fas fa-chart-pie" style="font-size: 2rem; margin-left: 10px;"></i>
-                                <span>رسم بياني دائري لتوزيع الشكاوى حسب الحالة</span>
-                            </div>
-                        </div>
-                        <div class="chart-card">
-                            <h3 class="chart-title">الشكاوى حسب القسم</h3>
-                            <div class="chart-placeholder">
-                                <i class="fas fa-chart-bar" style="font-size: 2rem; margin-left: 10px;"></i>
-                                <span>رسم بياني عمودي للشكاوى حسب القسم</span>
-                            </div>
-                        </div>
-                        <div class="chart-card">
-                            <h3 class="chart-title">الشكاوى حسب الأولوية</h3>
-                            <div class="chart-placeholder">
-                                <i class="fas fa-chart-bar" style="font-size: 2rem; margin-left: 10px;"></i>
-                                <span>رسم بياني عمودي للشكاوى حسب الأولوية</span>
-                            </div>
-                        </div>
-                        <div class="chart-card">
-                            <h3 class="chart-title">الشكاوى خلال الوقت</h3>
-                            <div class="chart-placeholder">
-                                <i class="fas fa-chart-line" style="font-size: 2rem; margin-left: 10px;"></i>
-                                <span>رسم بياني خطي للشكاوى خلال الوقت</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- قسم الإعدادات -->
-                <div id="settingsSection" class="content-section" style="display: none;">
-                    <div class="content-header">
-                        <h2 class="content-title">إعدادات النظام</h2>
-                        <button class="btn btn-primary">
-                            <i class="fas fa-save"></i>
-                            حفظ التغييرات
-                        </button>
-                    </div>
-                    
-                    <div class="settings-form">
-                        <div class="settings-group">
-                            <h3 class="settings-title">الإعدادات العامة</h3>
-                            <div class="toggle-label">
-                                <span>تفعيل إشعارات البريد الإلكتروني</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" checked>
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </div>
-                            <div class="toggle-label">
-                                <span>تفعيل إشعارات الواتساب</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" checked>
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </div>
-                            <div class="toggle-label">
-                                <span>تفعيل النظام الآلي للردود</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="settings-group">
-                            <h3 class="settings-title">إعدادات الإشعارات</h3>
-                            <div class="form-group">
-                                <label class="form-label">البريد الإلكتروني للإشعارات</label>
-                                <input type="email" class="form-control" value="admin@shakawa.com">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">رقم واتساب للإشعارات</label>
-                                <input type="text" class="form-control" value="+201234567890">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">وقت إرسال التقارير اليومية</label>
-                                <input type="time" class="form-control" value="09:00">
-                            </div>
-                        </div>
-                        
-                        <div class="settings-group">
-                            <h3 class="settings-title">إعدادات المظهر</h3>
-                            <div class="form-group">
-                                <label class="form-label">لون السمة الرئيسية</label>
-                                <input type="color" class="form-control" value="#1a5fb4" style="height: 50px; width: 100px; padding: 5px;">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">عدد العناصر في الصفحة</label>
-                                <select class="form-control">
-                                    <option value="10">10 عناصر</option>
-                                    <option value="25" selected>25 عنصر</option>
-                                    <option value="50">50 عنصر</option>
-                                    <option value="100">100 عنصر</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>© 2023 نظام الشكاوى الموحد - لوحة التحكم الإدارية</p>
-            <p>جميع الحقوق محفوظة - الإصدار 2.1.0</p>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    تسجيل الدخول
+                </button>
+            </form>
         </div>
     </div>
     
-    <!-- نافذة عرض تفاصيل الشكوى -->
-    <div class="complaint-details-modal" id="complaintDetailsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">تفاصيل الشكوى</h3>
-                <button class="close-modal" id="closeModal">&times;</button>
+    <!-- لوحة التحكم (تظهر بعد تسجيل الدخول) -->
+    <div id="dashboardScreen" style="display: none;">
+        <header>
+            <div class="container">
+                <h1 class="logo">لوحة التحكم - نظام الشكاوى الموحد</h1>
+                <p class="subtitle">إدارة الشكاوى والطلبات المقدمة من المواطنين</p>
             </div>
-            <div class="modal-body" id="modalBody">
-                <!-- سيتم ملؤها بواسطة JavaScript -->
+        </header>
+        
+        <div class="container">
+            <div class="admin-bar">
+                <div class="admin-info">
+                    <div class="admin-avatar">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 5px;">مرحباً، المسؤول أحمد</h3>
+                        <p style="opacity: 0.9; font-size: 0.9rem;">آخر دخول: اليوم الساعة 10:30 صباحاً</p>
+                    </div>
+                </div>
+                
+                <div class="admin-stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalComplaints">0</div>
+                        <div class="stat-label">إجمالي الشكاوى</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="newComplaints">0</div>
+                        <div class="stat-label">شكاوى جديدة</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="resolvedComplaints">0</div>
+                        <div class="stat-label">تم حلها</div>
+                    </div>
+                </div>
+                
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    تسجيل الخروج
+                </button>
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="sidebar">
+                    <h3 class="sidebar-title">القائمة الرئيسية</h3>
+                    <ul class="sidebar-menu">
+                        <li class="menu-item active" data-section="dashboard">
+                            <i class="fas fa-tachometer-alt menu-icon"></i>
+                            <span>لوحة التحكم</span>
+                        </li>
+                        <li class="menu-item" data-section="complaints">
+                            <i class="fas fa-file-alt menu-icon"></i>
+                            <span>إدارة الشكاوى</span>
+                            <span class="badge" id="complaintsBadge" style="background: #e74c3c; color: white; border-radius: 10px; padding: 2px 8px; font-size: 0.8rem; margin-right: auto; display: none;">0</span>
+                        </li>
+                        <li class="menu-item admin-only" data-section="users">
+                            <i class="fas fa-users menu-icon"></i>
+                            <span>المستخدمين</span>
+                        </li>
+                        <li class="menu-item" data-section="reports">
+                            <i class="fas fa-chart-bar menu-icon"></i>
+                            <span>التقارير والإحصائيات</span>
+                        </li>
+                        <li class="menu-item" data-section="settings">
+                            <i class="fas fa-cog menu-icon"></i>
+                            <span>الإعدادات</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="main-content">
+                    <!-- قسم لوحة التحكم -->
+                    <div id="dashboardSection" class="content-section">
+                        <div class="content-header">
+                            <h2 class="content-title">لوحة التحكم</h2>
+                            <div>
+                                <button class="btn btn-export">
+                                    <i class="fas fa-download"></i>
+                                    تصدير تقرير
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-card new">
+                                <div class="stat-icon new">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 id="statNew">0</h3>
+                                    <p>شكاوى جديدة</p>
+                                </div>
+                            </div>
+                            <div class="stat-card progress">
+                                <div class="stat-icon progress">
+                                    <i class="fas fa-spinner"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 id="statInProgress">0</h3>
+                                    <p>قيد المتابعة</p>
+                                </div>
+                            </div>
+                            <div class="stat-card resolved">
+                                <div class="stat-icon resolved">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 id="statResolved">0</h3>
+                                    <p>تم حلها</p>
+                                </div>
+                            </div>
+                            <div class="stat-card closed">
+                                <div class="stat-icon closed">
+                                    <i class="fas fa-archive"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 id="statClosed">0</h3>
+                                    <p>مغلقة</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="charts-container">
+                            <div class="chart-card">
+                                <h3 class="chart-title">توزيع الشكاوى حسب القسم</h3>
+                                <div class="chart-placeholder">
+                                    <i class="fas fa-chart-pie" style="font-size: 2rem; margin-left: 10px;"></i>
+                                    <span>رسم بياني لتوزيع الشكاوى حسب القسم</span>
+                                </div>
+                            </div>
+                            <div class="chart-card">
+                                <h3 class="chart-title">الشكاوى خلال الشهر</h3>
+                                <div class="chart-placeholder">
+                                    <i class="fas fa-chart-line" style="font-size: 2rem; margin-left: 10px;"></i>
+                                    <span>رسم بياني لعدد الشكاوى خلال الشهر</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="content-header" style="margin-top: 40px;">
+                            <h2 class="content-title">آخر الشكاوى</h2>
+                            <button class="btn btn-primary" onclick="showSection('complaints')">
+                                <i class="fas fa-eye"></i>
+                                عرض الكل
+                            </button>
+                        </div>
+                        
+                        <div class="complaints-table-container">
+                            <table class="complaints-table">
+                                <thead>
+                                    <tr>
+                                        <th>رقم الشكوى</th>
+                                        <th>الاسم</th>
+                                        <th>القسم</th>
+                                        <th>الحالة</th>
+                                        <th>التاريخ</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentComplaintsTable">
+                                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- قسم إدارة الشكاوى -->
+                    <div id="complaintsSection" class="content-section" style="display: none;">
+                        <div class="content-header">
+                            <h2 class="content-title">إدارة الشكاوى</h2>
+                            <button class="btn btn-primary" id="refreshComplaints">
+                                <i class="fas fa-sync-alt"></i>
+                                تحديث القائمة
+                            </button>
+                        </div>
+                        
+                        <div class="filters-container">
+                            <div class="filter-group">
+                                <label class="filter-label">حالة الشكوى</label>
+                                <select class="filter-select" id="filterStatus">
+                                    <option value="">جميع الحالات</option>
+                                    <option value="جديدة">جديدة</option>
+                                    <option value="قيد المتابعة">قيد المتابعة</option>
+                                    <option value="تم الرد">تم الرد</option>
+                                    <option value="مكتملة">مكتملة</option>
+                                    <option value="مغلقة">مغلقة</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label class="filter-label">القسم</label>
+                                <select class="filter-select" id="filterDepartment">
+                                    <option value="">جميع الأقسام</option>
+                                    <option value="مشكلة خاصة بالقضاء والمحاكم">مشكلة خاصة بالقضاء والمحاكم</option>
+                                    <option value="مساعدة مالية">مساعدة مالية</option>
+                                    <option value="مشكلة خاصة بالصحة">مشكلة خاصة بالصحة</option>
+                                    <option value="مشكلات مياه الشرب والصرف الصحي">مشكلات مياه الشرب والصرف الصحي</option>
+                                    <option value="مشكلة خاصة بالتعليم">مشكلة خاصة بالتعليم</option>
+                                    <option value="مشكلة خاصة بالشرطة والداخلية">مشكلة خاصة بالشرطة والداخلية</option>
+                                    <option value="حالة طارئة">حالة طارئة</option>
+                                    <option value="مشكلات أخرى">مشكلات أخرى</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label class="filter-label">نوع المشكلة</label>
+                                <select class="filter-select" id="filterPriority">
+                                    <option value="">جميع الأنواع</option>
+                                    <option value="عادية">عادية</option>
+                                    <option value="مهمة">مهمة</option>
+                                    <option value="فى غاية الأهمية">فى غاية الأهمية</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group search-box">
+                                <label class="filter-label">بحث</label>
+                                <div style="position: relative;">
+                                    <input type="text" class="search-input" id="searchInput" placeholder="ابحث برقم الشكوى أو الاسم...">
+                                    <i class="fas fa-search search-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="complaints-table-container">
+                            <table class="complaints-table">
+                                <thead>
+                                    <tr>
+                                        <th>رقم الشكوى</th>
+                                        <th>الاسم</th>
+                                        <th>الرقم القومي</th>
+                                        <th>القسم</th>
+                                        <th>نوع المشكلة</th>
+                                        <th>الحالة</th>
+                                        <th>التاريخ</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="complaintsTable">
+                                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="pagination">
+                            <button class="page-btn" id="prevPage">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <span class="page-info">الصفحة <span id="currentPage">1</span> من <span id="totalPages">1</span></span>
+                            <button class="page-btn" id="nextPage">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- قسم المستخدمين -->
+                    <div id="usersSection" class="content-section" style="display: none;">
+                        <div class="content-header">
+                            <h2 class="content-title">إدارة المستخدمين</h2>
+                            <div>
+                                <button class="btn btn-secondary" onclick="loadUsers()" style="margin-right: 10px;">
+                                    <i class="fas fa-sync-alt"></i>
+                                    تحديث
+                                </button>
+                                <button class="btn btn-primary" onclick="showAddUserModal()">
+                                    <i class="fas fa-user-plus"></i>
+                                    إضافة مستخدم
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="users-table-container">
+                            <table class="users-table">
+                                <thead>
+                                    <tr>
+                                        <th>الاسم</th>
+                                        <th>البريد الإلكتروني</th>
+                                        <th>رقم الهاتف</th>
+                                        <th>الدور</th>
+                                        <th>الحالة</th>
+                                        <th>آخر نشاط</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTable">
+                                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- قسم التقارير والإحصائيات -->
+                    <div id="reportsSection" class="content-section" style="display: none;">
+                        <div class="content-header">
+                            <h2 class="content-title">التقارير والإحصائيات</h2>
+                            <div>
+                                <button class="btn btn-export" style="margin-left: 10px;">
+                                    <i class="fas fa-file-pdf"></i>
+                                    تصدير PDF
+                                </button>
+                                <button class="btn btn-export">
+                                    <i class="fas fa-file-excel"></i>
+                                    تصدير Excel
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="filters-container">
+                            <div class="filter-group">
+                                <label class="filter-label">الفترة الزمنية</label>
+                                <select class="filter-select" id="reportPeriod">
+                                    <option value="week">آخر أسبوع</option>
+                                    <option value="month">آخر شهر</option>
+                                    <option value="quarter">آخر 3 أشهر</option>
+                                    <option value="year">آخر سنة</option>
+                                    <option value="custom">مخصص</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label class="filter-label">من تاريخ</label>
+                                <input type="date" class="filter-select" id="reportFromDate">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label class="filter-label">إلى تاريخ</label>
+                                <input type="date" class="filter-select" id="reportToDate">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label class="filter-label">&nbsp;</label>
+                                <button class="btn btn-primary" style="height: 42px;">
+                                    <i class="fas fa-filter"></i>
+                                    تطبيق التصفية
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="charts-container">
+                            <div class="chart-card">
+                                <h3 class="chart-title">توزيع الشكاوى حسب الحالة</h3>
+                                <div class="chart-placeholder">
+                                    <i class="fas fa-chart-pie" style="font-size: 2rem; margin-left: 10px;"></i>
+                                    <span>رسم بياني دائري لتوزيع الشكاوى حسب الحالة</span>
+                                </div>
+                            </div>
+                            <div class="chart-card">
+                                <h3 class="chart-title">الشكاوى حسب القسم</h3>
+                                <div class="chart-placeholder">
+                                    <i class="fas fa-chart-bar" style="font-size: 2rem; margin-left: 10px;"></i>
+                                    <span>رسم بياني عمودي للشكاوى حسب القسم</span>
+                                </div>
+                            </div>
+                            <div class="chart-card">
+                                <h3 class="chart-title">الشكاوى حسب الأولوية</h3>
+                                <div class="chart-placeholder">
+                                    <i class="fas fa-chart-bar" style="font-size: 2rem; margin-left: 10px;"></i>
+                                    <span>رسم بياني عمودي للشكاوى حسب الأولوية</span>
+                                </div>
+                            </div>
+                            <div class="chart-card">
+                                <h3 class="chart-title">الشكاوى خلال الوقت</h3>
+                                <div class="chart-placeholder">
+                                    <i class="fas fa-chart-line" style="font-size: 2rem; margin-left: 10px;"></i>
+                                    <span>رسم بياني خطي للشكاوى خلال الوقت</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- قسم الإعدادات -->
+                    <div id="settingsSection" class="content-section" style="display: none;">
+                        <div class="content-header">
+                            <h2 class="content-title">إعدادات النظام</h2>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                حفظ التغييرات
+                            </button>
+                        </div>
+                        
+                        <div class="settings-form">
+                            <div class="settings-group">
+                                <h3 class="settings-title">الإعدادات العامة</h3>
+                                <div class="toggle-label">
+                                    <span>تفعيل إشعارات البريد الإلكتروني</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="toggle-label">
+                                    <span>تفعيل إشعارات الواتساب</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="toggle-label">
+                                    <span>تفعيل النظام الآلي للردود</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-group">
+                                <h3 class="settings-title">إعدادات الإشعارات</h3>
+                                <div class="form-group">
+                                    <label class="form-label">البريد الإلكتروني للإشعارات</label>
+                                    <input type="email" class="form-control" value="admin@shakawa.com">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">رقم واتساب للإشعارات</label>
+                                    <input type="text" class="form-control" value="+201234567890">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">وقت إرسال التقارير اليومية</label>
+                                    <input type="time" class="form-control" value="09:00">
+                                </div>
+                            </div>
+                            
+                            <div class="settings-group">
+                                <h3 class="settings-title">إعدادات المظهر</h3>
+                                <div class="form-group">
+                                    <label class="form-label">لون السمة الرئيسية</label>
+                                    <input type="color" class="form-control" value="#1a5fb4" style="height: 50px; width: 100px; padding: 5px;">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">عدد العناصر في الصفحة</label>
+                                    <select class="form-control">
+                                        <option value="10">10 عناصر</option>
+                                        <option value="25" selected>25 عنصر</option>
+                                        <option value="50">50 عنصر</option>
+                                        <option value="100">100 عنصر</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>© 2023 نظام الشكاوى الموحد - لوحة التحكم الإدارية</p>
+                <p>جميع الحقوق محفوظة - الإصدار 2.1.0</p>
+            </div>
+        </div>
+        
+        <!-- نافذة عرض تفاصيل الشكوى -->
+        <div class="complaint-details-modal" id="complaintDetailsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">تفاصيل الشكوى</h3>
+                    <button class="close-modal" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- سيتم ملؤها بواسطة JavaScript -->
+                </div>
             </div>
         </div>
     </div>
@@ -1334,10 +1614,21 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <script>
+        // بيانات تسجيل الدخول للمسؤول
+        const ADMIN_CREDENTIALS = {
+            username: "admin",
+            password: "742018"
+        };
+        
+        // حالة تسجيل الدخول
+        let isLoggedIn = false;
+        let currentUser = null;
+        
         // متغيرات التطبيق
         let currentSection = 'dashboard';
         let allComplaints = [];
         let filteredComplaints = [];
+        let allUsers = [];
         let currentPage = 1;
         const itemsPerPage = 10;
         
@@ -1358,10 +1649,21 @@
         
         // تهيئة الصفحة
         document.addEventListener('DOMContentLoaded', function() {
+            // التحقق من حالة تسجيل الدخول
+            checkLoginStatus();
+            
+            // إضافة مستمعي الأحداث لتسجيل الدخول
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            
             // إضافة مستمعي الأحداث للقائمة الجانبية
             const menuItems = document.querySelectorAll('.menu-item');
             menuItems.forEach(item => {
                 item.addEventListener('click', function() {
+                    if (this.classList.contains('admin-only') && !isLoggedIn) {
+                        showMessage('يجب تسجيل الدخول كمسؤول للوصول إلى هذا القسم', 'error');
+                        return;
+                    }
+                    
                     // إزالة النشاط من جميع العناصر
                     menuItems.forEach(i => i.classList.remove('active'));
                     // إضافة النشاط للعنصر الحالي
@@ -1384,18 +1686,81 @@
             
             // إضافة مستمعي الأحداث للأزرار
             document.getElementById('refreshComplaints').addEventListener('click', loadComplaints);
-            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
             document.getElementById('closeModal').addEventListener('click', closeModal);
             
             // إغلاق النافذة المنبثقة عند النقر خارجها
             document.getElementById('complaintDetailsModal').addEventListener('click', function(e) {
                 if (e.target === this) closeModal();
             });
-            
-            // تحميل البيانات الأولية
-            loadComplaints();
-            updateDashboardStats();
         });
+        
+        // دالة التحقق من حالة تسجيل الدخول
+        function checkLoginStatus() {
+            const savedLogin = localStorage.getItem('adminLoggedIn');
+            if (savedLogin === 'true') {
+                isLoggedIn = true;
+                showDashboard();
+                loadComplaints();
+            } else {
+                showLogin();
+            }
+        }
+        
+        // دالة تسجيل الدخول
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+                isLoggedIn = true;
+                localStorage.setItem('adminLoggedIn', 'true');
+                currentUser = {
+                    username: username,
+                    role: 'admin',
+                    loginTime: new Date().toISOString()
+                };
+                showDashboard();
+                loadComplaints();
+                showMessage('تم تسجيل الدخول بنجاح!', 'success');
+            } else {
+                errorDiv.style.display = 'block';
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // دالة تسجيل الخروج
+        function handleLogout() {
+            if (confirm('هل تريد تسجيل الخروج من لوحة التحكم؟')) {
+                isLoggedIn = false;
+                localStorage.removeItem('adminLoggedIn');
+                currentUser = null;
+                showLogin();
+            }
+        }
+        
+        // دالة عرض شاشة تسجيل الدخول
+        function showLogin() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('dashboardScreen').style.display = 'none';
+        }
+        
+        // دالة عرض لوحة التحكم
+        function showDashboard() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboardScreen').style.display = 'block';
+            
+            // إظهار عناصر المسؤول فقط
+            const adminOnlyElements = document.querySelectorAll('.admin-only');
+            adminOnlyElements.forEach(el => {
+                el.classList.add('visible');
+            });
+        }
         
         // دالة عرض القسم المحدد
         function showSection(sectionId) {
@@ -1412,6 +1777,11 @@
             // إذا كان القسم هو الشكاوى، قم بتحديث القائمة
             if (sectionId === 'complaints') {
                 filterComplaints();
+            }
+            
+            // إذا كان القسم هو المستخدمين، قم بتحميل المستخدمين
+            if (sectionId === 'users' && isLoggedIn) {
+                loadUsers();
             }
         }
         
@@ -1442,14 +1812,14 @@
                 // تحديث الإحصائيات
                 updateDashboardStats();
                 
-                // تحديث قائمة الشكاوى
+                // تحديث قائمة الشكوى
                 filterComplaints();
                 
                 // تحديث القائمة الجانبية
                 updateSidebarBadge();
                 
-                // عرض رسالة نجاح
-                showMessage(`تم تحميل ${allComplaints.length} شكوى`, 'success');
+                // التحقق من المشكلات الحرجة
+                setTimeout(checkCriticalProblems, 1000);
                 
             } catch (error) {
                 console.error('Error loading complaints:', error);
@@ -1540,8 +1910,12 @@
                 
                 // تحديد فئة الأولوية
                 let priorityClass = 'priority-normal';
+                let isCritical = false;
                 if (complaint.priority === 'مهمة') priorityClass = 'priority-important';
-                if (complaint.priority === 'فى غاية الأهمية') priorityClass = 'priority-critical';
+                if (complaint.priority === 'فى غاية الأهمية') {
+                    priorityClass = 'priority-critical';
+                    isCritical = true;
+                }
                 
                 // تنسيق التاريخ
                 const complaintDate = new Date(complaint.createdAt).toLocaleDateString('ar-EG', {
@@ -1550,8 +1924,11 @@
                     day: 'numeric'
                 });
                 
+                // تحديد فئة الصف (حرجة أم لا)
+                const rowClass = isCritical ? 'class="complaint-row critical"' : 'class="complaint-row"';
+                
                 html += `
-                    <tr>
+                    <tr ${rowClass} data-complaint-id="${complaint.key}">
                         <td><strong>${complaint.complaintNumber || 'غير متوفر'}</strong></td>
                         <td>${complaint.fullName || 'غير متوفر'}</td>
                         <td>${complaint.nationalId || 'غير متوفر'}</td>
@@ -1569,10 +1946,12 @@
                                     <i class="fas fa-reply"></i>
                                     رد
                                 </button>
+                                ${isLoggedIn ? `
                                 <button class="action-btn btn-delete" onclick="deleteComplaint('${complaint.key}')">
                                     <i class="fas fa-trash"></i>
                                     حذف
                                 </button>
+                                ` : ''}
                             </div>
                         </td>
                     </tr>
@@ -1695,6 +2074,62 @@
             }
         }
         
+        // دالة التحقق من المشكلات الحرجة
+        function checkCriticalProblems() {
+            const criticalComplaints = allComplaints.filter(complaint => 
+                complaint.priority === 'فى غاية الأهمية' && 
+                (complaint.status === 'جديدة' || complaint.status === 'قيد المتابعة')
+            );
+            
+            if (criticalComplaints.length > 0) {
+                // تشغيل التنبيه الصوتي
+                playAlertSound();
+                
+                // عرض تنبيه
+                if (criticalComplaints.length === 1) {
+                    showMessage(`هناك مشكلة حرجة تتطلب اهتمامك فوراً!`, 'error');
+                } else {
+                    showMessage(`هناك ${criticalComplaints.length} مشكلة حرجة تتطلب اهتمامك فوراً!`, 'error');
+                }
+            }
+        }
+        
+        // دالة تشغيل التنبيه الصوتي
+        function playAlertSound() {
+            // إنشاء صوت تنبيه باستخدام Web Audio API
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+                
+                // تكرار الصوت 3 مرات
+                setTimeout(() => {
+                    oscillator.start(audioContext.currentTime + 0.6);
+                    oscillator.stop(audioContext.currentTime + 1.1);
+                }, 600);
+                
+                setTimeout(() => {
+                    oscillator.start(audioContext.currentTime + 1.2);
+                    oscillator.stop(audioContext.currentTime + 1.7);
+                }, 1200);
+                
+            } catch (e) {
+                console.log('لا يمكن تشغيل الصوت:', e);
+            }
+        }
+        
         // دالة عرض تفاصيل الشكوى
         function viewComplaint(complaintKey) {
             const complaint = allComplaints.find(c => c.key === complaintKey);
@@ -1736,59 +2171,109 @@
             // بناء محتوى النافذة المنبثقة
             const modalBody = document.getElementById('modalBody');
             modalBody.innerHTML = `
-                <div class="details-grid">
-                    <div class="detail-item">
-                        <div class="detail-label">رقم الشكوى:</div>
-                        <div><strong>${complaint.complaintNumber || 'غير متوفر'}</strong></div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">الاسم:</div>
-                        <div>${complaint.fullName || 'غير متوفر'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">الرقم القومي:</div>
-                        <div>${complaint.nationalId || 'غير متوفر'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">الوحدة المحلية:</div>
-                        <div>${complaint.localUnit || 'غير متوفر'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">العنوان:</div>
-                        <div>${complaint.address || 'غير متوفر'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">رقم الهاتف:</div>
-                        <div>${complaint.phone1 || 'غير متوفر'} ${complaint.phone2 ? ' / ' + complaint.phone2 : ''}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">القسم:</div>
-                        <div>${complaint.department || 'غير متوفر'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">نوع المشكلة:</div>
-                        <div class="${priorityClass}">${complaint.priority || 'عادية'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">الحالة:</div>
-                        <div>${complaint.status || 'جديدة'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">تاريخ الإرسال:</div>
-                        <div>${createdAt}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">آخر تحديث:</div>
-                        <div>${updatedAt}</div>
-                    </div>
+                <div class="no-print" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <button class="btn btn-primary" onclick="printComplaint('${complaint.key}')">
+                        <i class="fas fa-print"></i>
+                        طباعة الشكوى
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeModal()">
+                        <i class="fas fa-times"></i>
+                        إغلاق
+                    </button>
                 </div>
                 
-                <div class="detail-item" style="grid-column: 1 / -1;">
-                    <div class="detail-label">تفاصيل المشكلة:</div>
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 10px; white-space: pre-line;">${complaint.problemDetails || 'لا توجد تفاصيل'}</div>
+                <div class="print-section">
+                    <div class="print-header">
+                        <div class="print-logo">نظام الشكاوى الموحد</div>
+                        <h2 style="margin: 10px 0;">تفاصيل الشكوى</h2>
+                        <p>تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')}</p>
+                    </div>
+                    
+                    <div class="print-details">
+                        <div class="print-detail-item">
+                            <div class="print-detail-label">رقم الشكوى:</div>
+                            <div><strong>${complaint.complaintNumber || 'غير متوفر'}</strong></div>
+                        </div>
+                        <div class="print-detail-item">
+                            <div class="print-detail-label">الاسم:</div>
+                            <div>${complaint.fullName || 'غير متوفر'}</div>
+                        </div>
+                        <div class="print-detail-item">
+                            <div class="print-detail-label">الرقم القومي:</div>
+                            <div>${complaint.nationalId || 'غير متوفر'}</div>
+                        </div>
+                        <div class="print-detail-item">
+                            <div class="print-detail-label">الوحدة المحلية:</div>
+                            <div>${complaint.localUnit || 'غير متوفر'}</div>
+                        </div>
+                        <div class="print-detail-item">
+                            <div class="print-detail-label">العنوان:</div>
+                            <div>${complaint.address || 'غير متوفر'}</div>
+                        </div>
+                        <div class="print-detail-item">
+                            <div class="print-detail-label">رقم الهاتف:</div>
+                            <div>
+                                ${complaint.phone1 || 'غير متوفر'} 
+                                ${complaint.phone2 ? ' / ' + complaint.phone2 : ''}
+                                ${complaint.phone1 ? `
+                                    <div class="phone-actions">
+                                        <a href="tel:${complaint.phone1}" class="call-btn">
+                                            <i class="fas fa-phone"></i>
+                                            اتصال
+                                        </a>
+                                        <a href="https://wa.me/${complaint.phone1.replace(/\D/g, '')}" target="_blank" class="whatsapp-btn">
+                                            <i class="fab fa-whatsapp"></i>
+                                            واتساب
+                                        </a>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="print-detail-item">
+                            <div class="print-detail-label">القسم:</div>
+                            <div>${complaint.department || 'غير متوفر'}</div>
+                        </div>
+                        <div class="print-detail-item">
+                            <div class="print-detail-label">نوع المشكلة:</div>
+                            <div class="${priorityClass}">${complaint.priority || 'عادية'}</div>
+                        </div>
+                        <div class="print-detail-item">
+                            <div class="print-detail-label">الحالة:</div>
+                            <div>${complaint.status || 'جديدة'}</div>
+                        </div>
+                        <div class="print-detail-item">
+                            <div class="print-detail-label">تاريخ الإرسال:</div>
+                            <div>${createdAt}</div>
+                        </div>
+                        <div class="print-detail-item">
+                            <div class="print-detail-label">آخر تحديث:</div>
+                            <div>${updatedAt}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="print-problem-details">
+                        <h3 style="margin-bottom: 15px; color: #1a5fb4;">تفاصيل المشكلة:</h3>
+                        <div style="white-space: pre-line;">${complaint.problemDetails || 'لا توجد تفاصيل'}</div>
+                    </div>
+                    
+                    ${complaint.responses && complaint.responses.length > 0 ? `
+                        <div class="print-problem-details" style="margin-top: 30px;">
+                            <h3 style="margin-bottom: 15px; color: #1a5fb4;">الردود والمتابعات:</h3>
+                            ${complaint.responses.map(response => {
+                                const responseDate = new Date(response.date).toLocaleString('ar-EG');
+                                return `
+                                    <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #ddd;">
+                                        <strong>${response.sender === 'admin' ? (response.adminName || 'المسؤول') : 'العميل'}</strong>
+                                        <div style="color: #666; font-size: 14px; margin: 5px 0;">${responseDate}</div>
+                                        <p style="margin-top: 10px;">${response.text}</p>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : ''}
                 </div>
                 
-                <div class="responses-section">
+                <div class="responses-section no-print">
                     <h3 style="margin-bottom: 20px;">الردود والمتابعات</h3>
                     ${responsesHTML}
                     
@@ -1825,8 +2310,18 @@
             document.getElementById('complaintDetailsModal').style.display = 'flex';
         }
         
+        // دالة طباعة الشكوى
+        function printComplaint(complaintKey) {
+            window.print();
+        }
+        
         // دالة إرسال رد إداري
         async function submitAdminReply(complaintKey) {
+            if (!isLoggedIn) {
+                showMessage('يجب تسجيل الدخول كمسؤول لإرسال رد', 'error');
+                return;
+            }
+            
             const replyText = document.getElementById('adminReplyText').value.trim();
             const newStatus = document.getElementById('adminStatusChange').value;
             
@@ -1911,6 +2406,11 @@
         
         // دالة الرد على شكوى (فتح نموذج الرد)
         function replyToComplaint(complaintKey) {
+            if (!isLoggedIn) {
+                showMessage('يجب تسجيل الدخول كمسؤول للرد على الشكاوى', 'error');
+                return;
+            }
+            
             // عرض تفاصيل الشكوى مع التركيز على نموذج الرد
             viewComplaint(complaintKey);
             
@@ -1922,6 +2422,11 @@
         
         // دالة حذف شكوى
         async function deleteComplaint(complaintKey) {
+            if (!isLoggedIn) {
+                showMessage('يجب تسجيل الدخول كمسؤول لحذف الشكاوى', 'error');
+                return;
+            }
+            
             if (!confirm('هل أنت متأكد من حذف هذه الشكوى؟ لا يمكن التراجع عن هذا الإجراء.')) {
                 return;
             }
@@ -1949,12 +2454,358 @@
             document.getElementById('complaintDetailsModal').style.display = 'none';
         }
         
-        // دالة تسجيل الخروج
-        function logout() {
-            if (confirm('هل تريد تسجيل الخروج من لوحة التحكم؟')) {
-                // في التطبيق الحقيقي، هنا سيتم تدمير جلسة المستخدم
-                // لكن في هذا المثال سنقوم بإعادة التوجيه للصفحة الرئيسية
-                window.location.href = 'index.html';
+        // دالة تحميل المستخدمين
+        async function loadUsers() {
+            if (!isLoggedIn) {
+                showMessage('يجب تسجيل الدخول كمسؤول للوصول إلى إدارة المستخدمين', 'error');
+                return;
+            }
+            
+            try {
+                const usersRef = database.ref('users');
+                const snapshot = await usersRef.once('value');
+                
+                if (!snapshot.exists()) {
+                    allUsers = [];
+                    displayUsersTable();
+                    return;
+                }
+                
+                allUsers = [];
+                snapshot.forEach((childSnapshot) => {
+                    const user = childSnapshot.val();
+                    user.key = childSnapshot.key;
+                    allUsers.push(user);
+                });
+                
+                displayUsersTable();
+                
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showMessage('حدث خطأ أثناء تحميل المستخدمين', 'error');
+            }
+        }
+        
+        // دالة عرض المستخدمين في الجدول
+        function displayUsersTable() {
+            const tableBody = document.getElementById('usersTable');
+            
+            if (allUsers.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
+                            <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 15px; display: block; opacity: 0.5;"></i>
+                            لا يوجد مستخدمين مسجلين
+                            <br>
+                            <button onclick="showAddUserModal()" class="btn btn-primary" style="margin-top: 15px;">
+                                <i class="fas fa-user-plus"></i>
+                                إضافة مستخدم جديد
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            
+            allUsers.forEach(user => {
+                // تنسيق تاريخ آخر نشاط
+                const lastActivity = user.lastLogin ? 
+                    new Date(user.lastLogin).toLocaleDateString('ar-EG') : 
+                    'لم يسجل دخول';
+                
+                // تحديد فئة الحالة
+                let statusBadge = '';
+                if (user.status === 'active') {
+                    statusBadge = '<span class="status-badge status-new">نشط</span>';
+                } else if (user.status === 'inactive') {
+                    statusBadge = '<span class="status-badge status-in-progress">غير نشط</span>';
+                } else if (user.status === 'suspended') {
+                    statusBadge = '<span class="status-badge status-closed">موقوف</span>';
+                }
+                
+                html += `
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #3498db, #2c3e50); display: flex; align-items: center; justify-content: center; color: white;">
+                                    ${user.name ? user.name.charAt(0) : 'U'}
+                                </div>
+                                <div>
+                                    <strong>${user.name || 'غير معروف'}</strong><br>
+                                    <small style="color: #666;">${user.role === 'admin' ? 'مسؤول' : user.role === 'moderator' ? 'مشرف' : 'مستخدم'}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${user.email || 'غير محدد'}</td>
+                        <td>${user.phone || 'غير محدد'}</td>
+                        <td>${user.role === 'admin' ? 'مسؤول' : user.role === 'moderator' ? 'مشرف' : 'مستخدم'}</td>
+                        <td>${statusBadge}</td>
+                        <td>${lastActivity}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn btn-view" onclick="editUser('${user.key}')">
+                                    <i class="fas fa-edit"></i>
+                                    تعديل
+                                </button>
+                                <button class="action-btn btn-delete" onclick="deleteUser('${user.key}')">
+                                    <i class="fas fa-trash"></i>
+                                    حذف
+                                </button>
+                                <button class="action-btn btn-reply" onclick="resetUserPassword('${user.key}')">
+                                    <i class="fas fa-key"></i>
+                                    إعادة تعيين كلمة المرور
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+        
+        // دالة عرض نموذج إضافة مستخدم
+        function showAddUserModal() {
+            if (!isLoggedIn) {
+                showMessage('يجب تسجيل الدخول كمسؤول لإضافة مستخدمين', 'error');
+                return;
+            }
+            
+            const modalHTML = `
+                <div class="user-modal" id="addUserModal">
+                    <div class="user-modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title">إضافة مستخدم جديد</h3>
+                            <button class="close-modal" onclick="closeUserModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="addUserForm">
+                                <div class="form-group">
+                                    <label class="form-label">اسم المستخدم</label>
+                                    <input type="text" class="form-control" id="userName" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">البريد الإلكتروني</label>
+                                    <input type="email" class="form-control" id="userEmail" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">رقم الهاتف</label>
+                                    <input type="tel" class="form-control" id="userPhone" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">كلمة المرور</label>
+                                    <input type="password" class="form-control" id="userPassword" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">تأكيد كلمة المرور</label>
+                                    <input type="password" class="form-control" id="userConfirmPassword" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">الدور</label>
+                                    <select class="form-control" id="userRole">
+                                        <option value="user">مستخدم عادي</option>
+                                        <option value="moderator">مشرف</option>
+                                        <option value="admin">مسؤول</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">الحالة</label>
+                                    <select class="form-control" id="userStatus">
+                                        <option value="active">نشط</option>
+                                        <option value="inactive">غير نشط</option>
+                                        <option value="suspended">موقوف</option>
+                                    </select>
+                                </div>
+                                
+                                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i>
+                                        حفظ المستخدم
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">
+                                        <i class="fas fa-times"></i>
+                                        إلغاء
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            document.getElementById('addUserModal').style.display = 'flex';
+            
+            document.getElementById('addUserForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await saveUser();
+            });
+        }
+        
+        // دالة حفظ المستخدم
+        async function saveUser() {
+            const name = document.getElementById('userName').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+            const phone = document.getElementById('userPhone').value.trim();
+            const password = document.getElementById('userPassword').value;
+            const confirmPassword = document.getElementById('userConfirmPassword').value;
+            const role = document.getElementById('userRole').value;
+            const status = document.getElementById('userStatus').value;
+            
+            // التحقق من كلمات المرور
+            if (password !== confirmPassword) {
+                showMessage('كلمات المرور غير متطابقة', 'error');
+                return;
+            }
+            
+            try {
+                const usersRef = database.ref('users');
+                const newUserRef = usersRef.push();
+                
+                const userData = {
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    password: btoa(password), // تشفير بسيط
+                    role: role,
+                    status: status,
+                    createdAt: new Date().toISOString(),
+                    createdBy: currentUser ? currentUser.username : 'admin'
+                };
+                
+                await newUserRef.set(userData);
+                
+                closeUserModal();
+                loadUsers();
+                showMessage('تم حفظ المستخدم بنجاح', 'success');
+                
+            } catch (error) {
+                console.error('Error saving user:', error);
+                showMessage('حدث خطأ أثناء حفظ المستخدم', 'error');
+            }
+        }
+        
+        // دالة إغلاق نافذة المستخدم
+        function closeUserModal() {
+            const modal = document.getElementById('addUserModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // دالة حذف مستخدم
+        async function deleteUser(userKey) {
+            if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+                return;
+            }
+            
+            try {
+                await database.ref('users/' + userKey).remove();
+                loadUsers();
+                showMessage('تم حذف المستخدم بنجاح', 'success');
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showMessage('حدث خطأ أثناء حذف المستخدم', 'error');
+            }
+        }
+        
+        // دالة تعديل مستخدم
+        function editUser(userKey) {
+            const user = allUsers.find(u => u.key === userKey);
+            if (!user) return;
+            
+            showAddUserModal();
+            
+            // ملء الحقول بقيم المستخدم
+            document.getElementById('userName').value = user.name || '';
+            document.getElementById('userEmail').value = user.email || '';
+            document.getElementById('userPhone').value = user.phone || '';
+            document.getElementById('userRole').value = user.role || 'user';
+            document.getElementById('userStatus').value = user.status || 'active';
+            
+            // تغيير النص والتأثير
+            document.querySelector('.modal-title').textContent = 'تعديل المستخدم';
+            document.getElementById('userPassword').required = false;
+            document.getElementById('userConfirmPassword').required = false;
+            
+            // تغيير دالة الحفظ
+            const form = document.getElementById('addUserForm');
+            form.onsubmit = async function(e) {
+                e.preventDefault();
+                await updateUser(userKey);
+            };
+        }
+        
+        // دالة تحديث المستخدم
+        async function updateUser(userKey) {
+            const name = document.getElementById('userName').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+            const phone = document.getElementById('userPhone').value.trim();
+            const password = document.getElementById('userPassword').value;
+            const role = document.getElementById('userRole').value;
+            const status = document.getElementById('userStatus').value;
+            
+            try {
+                const updates = {
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    role: role,
+                    status: status,
+                    updatedAt: new Date().toISOString()
+                };
+                
+                // تحديث كلمة المرور فقط إذا تم إدخالها
+                if (password) {
+                    const confirmPassword = document.getElementById('userConfirmPassword').value;
+                    if (password !== confirmPassword) {
+                        showMessage('كلمات المرور غير متطابقة', 'error');
+                        return;
+                    }
+                    updates.password = btoa(password);
+                }
+                
+                await database.ref('users/' + userKey).update(updates);
+                
+                closeUserModal();
+                loadUsers();
+                showMessage('تم تحديث المستخدم بنجاح', 'success');
+                
+            } catch (error) {
+                console.error('Error updating user:', error);
+                showMessage('حدث خطأ أثناء تحديث المستخدم', 'error');
+            }
+        }
+        
+        // دالة إعادة تعيين كلمة المرور
+        async function resetUserPassword(userKey) {
+            const newPassword = prompt('أدخل كلمة المرور الجديدة:');
+            if (!newPassword) return;
+            
+            const confirmPassword = prompt('أكد كلمة المرور الجديدة:');
+            if (newPassword !== confirmPassword) {
+                showMessage('كلمات المرور غير متطابقة', 'error');
+                return;
+            }
+            
+            try {
+                await database.ref('users/' + userKey).update({
+                    password: btoa(newPassword),
+                    updatedAt: new Date().toISOString()
+                });
+                
+                showMessage('تم إعادة تعيين كلمة المرور بنجاح', 'success');
+            } catch (error) {
+                console.error('Error resetting password:', error);
+                showMessage('حدث خطأ أثناء إعادة تعيين كلمة المرور', 'error');
             }
         }
         
