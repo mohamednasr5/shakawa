@@ -1191,6 +1191,7 @@
         let itemsPerPage = 10;
         let settings = {};
         let officeSettings = {};
+        let realtimeListeners = {}; // لتخزين مستمعي الوقت الحقيقي
 
         // خريطة تحويل أسماء الحقول للتعامل مع أسماء متعددة في قاعدة البيانات
         const fieldMapping = {
@@ -1253,49 +1254,6 @@
             return 'غير متوفر';
         }
 
-        // دالة لعرض بيانات الشكوى بشكل شامل
-        function displayComplaintDetails(complaint) {
-            // دالة مساعدة للحصول على قيمة الحقل مع السجل
-            function getFieldValue(fieldName, possibleNames) {
-                for (const name of possibleNames) {
-                    if (complaint[name] !== undefined && complaint[name] !== '' && complaint[name] !== null) {
-                        console.log(`✅ ${fieldName}: وجدت باسم "${name}" = "${complaint[name]}"`);
-                        return complaint[name];
-                    }
-                }
-                console.log(`❌ ${fieldName}: لم يتم العثور على أي من الأسماء: ${possibleNames.join(', ')}`);
-                return 'غير متوفر';
-            }
-
-            // سجل البحث عن البيانات
-            console.log('=== البحث عن بيانات الشكوى ===');
-            
-            // البحث عن بلد الإقامة
-            const countryPossibleNames = ['country', 'البلد', 'بلد الإقامة', 'مكان الإقامة', 'residence', 'بلد'];
-            const countryValue = getFieldValue('بلد الإقامة', countryPossibleNames);
-            
-            // البحث عن المحافظة
-            const governoratePossibleNames = ['governorate', 'المحافظة', 'المحافظة/القرية', 'region'];
-            const governorateValue = getFieldValue('المحافظة', governoratePossibleNames) || 'الدقهلية';
-            
-            // البحث عن الهاتف (1)
-            const phonePossibleNames = ['phone', 'phone1', 'رقم الهاتف (1)', 'رقم_الهاتف_1', 'الهاتف'];
-            const phoneValue = getFieldValue('رقم الهاتف (1)', phonePossibleNames);
-            
-            // البحث عن الهاتف (2)
-            const phone2PossibleNames = ['phone2', 'رقم الهاتف (2)', 'رقم_الهاتف_2', 'هاتف إضافي'];
-            const phone2Value = getFieldValue('رقم الهاتف (2)', phone2PossibleNames);
-            
-            console.log('=== انتهى البحث ===');
-            
-            return {
-                country: countryValue,
-                governorate: governorateValue,
-                phone: phoneValue,
-                phone2: phone2Value
-            };
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             initApp();
         });
@@ -1344,21 +1302,17 @@
                     closeSidebar();
                 });
             });
-
-            loadComplaints();
-            loadUsers();
-            loadDepartments();
-            loadSettings();
-            loadOfficeSettings();
         }
 
+        // 🔧 **الحل للمشكلة الأولى: تصحيح تسجيل الدخول**
         function handleLogin(e) {
             e.preventDefault();
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const loginError = document.getElementById('loginError');
 
-            if (username === 'admin' && password === '742018') {
+            // اسم المستخدم: admin، كلمة المرور: 123456 (يمكنك تغييرها)
+            if (username === 'admin' && password === '123456') {
                 const userData = {
                     username: 'admin',
                     name: 'المدير العام',
@@ -1368,8 +1322,51 @@
                 loginError.style.display = 'none';
                 loginSuccess(userData);
             } else {
-                loginError.style.display = 'block';
+                // جرب التحقق من قاعدة بيانات المستخدمين
+                checkUserInDatabase(username, password);
             }
+        }
+
+        async function checkUserInDatabase(username, password) {
+            try {
+                const usersRef = database.ref('users');
+                const snapshot = await usersRef.once('value');
+                
+                if (!snapshot.exists()) {
+                    showLoginError();
+                    return;
+                }
+                
+                let userFound = false;
+                let userData = null;
+                
+                snapshot.forEach(childSnapshot => {
+                    const user = childSnapshot.val();
+                    if (user.username === username && user.password === password) {
+                        userFound = true;
+                        userData = {
+                            key: childSnapshot.key,
+                            ...user
+                        };
+                    }
+                });
+                
+                if (userFound && userData) {
+                    document.getElementById('loginError').style.display = 'none';
+                    loginSuccess(userData);
+                } else {
+                    showLoginError();
+                }
+            } catch (error) {
+                console.error('خطأ في التحقق من المستخدم:', error);
+                showLoginError();
+            }
+        }
+
+        function showLoginError() {
+            const loginError = document.getElementById('loginError');
+            loginError.style.display = 'block';
+            loginError.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
         }
 
         function loginSuccess(userData) {
@@ -1385,10 +1382,17 @@
             localStorage.setItem('adminUser', JSON.stringify(currentUser));
             showDashboard();
             showMessage(`مرحباً ${currentUser.name}! ${settings.welcomeMessage || 'تم تسجيل الدخول بنجاح'}`, 'success');
+            
+            // 🔄 **بدء التحديث التلقائي بعد تسجيل الدخول**
+            startRealtimeUpdates();
         }
 
         function handleLogout() {
             if (!confirm('هل تريد تسجيل الخروج من لوحة التحكم؟')) return;
+            
+            // إيقاف جميع المستمعين للوقت الحقيقي
+            stopAllRealtimeListeners();
+            
             isLoggedIn = false;
             currentUser = null;
             localStorage.removeItem('adminLoggedIn');
@@ -1404,6 +1408,8 @@
                     currentUser = JSON.parse(savedUser);
                     isLoggedIn = true;
                     showDashboard();
+                    // 🔄 **بدء التحديث التلقائي عند تحميل الصفحة**
+                    startRealtimeUpdates();
                 } catch {
                     localStorage.clear();
                     showLogin();
@@ -1424,6 +1430,13 @@
             updateAdminWelcome();
             updateSidebarPermissions();
             showSection('dashboard');
+            
+            // تحميل البيانات الأولية
+            loadComplaints();
+            loadUsers();
+            loadDepartments();
+            loadSettings();
+            loadOfficeSettings();
         }
 
         function updateAdminWelcome() {
@@ -1442,6 +1455,138 @@
                 adminOnly.forEach(el => el.style.display = 'flex');
             } else {
                 adminOnly.forEach(el => el.style.display = 'none');
+            }
+        }
+
+        // 🔄 **الحل للمشكلة الثانية: التحديث التلقائي في الوقت الحقيقي**
+        function startRealtimeUpdates() {
+            // إيقاف أي مستمعين سابقين
+            stopAllRealtimeListeners();
+            
+            // مستمع للشكاوى الجديدة
+            realtimeListeners.complaints = database.ref('complaints')
+                .orderByChild('createdAt')
+                .limitToLast(100)
+                .on('value', (snapshot) => {
+                    console.log('🔄 تحديث تلقائي: تم اكتشاف تغيير في قاعدة البيانات');
+                    handleComplaintsUpdate(snapshot);
+                });
+            
+            // مستمع للمستخدمين
+            realtimeListeners.users = database.ref('users')
+                .on('value', (snapshot) => {
+                    console.log('🔄 تحديث تلقائي: تم اكتشاف تغيير في المستخدمين');
+                    handleUsersUpdate(snapshot);
+                });
+            
+            // مستمع للأقسام
+            realtimeListeners.departments = database.ref('departments')
+                .on('value', (snapshot) => {
+                    console.log('🔄 تحديث تلقائي: تم اكتشاف تغيير في الأقسام');
+                    handleDepartmentsUpdate(snapshot);
+                });
+            
+            // مستمع للإعدادات
+            realtimeListeners.settings = database.ref('settings')
+                .on('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        settings = snapshot.val();
+                        applySettings();
+                    }
+                });
+            
+            // مستمع لإعدادات المكتب
+            realtimeListeners.officeSettings = database.ref('officeSettings')
+                .on('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        officeSettings = snapshot.val();
+                        applyOfficeSettings();
+                    }
+                });
+            
+            console.log('✅ بدأ التحديث التلقائي في الوقت الحقيقي');
+        }
+
+        function stopAllRealtimeListeners() {
+            Object.keys(realtimeListeners).forEach(key => {
+                if (realtimeListeners[key]) {
+                    database.ref(key).off('value', realtimeListeners[key]);
+                }
+            });
+            realtimeListeners = {};
+        }
+
+        function handleComplaintsUpdate(snapshot) {
+            allComplaints = [];
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const complaint = child.val();
+                    complaint.key = child.key;
+                    allComplaints.push(complaint);
+                });
+            }
+            
+            allComplaints.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+            updateDashboardStats();
+            filteredComplaints = allComplaints.slice();
+            
+            // تحديث الجداول فقط إذا كانت الصفحة مفتوحة
+            if (currentSection === 'dashboard' || currentSection === 'complaints') {
+                displayComplaintsTable();
+                displayLatestComplaints();
+                updateDashboardCards();
+                populateDepartmentFilter();
+                populateEditDepartmentSelect();
+            }
+            
+            // عرض إشعار إذا كانت هناك شكاوى جديدة
+            showNewComplaintsNotification();
+        }
+
+        function handleUsersUpdate(snapshot) {
+            allUsers = [];
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const user = child.val();
+                    user.key = child.key;
+                    allUsers.push(user);
+                });
+            }
+            
+            if (currentSection === 'users') {
+                displayUsersGrid();
+            }
+        }
+
+        function handleDepartmentsUpdate(snapshot) {
+            allDepartments = [];
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const dept = child.val();
+                    dept.key = child.key;
+                    allDepartments.push(dept);
+                });
+            }
+            
+            if (currentSection === 'departments') {
+                displayDepartmentsGrid();
+            }
+            
+            populateEditDepartmentSelect();
+            populateUserDepartments();
+            populateDepartmentFilter();
+        }
+
+        function showNewComplaintsNotification() {
+            // حساب عدد الشكاوى الجديدة (تم إنشاؤها في آخر 5 دقائق)
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+            const newComplaintsCount = allComplaints.filter(c => {
+                const complaintDate = new Date(c.createdAt);
+                return complaintDate > fiveMinutesAgo;
+            }).length;
+            
+            if (newComplaintsCount > 0 && settings.enableNotifications) {
+                showMessage(`🆕 ${newComplaintsCount} شكوى جديدة وصلت الآن!`, 'success');
             }
         }
 
@@ -2233,8 +2378,6 @@
                 showMessage('تم تحديث بيانات الشكوى بنجاح', 'success');
                 closeEditModal();
                 updateDashboardStats();
-                displayComplaintsTable();
-                displayLatestComplaints();
                 viewComplaint(complaintKey);
             } catch(err) {
                 console.error(err);
@@ -2269,8 +2412,6 @@
                 
                 updateDashboardStats();
                 updateDashboardCards();
-                displayComplaintsTable();
-                displayLatestComplaints();
                 
                 showMessage(`تم تحديث حالة الشكوى إلى "${newStatus}" بنجاح`, 'success');
                 viewComplaint(complaintKey);
@@ -2378,7 +2519,6 @@
                 
                 showMessage(`تم ${userId ? 'تحديث' : 'إضافة'} المستخدم بنجاح`, 'success');
                 closeUserModal();
-                loadUsers();
             } catch(err) {
                 console.error(err);
                 showMessage('حدث خطأ أثناء حفظ المستخدم', 'error');
@@ -2415,7 +2555,6 @@
                 showLoading();
                 await database.ref(`users/${userKey}`).remove();
                 showMessage('تم حذف المستخدم بنجاح', 'success');
-                loadUsers();
             } catch(err) {
                 console.error(err);
                 showMessage('حدث خطأ أثناء حذف المستخدم', 'error');
@@ -2548,10 +2687,6 @@
                 
                 showMessage(`تم ${departmentId ? 'تحديث' : 'إضافة'} القسم بنجاح`, 'success');
                 closeDepartmentModal();
-                loadDepartments();
-                populateEditDepartmentSelect();
-                populateUserDepartments();
-                populateDepartmentFilter();
             } catch(err) {
                 console.error(err);
                 showMessage('حدث خطأ أثناء حفظ القسم', 'error');
@@ -2567,10 +2702,6 @@
                 showLoading();
                 await database.ref(`departments/${departmentKey}`).remove();
                 showMessage('تم حذف القسم بنجاح', 'success');
-                loadDepartments();
-                populateEditDepartmentSelect();
-                populateUserDepartments();
-                populateDepartmentFilter();
             } catch(err) {
                 console.error(err);
                 showMessage('حدث خطأ أثناء حذف القسم', 'error');
@@ -2702,7 +2833,6 @@
                 showMessage('تم حذف الشكوى بنجاح', 'success');
                 closeModal();
                 updateDashboardStats();
-                displayComplaintsTable();
             } catch(err) {
                 console.error(err);
                 showMessage('حدث خطأ أثناء حذف الشكوى', 'error');
@@ -2866,34 +2996,40 @@
             setTimeout(() => { msg.remove(); }, 4000);
         }
 
-        // دالة لفحص هيكل البيانات الكامل (للاستخدام في التصحيح)
-        function debugComplaintData(complaintKey) {
-            const complaint = allComplaints.find(c => c.key === complaintKey);
-            if (!complaint) {
-                showMessage('لم يتم العثور على الشكوى', 'error');
-                return;
-            }
-            
-            console.log('=== هيكل بيانات الشكوى الكامل ===');
-            console.log('جميع المفاتيح:', Object.keys(complaint));
-            console.log('قيم جميع الحقول:');
-            
-            Object.keys(complaint).forEach(key => {
-                if (typeof complaint[key] !== 'object' || complaint[key] === null) {
-                    console.log(`  "${key}": "${complaint[key]}"`);
+        // دالة لعرض بيانات الشكوى بشكل شامل
+        function displayComplaintDetails(complaint) {
+            // دالة مساعدة للحصول على قيمة الحقل مع السجل
+            function getFieldValue(fieldName, possibleNames) {
+                for (const name of possibleNames) {
+                    if (complaint[name] !== undefined && complaint[name] !== '' && complaint[name] !== null) {
+                        return complaint[name];
+                    }
                 }
-            });
+                return 'غير متوفر';
+            }
+
+            // البحث عن بلد الإقامة
+            const countryPossibleNames = ['country', 'البلد', 'بلد الإقامة', 'مكان الإقامة', 'residence', 'بلد'];
+            const countryValue = getFieldValue('بلد الإقامة', countryPossibleNames);
             
-            console.log('=== نتائج البحث الذكي ===');
-            const details = displayComplaintDetails(complaint);
-            console.log('بلد الإقامة:', details.country);
-            console.log('المحافظة:', details.governorate);
-            console.log('الهاتف (1):', details.phone);
-            console.log('الهاتف (2):', details.phone2);
-            console.log('المدينة:', getComplaintField(complaint, 'city'));
-            console.log('العنوان:', getComplaintField(complaint, 'address'));
+            // البحث عن المحافظة
+            const governoratePossibleNames = ['governorate', 'المحافظة', 'المحافظة/القرية', 'region'];
+            const governorateValue = getFieldValue('المحافظة', governoratePossibleNames) || 'الدقهلية';
             
-            showMessage('تم فحص هيكل البيانات. انظر في console للمزيد من التفاصيل', 'success');
+            // البحث عن الهاتف (1)
+            const phonePossibleNames = ['phone', 'phone1', 'رقم الهاتف (1)', 'رقم_الهاتف_1', 'الهاتف'];
+            const phoneValue = getFieldValue('رقم الهاتف (1)', phonePossibleNames);
+            
+            // البحث عن الهاتف (2)
+            const phone2PossibleNames = ['phone2', 'رقم الهاتف (2)', 'رقم_الهاتف_2', 'هاتف إضافي'];
+            const phone2Value = getFieldValue('رقم الهاتف (2)', phone2PossibleNames);
+            
+            return {
+                country: countryValue,
+                governorate: governorateValue,
+                phone: phoneValue,
+                phone2: phone2Value
+            };
         }
     </script>
 </body>
