@@ -1192,6 +1192,37 @@
         let settings = {};
         let officeSettings = {};
 
+        // خريطة تحويل أسماء الحقول للتعامل مع أسماء متعددة في قاعدة البيانات
+        const fieldMapping = {
+            // حقل رقم الهاتف (1)
+            'phone': ['phone', 'phone1', 'رقم الهاتف (1)', 'رقم_الهاتف_1', 'الهاتف', 'mobile'],
+            // حقل رقم الهاتف (2)
+            'phone2': ['phone2', 'رقم الهاتف (2)', 'رقم_الهاتف_2', 'هاتف إضافي'],
+            // حقل البلد
+            'country': ['country', 'البلد', 'بلد الإقامة', 'مكان الإقامة'],
+            // حقل المحافظة
+            'governorate': ['governorate', 'المحافظة', 'المحافظة/القرية', 'region'],
+            // حقل المدينة
+            'city': ['city', 'المدينة', 'المدينة/القرية', 'town'],
+            // حقل العنوان
+            'address': ['address', 'العنوان', 'العنوان بالتفصيل', 'detailedAddress'],
+            // حقل البريد الإلكتروني
+            'email': ['email', 'البريد الإلكتروني', 'البريد_الإلكتروني', 'mail']
+        };
+
+        // دالة ذكية للحصول على قيمة الحقل بأسماء مختلفة
+        function getComplaintField(complaint, fieldType) {
+            const possibleNames = fieldMapping[fieldType] || [fieldType];
+            
+            for (const name of possibleNames) {
+                if (complaint[name] !== undefined && complaint[name] !== '' && complaint[name] !== null) {
+                    return complaint[name];
+                }
+            }
+            
+            return 'غير متوفر';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             initApp();
         });
@@ -1949,6 +1980,7 @@
             
             document.getElementById('modalHeaderControls').innerHTML = downloadBtn + replyBtn + controlBtns;
             
+            // استخدام الدالة الذكية للحصول على بيانات العميل
             modalBody.innerHTML = `
                 <div class="details-grid">
                     <div class="detail-item">
@@ -1965,31 +1997,31 @@
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">بلد الإقامة</div>
-                        <div>${complaint.country || complaint.governorate || 'غير متوفر'}</div>
+                        <div>${getComplaintField(complaint, 'country')}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">المحافظة</div>
-                        <div>${complaint.governorate || ''}</div>
+                        <div>${getComplaintField(complaint, 'governorate')}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">المدينة/القرية</div>
-                        <div>${complaint.city || ''}</div>
+                        <div>${getComplaintField(complaint, 'city')}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">العنوان بالتفصيل</div>
-                        <div>${complaint.address || ''}</div>
+                        <div>${getComplaintField(complaint, 'address')}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">رقم الهاتف (1)</div>
-                        <div>${complaint.phone || 'غير متوفر'}</div>
+                        <div>${getComplaintField(complaint, 'phone')}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">رقم الهاتف (2) - اختياري</div>
-                        <div>${complaint.phone2 || 'غير متوفر'}</div>
+                        <div>${getComplaintField(complaint, 'phone2')}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">البريد الإلكتروني</div>
-                        <div>${complaint.email || 'غير متوفر'}</div>
+                        <div>${getComplaintField(complaint, 'email')}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">القسم</div>
@@ -2071,12 +2103,15 @@
             document.getElementById('editComplaintId').value = complaintKey;
             document.getElementById('editFullName').value = complaint.fullName || '';
             document.getElementById('editNationalId').value = complaint.nationalId || '';
-            document.getElementById('editPhone').value = complaint.phone || '';
-            document.getElementById('editPhone2').value = complaint.phone2 || '';
-            document.getElementById('editCountry').value = complaint.country || '';
-            document.getElementById('editGovernorate').value = complaint.governorate || '';
-            document.getElementById('editCity').value = complaint.city || '';
-            document.getElementById('editAddress').value = complaint.address || '';
+            
+            // استخدام الدالة الذكية لملء حقول الهاتف والعنوان
+            document.getElementById('editPhone').value = getComplaintField(complaint, 'phone');
+            document.getElementById('editPhone2').value = getComplaintField(complaint, 'phone2');
+            document.getElementById('editCountry').value = getComplaintField(complaint, 'country');
+            document.getElementById('editGovernorate').value = getComplaintField(complaint, 'governorate');
+            document.getElementById('editCity').value = getComplaintField(complaint, 'city');
+            document.getElementById('editAddress').value = getComplaintField(complaint, 'address');
+            
             document.getElementById('editDepartment').value = complaint.department || '';
             document.getElementById('editPriority').value = complaint.priority || 'متوسطة';
             document.getElementById('editStatus').value = complaint.status || 'جديدة';
@@ -2508,13 +2543,13 @@
                             <tr><td class="label">رقم الشكوى:</td><td>${complaint.complaintNumber || ''}</td></tr>
                             <tr><td class="label">الاسم بالكامل:</td><td>${complaint.fullName || ''}</td></tr>
                             <tr><td class="label">الرقم القومي:</td><td>${complaint.nationalId || 'غير متوفر'}</td></tr>
-                            <tr><td class="label">بلد الإقامة:</td><td>${complaint.country || complaint.governorate || 'غير متوفر'}</td></tr>
-                            <tr><td class="label">المحافظة:</td><td>${complaint.governorate || ''}</td></tr>
-                            <tr><td class="label">المدينة/القرية:</td><td>${complaint.city || ''}</td></tr>
-                            <tr><td class="label">العنوان بالتفصيل:</td><td>${complaint.address || ''}</td></tr>
-                            <tr><td class="label">رقم الهاتف (1):</td><td>${complaint.phone || 'غير متوفر'}</td></tr>
-                            <tr><td class="label">رقم الهاتف (2):</td><td>${complaint.phone2 || 'غير متوفر'}</td></tr>
-                            <tr><td class="label">البريد الإلكتروني:</td><td>${complaint.email || 'غير متوفر'}</td></tr>
+                            <tr><td class="label">بلد الإقامة:</td><td>${getComplaintField(complaint, 'country')}</td></tr>
+                            <tr><td class="label">المحافظة:</td><td>${getComplaintField(complaint, 'governorate')}</td></tr>
+                            <tr><td class="label">المدينة/القرية:</td><td>${getComplaintField(complaint, 'city')}</td></tr>
+                            <tr><td class="label">العنوان بالتفصيل:</td><td>${getComplaintField(complaint, 'address')}</td></tr>
+                            <tr><td class="label">رقم الهاتف (1):</td><td>${getComplaintField(complaint, 'phone')}</td></tr>
+                            <tr><td class="label">رقم الهاتف (2):</td><td>${getComplaintField(complaint, 'phone2')}</td></tr>
+                            <tr><td class="label">البريد الإلكتروني:</td><td>${getComplaintField(complaint, 'email')}</td></tr>
                             <tr><td class="label">القسم:</td><td>${complaint.department || ''}</td></tr>
                             <tr><td class="label">نوع المشكلة:</td><td>${complaint.priority || ''}</td></tr>
                             <tr><td class="label">الحالة:</td><td>${complaint.status || ''}</td></tr>
@@ -2749,6 +2784,34 @@
             msg.textContent = text;
             document.body.appendChild(msg);
             setTimeout(() => { msg.remove(); }, 4000);
+        }
+
+        // دالة مساعدة لفحص هيكل البيانات (للاستخدام في التصحيح)
+        function debugComplaintData(complaintKey) {
+            const complaint = allComplaints.find(c => c.key === complaintKey);
+            if (!complaint) return;
+            
+            console.log("=== هيكل بيانات الشكوى ===");
+            console.log("المفاتيح الموجودة:", Object.keys(complaint));
+            
+            // عرض جميع الحقول وقيمها
+            Object.keys(complaint).forEach(key => {
+                if (typeof complaint[key] !== 'object' || complaint[key] === null) {
+                    console.log(`${key}: ${complaint[key]}`);
+                }
+            });
+            
+            console.log("========================");
+            
+            // عرض في واجهة المستخدم أيضًا
+            let debugInfo = "هيكل بيانات الشكوى:\n";
+            Object.keys(complaint).forEach(key => {
+                if (typeof complaint[key] !== 'object' || complaint[key] === null) {
+                    debugInfo += `${key}: ${complaint[key]}\n`;
+                }
+            });
+            
+            showMessage("تم فحص هيكل البيانات. انظر في console للمزيد من التفاصيل", "success");
         }
     </script>
 </body>
