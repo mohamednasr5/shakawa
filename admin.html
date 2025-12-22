@@ -167,6 +167,18 @@
         .settings-card{background:#fff;border-radius:15px;padding:25px;box-shadow:0 5px 20px rgba(0,0,0,.08);margin-bottom:20px}
         .settings-card h3{color:#2c3e50;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #f0f0f0}
         
+        /* إضافات للرقم القومي وتعديل الطلب */
+        .national-id{font-family:monospace;font-size:1.1rem;letter-spacing:2px}
+        .edit-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;margin-bottom:20px}
+        .full-width{grid-column:1/-1}
+        .edit-modal .modal-content{max-width:900px}
+        .department-management{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:20px}
+        .department-tag{background:#e3f2fd;padding:8px 15px;border-radius:20px;display:flex;align-items:center;gap:10px}
+        .department-tag .delete{color:#e74c3c;cursor:pointer}
+        .add-department-form{display:flex;gap:10px;flex-wrap:wrap}
+        .alert{background:#e8f4fd;color:#155724;padding:15px;border-radius:10px;margin-bottom:20px;border-right:4px solid #1a5fb4}
+        .alert.error{background:#f8d7da;color:#721c24;border-color:#e74c3c}
+        
         @media (max-width:768px){
             .mobile-menu-btn,.mobile-nav{display:flex}
             .cards-grid{grid-template-columns:1fr}
@@ -182,6 +194,7 @@
             .modal-header-controls button{width:100%}
             .form-row{flex-direction:column}
             .form-group{width:100%}
+            .edit-form-grid{grid-template-columns:1fr}
         }
         @media (min-width:769px){
             .dashboard-grid{display:grid;grid-template-columns:280px 1fr}
@@ -455,7 +468,7 @@
                         <div class="filter-controls">
                             <div class="filter-group">
                                 <label class="filter-label">بحث</label>
-                                <input type="text" id="searchComplaints" class="filter-input" placeholder="ابحث برقم أو اسم...">
+                                <input type="text" id="searchComplaints" class="filter-input" placeholder="ابحث برقم أو اسم أو رقم قومي...">
                             </div>
                             <div class="filter-group">
                                 <label class="filter-label">القسم</label>
@@ -491,6 +504,7 @@
                                     <tr>
                                         <th>رقم الشكوى</th>
                                         <th>الاسم</th>
+                                        <th>الرقم القومي</th>
                                         <th>القسم</th>
                                         <th>الأولوية</th>
                                         <th>الحالة</th>
@@ -684,10 +698,15 @@
                     <div id="departmentsSection" class="content-section">
                         <div class="section-header">
                             <h2 class="section-title">إدارة الأقسام</h2>
-                            <button class="save-btn" onclick="addNewDepartment()">
+                            <button class="save-btn" onclick="showAddDepartmentModal()">
                                 <i class="fas fa-plus"></i>
                                 إضافة قسم
                             </button>
+                        </div>
+
+                        <div class="alert">
+                            <i class="fas fa-info-circle"></i>
+                            يمكنك إضافة أقسام جديدة للمشاكل التي يمكن للمواطنين تقديم شكاوى فيها.
                         </div>
 
                         <div class="cards-grid" id="departmentsGrid">
@@ -721,6 +740,89 @@
                     </div>
                 </div>
                 <div class="modal-body" id="modalBody"></div>
+            </div>
+        </div>
+
+        <!-- نافذة تعديل الشكوى -->
+        <div class="complaint-details-modal edit-modal" id="editComplaintModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">تعديل بيانات الشكوى</h3>
+                    <button class="close-modal" onclick="closeEditModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="editComplaintForm">
+                        <div class="edit-form-grid">
+                            <div class="form-group">
+                                <label class="setting-label">الاسم بالكامل</label>
+                                <input type="text" class="setting-input" id="editFullName" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">الرقم القومي</label>
+                                <input type="text" class="setting-input national-id" id="editNationalId" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">رقم الهاتف</label>
+                                <input type="tel" class="setting-input" id="editPhone" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">البريد الإلكتروني</label>
+                                <input type="email" class="setting-input" id="editEmail">
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">المحافظة</label>
+                                <input type="text" class="setting-input" id="editGovernorate" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">المدينة/القرية</label>
+                                <input type="text" class="setting-input" id="editCity" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">العنوان بالتفصيل</label>
+                                <input type="text" class="setting-input" id="editAddress" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">القسم</label>
+                                <select class="setting-select" id="editDepartment" required>
+                                    <!-- سيتم ملؤها بالجافاسكريبت -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">نوع المشكلة/الأولوية</label>
+                                <select class="setting-select" id="editPriority" required>
+                                    <option value="عاجلة">عاجلة</option>
+                                    <option value="متوسطة">متوسطة</option>
+                                    <option value="منخفضة">منخفضة</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="setting-label">حالة الشكوى</label>
+                                <select class="setting-select" id="editStatus" required>
+                                    <option value="جديدة">جديدة</option>
+                                    <option value="قيد المراجعة">قيد المراجعة</option>
+                                    <option value="قيد المعالجة">قيد المعالجة</option>
+                                    <option value="مكتملة">مكتملة</option>
+                                    <option value="ملغاة">ملغاة</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label class="setting-label">تفاصيل المشكلة</label>
+                                <textarea class="setting-textarea" id="editProblemDetails" rows="6" required></textarea>
+                            </div>
+                        </div>
+                        <input type="hidden" id="editComplaintId">
+                        <div class="modal-header-controls">
+                            <button type="submit" class="action-btn btn-edit" style="flex:1">
+                                <i class="fas fa-save"></i>
+                                حفظ التعديلات
+                            </button>
+                            <button type="button" class="action-btn btn-secondary" onclick="closeEditModal()" style="flex:1">
+                                <i class="fas fa-times"></i>
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -821,6 +923,43 @@
             </div>
         </div>
 
+        <!-- نافذة إضافة قسم -->
+        <div class="complaint-details-modal" id="departmentModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="departmentModalTitle">إضافة قسم جديد</h3>
+                    <button class="close-modal" onclick="closeDepartmentModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="departmentForm">
+                        <div class="form-group">
+                            <label class="setting-label">اسم القسم</label>
+                            <input type="text" class="setting-input" id="departmentName" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="setting-label">وصف القسم</label>
+                            <textarea class="setting-textarea" id="departmentDescription" rows="4" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="setting-label">البريد الإلكتروني المسؤول عن القسم</label>
+                            <input type="email" class="setting-input" id="departmentEmail">
+                        </div>
+                        <input type="hidden" id="departmentId">
+                        <div class="modal-header-controls">
+                            <button type="submit" class="action-btn btn-edit" style="flex:1">
+                                <i class="fas fa-save"></i>
+                                حفظ القسم
+                            </button>
+                            <button type="button" class="action-btn btn-secondary" onclick="closeDepartmentModal()" style="flex:1">
+                                <i class="fas fa-times"></i>
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- شريط التحميل -->
         <div class="loading-overlay" id="loadingOverlay">
             <div class="loading-spinner"></div>
@@ -838,7 +977,7 @@
             </a>
             <a href="#" class="mobile-nav-item" onclick="if(currentUser && currentUser.role === 'admin'){showSection('users'); updateMobileNav(this);} else {showMessage('يجب تسجيل الدخول كمسؤول', 'error');} return false;">
                 <i class="fas fa-users mobile-nav-icon"></i>
-                <span>المستخدمين</span>
+                                <span>المستخدمين</span>
             </a>
             <a href="#" class="mobile-nav-item" onclick="showSection('settings'); updateMobileNav(this); return false;">
                 <i class="fas fa-cog mobile-nav-icon"></i>
@@ -911,6 +1050,8 @@
             document.getElementById('officeSettingsForm').addEventListener('submit', saveOfficeSettings);
             document.getElementById('userForm').addEventListener('submit', saveUser);
             document.getElementById('replyForm').addEventListener('submit', sendReply);
+            document.getElementById('editComplaintForm').addEventListener('submit', saveEditedComplaint);
+            document.getElementById('departmentForm').addEventListener('submit', saveDepartment);
 
             // متابعة تغيير الأقسام للمستخدم
             document.getElementById('userDepartments').addEventListener('change', updateSelectedDepartments);
@@ -1047,6 +1188,7 @@
                 displayLatestComplaints();
                 updateDashboardCards();
                 populateDepartmentFilter();
+                populateEditDepartmentSelect();
             } catch(err){
                 console.error(err);
                 showMessage('حدث خطأ أثناء تحميل الشكاوى','error');
@@ -1219,7 +1361,7 @@
             const currentItems = filteredComplaints.slice(start, end);
             
             if (!currentItems.length) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:#666;">لا توجد شكاوى</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:#666;">لا توجد شكاوى</td></tr>`;
                 updatePagination();
                 return;
             }
@@ -1233,6 +1375,7 @@
                 <tr>
                     <td><strong>${c.complaintNumber || 'غير معروف'}</strong></td>
                     <td>${c.fullName || ''}</td>
+                    <td class="national-id">${c.nationalId || 'غير متوفر'}</td>
                     <td>${c.department || ''}</td>
                     <td>
                         <span class="status-badge ${getPriorityClass(c.priority)}">
@@ -1249,14 +1392,8 @@
                         <button class="action-btn btn-view" onclick="viewComplaint('${c.key}')">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="action-btn" style="background:#2ecc71;color:#fff" onclick="updateStatus('${c.key}', 'قيد المراجعة')">
-                            <i class="fas fa-play"></i>
-                        </button>
-                        <button class="action-btn" style="background:#f39c12;color:#fff" onclick="updateStatus('${c.key}', 'قيد المعالجة')">
-                            <i class="fas fa-cog"></i>
-                        </button>
-                        <button class="action-btn" style="background:#27ae60;color:#fff" onclick="updateStatus('${c.key}', 'مكتملة')">
-                            <i class="fas fa-check"></i>
+                        <button class="action-btn btn-edit" onclick="editComplaint('${c.key}')">
+                            <i class="fas fa-edit"></i>
                         </button>
                     </td>
                 </tr>`;
@@ -1374,6 +1511,7 @@
                     <h3 class="card-title">${d.name}</h3>
                     <div class="card-value">${complaintsCount}</div>
                     <p class="card-label">شكوى</p>
+                    <p style="font-size:.85rem;color:#666;margin-top:10px">${d.description || ''}</p>
                     <div style="margin-top:15px;display:flex;gap:10px">
                         <button class="action-btn" style="background:${color};color:#fff" onclick="editDepartment('${d.key}')">
                             <i class="fas fa-edit"></i>
@@ -1401,6 +1539,18 @@
             select.innerHTML = options;
         }
 
+        function populateEditDepartmentSelect() {
+            const select = document.getElementById('editDepartment');
+            if (!select) return;
+            
+            let options = '';
+            allDepartments.forEach(dept => {
+                options += `<option value="${dept.name}">${dept.name}</option>`;
+            });
+            
+            select.innerHTML = options;
+        }
+
         function populateUserDepartments() {
             const select = document.getElementById('userDepartments');
             if (!select) return;
@@ -1423,6 +1573,7 @@
                 const searchMatch = !search || 
                     (c.complaintNumber && c.complaintNumber.toLowerCase().includes(search)) ||
                     (c.fullName && c.fullName.toLowerCase().includes(search)) ||
+                    (c.nationalId && c.nationalId.includes(search)) ||
                     (c.problemDetails && c.problemDetails.toLowerCase().includes(search));
                 
                 const departmentMatch = !department || c.department === department;
@@ -1517,8 +1668,12 @@
                         <div><strong>${complaint.complaintNumber || ''}</strong></div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">الاسم</div>
+                        <div class="detail-label">الاسم بالكامل</div>
                         <div>${complaint.fullName || ''}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">الرقم القومي</div>
+                        <div class="national-id">${complaint.nationalId || 'غير متوفر'}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">الهاتف</div>
@@ -1529,11 +1684,23 @@
                         <div>${complaint.email || 'غير متوفر'}</div>
                     </div>
                     <div class="detail-item">
+                        <div class="detail-label">المحافظة</div>
+                        <div>${complaint.governorate || ''}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">المدينة/القرية</div>
+                        <div>${complaint.city || ''}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">العنوان بالتفصيل</div>
+                        <div>${complaint.address || ''}</div>
+                    </div>
+                    <div class="detail-item">
                         <div class="detail-label">القسم</div>
                         <div>${complaint.department || ''}</div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">نوع المشكلة</div>
+                        <div class="detail-label">نوع المشكلة/الأولوية</div>
                         <div>${complaint.priority || ''}</div>
                     </div>
                     <div class="detail-item">
@@ -1548,12 +1715,12 @@
                         <div class="detail-label">آخر تحديث</div>
                         <div>${updatedAt}</div>
                     </div>
-                    <div class="detail-item">
+                    <div class="detail-item full-width">
                         <div class="detail-label">تفاصيل المشكلة</div>
                         <div style="white-space:pre-line;background:#f8f9fa;padding:15px;border-radius:8px;border-right:4px solid #1a5fb4">${complaint.problemDetails || ''}</div>
                     </div>
                     ${complaint.response ? `
-                    <div class="detail-item">
+                    <div class="detail-item full-width">
                         <div class="detail-label">الرد الرسمي</div>
                         <div style="white-space:pre-line;background:#e8f5e9;padding:15px;border-radius:8px;border-right:4px solid #2e7d32">
                             <strong>${officeSettings.replyName || 'مكتب النائب أحمد الحديدي'}:</strong><br>
@@ -1583,6 +1750,77 @@
             
             document.getElementById('complaintDetailsModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
+        }
+
+        function editComplaint(complaintKey) {
+            const complaint = allComplaints.find(c => c.key === complaintKey);
+            if (!complaint) return;
+            
+            document.getElementById('editComplaintId').value = complaintKey;
+            document.getElementById('editFullName').value = complaint.fullName || '';
+            document.getElementById('editNationalId').value = complaint.nationalId || '';
+            document.getElementById('editPhone').value = complaint.phone || '';
+            document.getElementById('editEmail').value = complaint.email || '';
+            document.getElementById('editGovernorate').value = complaint.governorate || '';
+            document.getElementById('editCity').value = complaint.city || '';
+            document.getElementById('editAddress').value = complaint.address || '';
+            document.getElementById('editDepartment').value = complaint.department || '';
+            document.getElementById('editPriority').value = complaint.priority || 'متوسطة';
+            document.getElementById('editStatus').value = complaint.status || 'جديدة';
+            document.getElementById('editProblemDetails').value = complaint.problemDetails || '';
+            
+            document.getElementById('editComplaintModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            closeModal();
+        }
+
+        async function saveEditedComplaint(e) {
+            e.preventDefault();
+            
+            const complaintKey = document.getElementById('editComplaintId').value;
+            const complaintData = {
+                fullName: document.getElementById('editFullName').value.trim(),
+                nationalId: document.getElementById('editNationalId').value.trim(),
+                phone: document.getElementById('editPhone').value.trim(),
+                email: document.getElementById('editEmail').value.trim(),
+                governorate: document.getElementById('editGovernorate').value.trim(),
+                city: document.getElementById('editCity').value.trim(),
+                address: document.getElementById('editAddress').value.trim(),
+                department: document.getElementById('editDepartment').value,
+                priority: document.getElementById('editPriority').value,
+                status: document.getElementById('editStatus').value,
+                problemDetails: document.getElementById('editProblemDetails').value.trim(),
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentUser.name
+            };
+            
+            try {
+                showLoading();
+                await database.ref(`complaints/${complaintKey}`).update(complaintData);
+                
+                // تحديث البيانات المحلية
+                const index = allComplaints.findIndex(c => c.key === complaintKey);
+                if (index !== -1) {
+                    Object.assign(allComplaints[index], complaintData);
+                }
+                
+                showMessage('تم تحديث بيانات الشكوى بنجاح', 'success');
+                closeEditModal();
+                updateDashboardStats();
+                displayComplaintsTable();
+                displayLatestComplaints();
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء تحديث الشكوى', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editComplaintModal').style.display = 'none';
+            document.getElementById('editComplaintForm').reset();
+            document.body.style.overflow = 'auto';
         }
 
         async function updateStatus(complaintKey, newStatus) {
@@ -1817,6 +2055,87 @@
             document.body.style.overflow = 'auto';
         }
 
+        function showAddDepartmentModal() {
+            document.getElementById('departmentModalTitle').textContent = 'إضافة قسم جديد';
+            document.getElementById('departmentForm').reset();
+            document.getElementById('departmentId').value = '';
+            document.getElementById('departmentModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function editDepartment(departmentKey) {
+            const department = allDepartments.find(d => d.key === departmentKey);
+            if (!department) return;
+            
+            document.getElementById('departmentModalTitle').textContent = 'تعديل القسم';
+            document.getElementById('departmentId').value = departmentKey;
+            document.getElementById('departmentName').value = department.name || '';
+            document.getElementById('departmentDescription').value = department.description || '';
+            document.getElementById('departmentEmail').value = department.email || '';
+            document.getElementById('departmentModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        async function saveDepartment(e) {
+            e.preventDefault();
+            
+            const departmentId = document.getElementById('departmentId').value;
+            const departmentData = {
+                name: document.getElementById('departmentName').value.trim(),
+                description: document.getElementById('departmentDescription').value.trim(),
+                email: document.getElementById('departmentEmail').value.trim(),
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentUser.name
+            };
+            
+            try {
+                showLoading();
+                if (departmentId) {
+                    await database.ref(`departments/${departmentId}`).update(departmentData);
+                } else {
+                    departmentData.createdAt = new Date().toISOString();
+                    await database.ref('departments').push(departmentData);
+                }
+                
+                showMessage(`تم ${departmentId ? 'تحديث' : 'إضافة'} القسم بنجاح`, 'success');
+                closeDepartmentModal();
+                loadDepartments();
+                populateEditDepartmentSelect();
+                populateUserDepartments();
+                populateDepartmentFilter();
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حفظ القسم', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteDepartment(departmentKey) {
+            if (!confirm('هل تريد حذف هذا القسم؟ سيتم إزالة القسم من جميع الشكاوى المرتبطة به.')) return;
+            
+            try {
+                showLoading();
+                await database.ref(`departments/${departmentKey}`).remove();
+                showMessage('تم حذف القسم بنجاح', 'success');
+                loadDepartments();
+                populateEditDepartmentSelect();
+                populateUserDepartments();
+                populateDepartmentFilter();
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء حذف القسم', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function closeDepartmentModal() {
+            document.getElementById('departmentModal').style.display = 'none';
+            document.getElementById('departmentForm').reset();
+            document.body.style.overflow = 'auto';
+        }
+
         async function downloadComplaintPDF(complaintKey) {
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) return;
@@ -1850,9 +2169,13 @@
                         
                         <table class="info-table">
                             <tr><td class="label">رقم الشكوى:</td><td>${complaint.complaintNumber || ''}</td></tr>
-                            <tr><td class="label">الاسم:</td><td>${complaint.fullName || ''}</td></tr>
+                            <tr><td class="label">الاسم بالكامل:</td><td>${complaint.fullName || ''}</td></tr>
+                            <tr><td class="label">الرقم القومي:</td><td>${complaint.nationalId || 'غير متوفر'}</td></tr>
                             <tr><td class="label">الهاتف:</td><td>${complaint.phone || 'غير متوفر'}</td></tr>
                             <tr><td class="label">البريد الإلكتروني:</td><td>${complaint.email || 'غير متوفر'}</td></tr>
+                            <tr><td class="label">المحافظة:</td><td>${complaint.governorate || ''}</td></tr>
+                            <tr><td class="label">المدينة/القرية:</td><td>${complaint.city || ''}</td></tr>
+                            <tr><td class="label">العنوان:</td><td>${complaint.address || ''}</td></tr>
                             <tr><td class="label">القسم:</td><td>${complaint.department || ''}</td></tr>
                             <tr><td class="label">نوع المشكلة:</td><td>${complaint.priority || ''}</td></tr>
                             <tr><td class="label">الحالة:</td><td>${complaint.status || ''}</td></tr>
@@ -1893,10 +2216,6 @@
             } finally {
                 hideLoading();
             }
-        }
-
-        async function editComplaint(complaintKey) {
-            showMessage('سيتم إضافة ميزة تعديل الشكوى في التحديثات القادمة', 'success');
         }
 
         async function deleteComplaint(complaintKey) {
@@ -1971,10 +2290,6 @@
             } finally {
                 hideLoading();
             }
-        }
-
-        function addNewDepartment() {
-            showMessage('سيتم إضافة هذه الميزة في التحديثات القادمة', 'success');
         }
 
         function generateReports() {
