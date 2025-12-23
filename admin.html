@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>لوحة التحكم - نظام الشكاوى الموحد</title>
     <!-- إضافة manifest لتثبيت التطبيق -->
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest-admin.json">
     <meta name="theme-color" content="#1a5fb4">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="نظام الشكاوى">
+    <meta name="apple-mobile-web-app-title" content="إدارة الشكاوى">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- أيقونة التطبيق -->
@@ -236,6 +236,160 @@
         .add-department-form input{flex:1;min-width:200px}
         .modal-actions{display:flex;gap:10px;padding:20px;background:#f8f9fa;border-radius:0 0 20px 20px;flex-wrap:wrap}
         .modal-actions button{flex:1;min-width:120px}
+        
+        /* ==================== أنماط PWA المشتركة ==================== */
+        /* أنماط تثبيت التطبيق */
+        .install-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .install-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .install-icon {
+            font-size: 4rem;
+            color: #1a5fb4;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .install-text h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .install-text p {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .install-btn, .cancel-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        .install-btn {
+            background: linear-gradient(135deg, #1a5fb4 0%, #2d8fd5 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(26, 95, 180, 0.4);
+        }
+
+        .install-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(26, 95, 180, 0.5);
+        }
+
+        .cancel-btn {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e0e0e0;
+        }
+
+        .cancel-btn:hover {
+            background: #e9ecef;
+        }
+
+        /* زر التثبيت العائم */
+        .floating-install-btn {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, #1a5fb4 0%, #2d8fd5 100%);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(26, 95, 180, 0.4);
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(26, 95, 180, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(26, 95, 180, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(26, 95, 180, 0); }
+        }
+
+        .floating-install-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Toast للإشعارات */
+        #pwa-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            z-index: 10000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            max-width: 400px;
+            animation: slideIn 0.3s ease;
+            display: none;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .floating-install-btn {
+                bottom: 80px;
+                right: 15px;
+            }
+        }
+
         @media (max-width:768px){
             .mobile-menu-btn,.mobile-nav{display:flex}
             .cards-grid{grid-template-columns:1fr}
@@ -273,6 +427,33 @@
     </style>
 </head>
 <body>
+    <!-- نافذة تثبيت التطبيق -->
+    <div id="installContainer" class="install-container" style="display: none;">
+        <div class="install-card">
+            <div class="install-icon">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="install-text">
+                <h3 id="installTitle">تثبيت تطبيق الإدارة</h3>
+                <p id="installDescription">جاري تحميل التعليمات...</p>
+            </div>
+            <button class="install-btn" id="installButton">
+                <i class="fas fa-download"></i> تثبيت التطبيق
+            </button>
+            <button class="cancel-btn" id="cancelInstall">
+                لاحقاً
+            </button>
+        </div>
+    </div>
+
+    <!-- زر التثبيت العائم -->
+    <div class="floating-install-btn" id="floatingInstallBtn">
+        <i class="fas fa-download"></i>
+    </div>
+
+    <!-- Toast للإشعارات -->
+    <div id="pwa-toast"></div>
+
     <div id="loginScreen" class="login-container">
         <div class="login-box">
             <div class="login-logo">
@@ -700,6 +881,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- ملف PWA Handler -->
+    <script src="pwa-handler.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBIIStbiZD0ZJ6su7C1bwZlBvqx-PP-t58",
