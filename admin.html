@@ -1327,7 +1327,7 @@
                 <div class="responses-container">
                     <div class="responses-title">
                         <i class="fas fa-comments"></i>
-                        سجل المحادثة
+                        سجل متابعة الطلب
                     </div>
                     <div class="responses-list">
             `;
@@ -1571,7 +1571,7 @@
                         <div class="details">${complaint.problemDetails || ''}</div>
 
                         ${complaint.responses && Object.keys(complaint.responses).length > 0 ? `
-                        <h3>سجل المحادثة:</h3>
+                        <h3>سجل متابعة الطلب:</h3>
                         ${Object.values(complaint.responses)
                             .sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp))
                             .map(response => {
