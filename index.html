@@ -1332,7 +1332,66 @@ textarea {
         right: 15px;
     }
 }
+
+/* QR Code Styles */
+.qr-code-container {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 2px solid var(--primary-color);
+    border-radius: 20px;
+    padding: 30px;
+    margin: 25px 0;
+    text-align: center;
+    animation: fadeIn 0.6s ease;
+}
+
+.qr-code-container h3 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+.qr-code-wrapper {
+    display: inline-block;
+    padding: 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+}
+
+#qrcode {
+    display: inline-block;
+}
+
+.qr-code-container p {
+    color: #666;
+    margin-top: 15px;
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+.complaint-link {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 12px 25px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 700;
+    transition: var(--transition);
+    word-break: break-all;
+}
+
+.complaint-link:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(26, 95, 180, 0.3);
+}
+
 </style>
+    
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
     <div class="particles" id="particles"></div>
@@ -1995,6 +2054,27 @@ textarea {
             
             // تحديث زر التثبيت
             pwaHandler.updateInstallButton();
+
+        // كشف معامل URL للوصول المباشر للطلب
+        function checkURLParameter() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const complaintId = urlParams.get('id');
+
+            if (complaintId) {
+                console.log('Direct link detected:', complaintId);
+                openTrackSection();
+                setTimeout(() => {
+                    const searchInput = document.getElementById('searchByNumber');
+                    if (searchInput) {
+                        searchInput.value = complaintId;
+                        searchByComplaintNumber();
+                    }
+                }, 500);
+            }
+        }
+
+        checkURLParameter();
+
         }
         
         async function loadDepartments() {
@@ -2208,126 +2288,164 @@ textarea {
         }
         
         window.submitComplaint = async function() {
-            const fullName = document.getElementById('fullName').value.trim();
-            const nationalId = document.getElementById('nationalId').value.trim();
-            const localUnit = document.getElementById('localUnit').value;
-            const address = document.getElementById('address').value.trim();
-            const phone1 = document.getElementById('phone1').value.trim();
-            const phone2 = document.getElementById('phone2').value.trim();
-            const department = document.getElementById('department').value;
-            const priority = document.getElementById('priority').value;
-            const problemDetailsText = document.getElementById('problemDetails').value.trim();
-            const sendDocs = document.getElementById('sendDocuments').checked;
-            
-            if (!fullName || !nationalId || !localUnit || !address || !phone1 || !department || !priority || !problemDetailsText) {
-                showMessage('error', 'يرجى ملء جميع الحقول المطلوبة');
-                return;
-            }
-            
-            if (nationalId.length !== 14 || (nationalId[0] !== '2' && nationalId[0] !== '3')) {
-                showMessage('error', 'الرقم القومي يجب أن يكون 14 رقمًا ويبدأ بـ 2 أو 3');
-                return;
-            }
-            
-            if (phone1.length !== 11 || !phone1.startsWith('01')) {
-                showMessage('error', 'رقم الهاتف الأول يجب أن يكون 11 رقمًا ويبدأ بـ 01');
-                return;
-            }
-            
-            if (phone2 && (phone2.length !== 11 || !phone2.startsWith('01'))) {
-                showMessage('error', 'رقم الهاتف الثاني يجب أن يكون 11 رقمًا ويبدأ بـ 01');
-                return;
-            }
-            
-            try {
-                showLoading(true);
-                const complaintRef = database.ref('complaints').push();
-                const complaintKey = complaintRef.key;
-                const timestamp = new Date().toISOString();
-                const complaintNumber = await generateComplaintNumber(department);
-                const complaintData = {
-                    complaintNumber: complaintNumber,
-                    fullName: fullName,
-                    nationalId: nationalId,
-                    localUnit: localUnit,
-                    address: address,
-                    phone1: phone1,
-                    phone2: phone2 || '',
-                    department: department,
-                    priority: priority,
-                    problemDetails: problemDetailsText,
-                    status: 'جديدة',
-                    createdAt: timestamp,
-                    updatedAt: timestamp,
-                    sendDocuments: sendDocs,
-                    documentsSent: false,
-                    whatsappLink: sendDocs ? generateWhatsAppLink(complaintNumber, fullName) : '',
-                    responses: {},
-                    timestamp: timestamp
-                };
-                
-                await complaintRef.set(complaintData);
-                await database.ref('lastComplaintNumber').set(complaintNumber);
-                await saveUserResidence(nationalId, localUnit);
-                
-                currentComplaintKey = complaintKey;
-                currentComplaintData = complaintData;
-                lastComplaintNumber = complaintNumber;
-                
-                // إرسال إشعار PWA
-                if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-                    navigator.serviceWorker.ready.then(registration => {
-                        registration.showNotification('تم تقديم شكوى جديدة', {
-                            body: `شكوى رقم: ${complaintNumber} - ${fullName}`,
-                            icon: 'icon-192x192.png',
-                            badge: 'icon-192x192.png',
-                            tag: 'new-complaint',
-                            data: {
-                                url: '/shakawa/',
-                                complaintNumber: complaintNumber
-                            }
-                        });
-                    });
-                }
-                
-                if (sendDocs) {
-                    const successMessage = `
-                        <div class="message success">
-                            <p>✅ تم تقديم الشكوى بنجاح!</p>
-                            <p><strong>رقم الشكوى:</strong> ${complaintNumber}</p>
-                            <p><strong>بلد الإقامة:</strong> ${localUnit}</p>
-                            <p>سيتم مراجعة شكواك والرد عليك في أقرب وقت.</p>
-                            <div style="margin-top: 20px;">
-                                <p>📎 <strong>لإرسال المستندات عبر واتساب:</strong></p>
-                                <button onclick="sendDocumentsViaWhatsApp()" class="btn btn-whatsapp" style="margin-top: 10px;">
-                                    <i class="fab fa-whatsapp"></i>
-                                    إرسال المستندات عبر واتساب
-                                </button>
-                                <p style="font-size: 0.9rem; margin-top: 10px;">يرجى ذكر رقم الشكوى عند إرسال المستندات: <strong>${complaintNumber}</strong></p>
-                            </div>
-                        </div>
-                    `;
-                    document.getElementById('message').innerHTML = successMessage;
-                } else {
-                    document.getElementById('message').innerHTML = `
-                        <div class="message success">
-                            <p>✅ تم تقديم الشكوى بنجاح!</p>
-                            <p><strong>رقم الشكوى:</strong> ${complaintNumber}</p>
-                            <p><strong>بلد الإقامة:</strong> ${localUnit}</p>
-                            <p>يمكنك استخدام هذا الرقم لمتابعة حالة الشكوى.</p>
-                            <p>سيتم مراجعة شكواك والرد عليك في أقرب وقت.</p>
-                        </div>
-                    `;
-                }
-                document.getElementById('message').style.display = 'block';
-                setTimeout(() => resetForms(), 10000);
-            } catch (error) {
-                console.error('Error submitting complaint:', error);
-                showMessage('error', 'حدث خطأ أثناء تقديم الشكوى. يرجى المحاولة مرة أخرى.');
-            } finally {
-                showLoading(false);
-            }
+    const fullName = document.getElementById('fullName').value.trim();
+    const nationalId = document.getElementById('nationalId').value.trim();
+    const localUnit = document.getElementById('localUnit').value;
+    const address = document.getElementById('address').value.trim();
+    const phone1 = document.getElementById('phone1').value.trim();
+    const phone2 = document.getElementById('phone2').value.trim();
+    const department = document.getElementById('department').value;
+    const priority = document.getElementById('priority').value;
+    const problemDetailsText = document.getElementById('problemDetails').value.trim();
+    const sendDocs = document.getElementById('sendDocuments').checked;
+
+    if (!fullName || !nationalId || !localUnit || !address || !phone1 || !department || !priority || !problemDetailsText) {
+        showMessage('error', 'يرجى ملء جميع الحقول المطلوبة');
+        return;
+    }
+
+    if (nationalId.length !== 14 || (nationalId[0] !== '2' && nationalId[0] !== '3')) {
+        showMessage('error', 'الرقم القومي يجب أن يكون 14 رقمًا ويبدأ بـ 2 أو 3');
+        return;
+    }
+
+    if (phone1.length !== 11 || !phone1.startsWith('01')) {
+        showMessage('error', 'رقم الهاتف الأول يجب أن يكون 11 رقمًا ويبدأ بـ 01');
+        return;
+    }
+
+    if (phone2 && (phone2.length !== 11 || !phone2.startsWith('01'))) {
+        showMessage('error', 'رقم الهاتف الثاني يجب أن يكون 11 رقمًا ويبدأ بـ 01');
+        return;
+    }
+
+    try {
+        showLoading(true);
+        const complaintRef = database.ref('complaints').push();
+        const complaintKey = complaintRef.key;
+        const timestamp = new Date().toISOString();
+        const complaintNumber = await generateComplaintNumber(department);
+
+        const complaintDirectLink = `https://mohamednasr5.github.io/shakawa/?id=${complaintNumber}`;
+
+        const complaintData = {
+            complaintNumber: complaintNumber,
+            fullName: fullName,
+            nationalId: nationalId,
+            localUnit: localUnit,
+            address: address,
+            phone1: phone1,
+            phone2: phone2 || '',
+            department: department,
+            priority: priority,
+            problemDetails: problemDetailsText,
+            status: 'جديدة',
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            sendDocuments: sendDocs,
+            documentsSent: false,
+            whatsappLink: sendDocs ? generateWhatsAppLink(complaintNumber, fullName) : '',
+            directLink: complaintDirectLink,
+            responses: {},
+            timestamp: timestamp
         };
+
+        await complaintRef.set(complaintData);
+        await database.ref('lastComplaintNumber').set(complaintNumber);
+        await saveUserResidence(nationalId, localUnit);
+
+        currentComplaintKey = complaintKey;
+        currentComplaintData = complaintData;
+        lastComplaintNumber = complaintNumber;
+
+        if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification('تم تقديم شكوى جديدة', {
+                    body: `شكوى رقم: ${complaintNumber} - ${fullName}`,
+                    icon: 'icon-192x192.png',
+                    badge: 'icon-192x192.png',
+                    tag: 'new-complaint',
+                    data: {
+                        url: complaintDirectLink,
+                        complaintNumber: complaintNumber
+                    }
+                });
+            });
+        }
+
+        let successMessage = `
+            <div class="message success">
+                <p>✅ تم تقديم الشكوى بنجاح!</p>
+                <p><strong>رقم الشكوى:</strong> ${complaintNumber}</p>
+                <p><strong>بلد الإقامة:</strong> ${localUnit}</p>
+                <p>سيتم مراجعة شكواك والرد عليك في أقرب وقت.</p>
+            </div>
+
+            <div class="qr-code-container">
+                <h3><i class="fas fa-qrcode"></i> رابط الطلب المباشر + QR Code</h3>
+                <p>يمكنك الوصول للطلب مباشرة من خلال الرابط أو مسح الـ QR Code:</p>
+                <div class="qr-code-wrapper">
+                    <div id="qrcode"></div>
+                </div>
+                <a href="${complaintDirectLink}" target="_blank" class="complaint-link">
+                    <i class="fas fa-external-link-alt"></i> ${complaintDirectLink}
+                </a>
+                <p style="margin-top: 20px; font-size: 0.95rem;">
+                    <i class="fas fa-info-circle"></i> احفظ هذا الرابط أو QR Code للوصول السريع لطلبك
+                </p>
+            </div>
+        `;
+
+        if (sendDocs) {
+            successMessage += `
+                <div style="margin-top: 20px;">
+                    <p>📎 <strong>لإرسال المستندات عبر واتساب:</strong></p>
+                    <button onclick="sendDocumentsViaWhatsApp('${complaintNumber}', '${fullName}')" class="btn btn-whatsapp" style="margin-top: 10px;">
+                        <i class="fab fa-whatsapp"></i>
+                        إرسال المستندات عبر واتساب
+                    </button>
+                </div>
+            `;
+        }
+
+        document.getElementById('message').innerHTML = successMessage;
+        document.getElementById('message').style.display = 'block';
+
+        setTimeout(() => {
+            const qrcodeElement = document.getElementById('qrcode');
+            if (qrcodeElement && typeof QRCode !== 'undefined') {
+                qrcodeElement.innerHTML = '';
+                new QRCode(qrcodeElement, {
+                    text: complaintDirectLink,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#1a5fb4",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+        }, 100);
+
+        document.getElementById('fullName').value = '';
+        document.getElementById('nationalId').value = '';
+        document.getElementById('localUnit').value = '';
+        document.getElementById('address').value = '';
+        document.getElementById('phone1').value = '';
+        document.getElementById('phone2').value = '';
+        document.getElementById('department').value = '';
+        document.getElementById('priority').value = '';
+        document.getElementById('problemDetails').value = '';
+        if (sendDocumentsCheckbox) sendDocumentsCheckbox.checked = false;
+        if (documentsInstructions) documentsInstructions.classList.remove('show');
+        if (charCount) charCount.textContent = '0';
+
+    } catch (error) {
+        console.error('Error submitting complaint:', error);
+        showMessage('error', 'حدث خطأ أثناء تقديم الشكوى. يرجى المحاولة مرة أخرى.');
+    } finally {
+        showLoading(false);
+    }
+};      };
         
         async function generateComplaintNumber(department) {
             try {
