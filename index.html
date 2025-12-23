@@ -1333,65 +1333,94 @@ textarea {
     }
 }
 
-/* QR Code Styles */
+/* QR Code Container Styles */
 .qr-code-container {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    border: 2px solid var(--primary-color);
-    border-radius: 20px;
-    padding: 30px;
-    margin: 25px 0;
+    background: linear-gradient(135deg, #fff, #f8f9fa);
+    border: 3px solid var(--primary-color);
+    border-radius: 25px;
+    padding: 35px;
+    margin: 30px 0;
     text-align: center;
-    animation: fadeIn 0.6s ease;
+    animation: fadeIn 0.8s ease;
+    box-shadow: 0 15px 50px rgba(26, 95, 180, 0.2);
 }
 
 .qr-code-container h3 {
     color: var(--primary-color);
-    margin-bottom: 20px;
-    font-size: 1.5rem;
+    margin-bottom: 25px;
+    font-size: 1.6rem;
+    font-weight: 800;
 }
 
 .qr-code-wrapper {
     display: inline-block;
-    padding: 20px;
+    padding: 25px;
     background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    margin: 20px auto;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    margin: 25px auto;
+    border: 2px solid #e0e0e0;
 }
 
 #qrcode {
     display: inline-block;
 }
 
-.qr-code-container p {
-    color: #666;
-    margin-top: 15px;
-    font-size: 1.1rem;
-    line-height: 1.8;
+#qrcode img {
+    border-radius: 10px;
+}
+
+.qr-code-container .qr-description {
+    color: #555;
+    margin: 20px 0;
+    font-size: 1.15rem;
+    line-height: 2;
+    font-weight: 600;
+}
+
+.complaint-link-box {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border: 2px solid var(--primary-color);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 600px;
 }
 
 .complaint-link {
     display: inline-block;
-    margin-top: 15px;
-    padding: 12px 25px;
+    padding: 15px 30px;
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
     text-decoration: none;
     border-radius: 50px;
     font-weight: 700;
+    font-size: 1.1rem;
     transition: var(--transition);
     word-break: break-all;
+    box-shadow: 0 8px 25px rgba(26, 95, 180, 0.3);
 }
 
 .complaint-link:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(26, 95, 180, 0.3);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 35px rgba(26, 95, 180, 0.4);
+}
+
+.qr-info-text {
+    color: #666;
+    margin-top: 25px;
+    font-size: 1rem;
+    line-height: 1.8;
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    padding: 15px 20px;
+    border-radius: 12px;
+    border-right: 5px solid #ffc107;
 }
 
 </style>
     
     <!-- QR Code Library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
     <div class="particles" id="particles"></div>
@@ -1973,6 +2002,44 @@ textarea {
         
         document.addEventListener('DOMContentLoaded', function() {
             initApp();
+
+
+        // كشف معامل URL للوصول المباشر للطلب
+        function checkURLParameter() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const complaintId = urlParams.get('id');
+
+            if (complaintId) {
+                console.log('🔍 تم كشف رابط مباشر للطلب:', complaintId);
+
+                // الانتظار قليلاً حتى يتم تحميل كل شيء
+                setTimeout(() => {
+                    // فتح قسم المتابعة
+                    openTrackSection();
+
+                    // الانتظار حتى يتم فتح القسم
+                    setTimeout(() => {
+                        // ملء رقم الطلب
+                        const searchInput = document.getElementById('searchByNumber');
+                        if (searchInput) {
+                            searchInput.value = complaintId;
+                            console.log('✅ تم ملء رقم الطلب:', complaintId);
+
+                            // البحث تلقائياً
+                            setTimeout(() => {
+                                searchByComplaintNumber();
+                                console.log('✅ تم البحث عن الطلب');
+                            }, 300);
+                        } else {
+                            console.error('❌ لم يتم العثور على حقل البحث');
+                        }
+                    }, 500);
+                }, 1000);
+            }
+        }
+
+        // استدعاء الدالة بعد تحميل الصفحة
+        checkURLParameter();
         });
         
         function initApp() {
@@ -2054,27 +2121,6 @@ textarea {
             
             // تحديث زر التثبيت
             pwaHandler.updateInstallButton();
-
-        // كشف معامل URL للوصول المباشر للطلب
-        function checkURLParameter() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const complaintId = urlParams.get('id');
-
-            if (complaintId) {
-                console.log('Direct link detected:', complaintId);
-                openTrackSection();
-                setTimeout(() => {
-                    const searchInput = document.getElementById('searchByNumber');
-                    if (searchInput) {
-                        searchInput.value = complaintId;
-                        searchByComplaintNumber();
-                    }
-                }, 500);
-            }
-        }
-
-        checkURLParameter();
-
         }
         
         async function loadDepartments() {
@@ -2375,24 +2421,31 @@ textarea {
 
         let successMessage = `
             <div class="message success">
-                <p>✅ تم تقديم الشكوى بنجاح!</p>
-                <p><strong>رقم الشكوى:</strong> ${complaintNumber}</p>
+                <p style="font-size: 1.3rem; margin-bottom: 15px;">✅ تم تقديم الشكوى بنجاح!</p>
+                <p style="font-size: 1.2rem;"><strong>رقم الشكوى:</strong> <span style="color: var(--primary-color); font-size: 1.4rem;">${complaintNumber}</span></p>
                 <p><strong>بلد الإقامة:</strong> ${localUnit}</p>
-                <p>سيتم مراجعة شكواك والرد عليك في أقرب وقت.</p>
+                <p style="margin-top: 15px;">سيتم مراجعة شكواك والرد عليك في أقرب وقت.</p>
             </div>
 
             <div class="qr-code-container">
                 <h3><i class="fas fa-qrcode"></i> رابط الطلب المباشر + QR Code</h3>
-                <p>يمكنك الوصول للطلب مباشرة من خلال الرابط أو مسح الـ QR Code:</p>
+                <p class="qr-description">يمكنك الوصول للطلب مباشرة من خلال مسح الـ QR Code أو الضغط على الرابط:</p>
+
                 <div class="qr-code-wrapper">
                     <div id="qrcode"></div>
                 </div>
-                <a href="${complaintDirectLink}" target="_blank" class="complaint-link">
-                    <i class="fas fa-external-link-alt"></i> ${complaintDirectLink}
-                </a>
-                <p style="margin-top: 20px; font-size: 0.95rem;">
-                    <i class="fas fa-info-circle"></i> احفظ هذا الرابط أو QR Code للوصول السريع لطلبك
-                </p>
+
+                <div class="complaint-link-box">
+                    <p style="margin-bottom: 15px; font-weight: 700; color: var(--primary-color);">🔗 الرابط المباشر للطلب:</p>
+                    <a href="${complaintDirectLink}" target="_blank" class="complaint-link">
+                        <i class="fas fa-external-link-alt"></i> افتح الطلب
+                    </a>
+                    <p style="margin-top: 15px; font-size: 0.9rem; color: #666; word-break: break-all;">${complaintDirectLink}</p>
+                </div>
+
+                <div class="qr-info-text">
+                    <i class="fas fa-info-circle"></i> احفظ هذا الرابط أو QR Code للوصول السريع لطلبك في أي وقت
+                </div>
             </div>
         `;
 
@@ -2413,18 +2466,29 @@ textarea {
 
         setTimeout(() => {
             const qrcodeElement = document.getElementById('qrcode');
-            if (qrcodeElement && typeof QRCode !== 'undefined') {
+            if (qrcodeElement) {
                 qrcodeElement.innerHTML = '';
-                new QRCode(qrcodeElement, {
-                    text: complaintDirectLink,
-                    width: 200,
-                    height: 200,
-                    colorDark: "#1a5fb4",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
+                if (typeof QRCode !== 'undefined') {
+                    try {
+                        new QRCode(qrcodeElement, {
+                            text: complaintDirectLink,
+                            width: 220,
+                            height: 220,
+                            colorDark: "#1a5fb4",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+                        console.log('QR Code generated successfully');
+                    } catch(err) {
+                        console.error('QR Code generation error:', err);
+                        qrcodeElement.innerHTML = '<p style="color: red;">خطأ في توليد QR Code</p>';
+                    }
+                } else {
+                    console.error('QRCode library not loaded');
+                    qrcodeElement.innerHTML = '<p style="color: red;">مكتبة QR Code غير محملة</p>';
+                }
             }
-        }, 100);
+        }, 300);
 
         document.getElementById('fullName').value = '';
         document.getElementById('nationalId').value = '';
@@ -2439,13 +2503,15 @@ textarea {
         if (documentsInstructions) documentsInstructions.classList.remove('show');
         if (charCount) charCount.textContent = '0';
 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
     } catch (error) {
         console.error('Error submitting complaint:', error);
         showMessage('error', 'حدث خطأ أثناء تقديم الشكوى. يرجى المحاولة مرة أخرى.');
     } finally {
         showLoading(false);
     }
-};      };
+};
         
         async function generateComplaintNumber(department) {
             try {
