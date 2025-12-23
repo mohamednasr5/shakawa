@@ -1971,8 +1971,8 @@
                     <head>
                         <meta charset="UTF-8">
                         <title>تقرير الشكوى - ${complaint.complaintNumber}</title>
-                        <!-- JsBarcode Library -->
-                        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+                        <!-- QRCode.js Library -->
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
                         <style>
                             body { 
                                 font-family: 'Cairo', sans-serif; 
@@ -1983,9 +1983,10 @@
                                 text-align: center; 
                                 margin-bottom: 30px; 
                                 border: 3px solid #000; 
-                                padding: 20px; 
+                                padding: 25px; 
                                 background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
                                 border-radius: 10px;
+                                position: relative;
                             }
                             .header h1 { 
                                 color: #000; 
@@ -1993,31 +1994,42 @@
                                 font-size: 28px;
                                 font-weight: bold;
                             }
-                            .barcode-container {
-                                background: #fff;
-                                padding: 15px;
-                                border-radius: 8px;
-                                margin: 15px auto;
-                                display: inline-block;
-                                border: 2px solid #000;
-                            }
-                            .barcode-container svg {
-                                display: block;
-                                margin: 0 auto;
-                            }
-                            .barcode-label {
+                            .complaint-number-display {
+                                font-size: 26px;
                                 color: #000;
-                                font-size: 12px;
-                                margin-top: 10px;
+                                font-weight: bold;
+                                margin: 15px 0;
+                                letter-spacing: 2px;
+                            }
+                            .qrcode-container {
+                                background: #fff;
+                                padding: 20px;
+                                border-radius: 10px;
+                                margin: 20px auto;
+                                display: inline-block;
+                                border: 3px solid #000;
+                                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                            }
+                            #qrcode {
+                                display: inline-block;
+                                background: #fff;
+                            }
+                            #qrcode img {
+                                display: block !important;
+                                margin: 0 auto !important;
+                            }
+                            .qrcode-label {
+                                color: #000;
+                                font-size: 13px;
+                                margin-top: 12px;
                                 font-weight: bold;
                                 text-align: center;
+                                line-height: 1.5;
                             }
-                            .complaint-number-display {
-                                font-size: 24px;
-                                color: #000;
-                                font-weight: bold;
-                                margin: 10px 0;
-                                letter-spacing: 2px;
+                            .print-date {
+                                color: #666;
+                                font-size: 12px;
+                                margin-top: 15px;
                             }
                             .info-table { 
                                 width: 100%; 
@@ -2058,21 +2070,28 @@
                                     -webkit-print-color-adjust: exact;
                                     print-color-adjust: exact;
                                 }
+                                #qrcode canvas {
+                                    -webkit-print-color-adjust: exact;
+                                    print-color-adjust: exact;
+                                }
                             }
                         </style>
                     </head>
                     <body>
                         <div class="header">
                             <h1>🏛️ نظام الشكاوى الموحد - الإدارة</h1>
-                            <div class="complaint-number-display">${complaint.complaintNumber}</div>
+                            <div class="complaint-number-display">رقم الطلب: ${complaint.complaintNumber}</div>
 
-                            <!-- Barcode Container -->
-                            <div class="barcode-container">
-                                <svg id="barcode"></svg>
-                                <div class="barcode-label">امسح الباركود للوصول المباشر للطلب</div>
+                            <!-- QR Code Container -->
+                            <div class="qrcode-container">
+                                <div id="qrcode"></div>
+                                <div class="qrcode-label">
+                                    📱 امسح QR Code للوصول المباشر للطلب<br>
+                                    أو ادخل الرابط: ${complaintDirectLink}
+                                </div>
                             </div>
 
-                            <p>تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')}</p>
+                            <p class="print-date">تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')}</p>
                         </div>
 
                         <table class="info-table">
@@ -2120,30 +2139,41 @@
                         <div class="footer">
                             <p>© 2026 نظام الشكاوى الموحد - الإدارة</p>
                             <p>تم الإنشاء بواسطة: <strong>Mohamed Nasr</strong></p>
-                            <p style="margin-top: 10px; font-size: 10px;">الرابط المباشر: ${complaintDirectLink}</p>
+                            <p style="margin-top: 10px; font-size: 10px; word-break: break-all;">
+                                الرابط المباشر: ${complaintDirectLink}
+                            </p>
                         </div>
 
                         <script>
-                            // توليد الباركود بعد تحميل الصفحة
+                            // توليد QR Code بعد تحميل الصفحة
                             window.onload = function() {
                                 try {
-                                    JsBarcode("#barcode", "${complaintDirectLink}", {
-                                        format: "CODE128",
-                                        width: 2,
-                                        height: 80,
-                                        displayValue: false,
-                                        background: "#ffffff",
-                                        lineColor: "#000000",
-                                        margin: 10
-                                    });
+                                    if (typeof QRCode !== 'undefined') {
+                                        const qrcodeElement = document.getElementById('qrcode');
+                                        qrcodeElement.innerHTML = '';
 
-                                    // الطباعة بعد توليد الباركود
-                                    setTimeout(function() {
-                                        window.print();
-                                    }, 500);
+                                        new QRCode(qrcodeElement, {
+                                            text: "${complaintDirectLink}",
+                                            width: 180,
+                                            height: 180,
+                                            colorDark: "#000000",
+                                            colorLight: "#ffffff",
+                                            correctLevel: QRCode.CorrectLevel.H
+                                        });
+
+                                        console.log('QR Code generated successfully');
+
+                                        // الطباعة بعد توليد QR Code
+                                        setTimeout(function() {
+                                            window.print();
+                                        }, 600);
+                                    } else {
+                                        console.error('QRCode library not loaded');
+                                        alert('خطأ: مكتبة QR Code غير محملة');
+                                    }
                                 } catch(e) {
-                                    console.error("Barcode generation error:", e);
-                                    window.print();
+                                    console.error('QR Code generation error:', e);
+                                    alert('خطأ في توليد QR Code: ' + e.message);
                                 }
                             };
                         </script>
@@ -2153,10 +2183,15 @@
 
                 // فتح نافذة جديدة وطباعة
                 const printWindow = window.open('', '_blank');
+                if (!printWindow) {
+                    showMessage('يرجى السماح بالنوافذ المنبثقة', 'error');
+                    return;
+                }
+
                 printWindow.document.write(htmlContent);
                 printWindow.document.close();
 
-                showMessage('تم تحميل PDF بنجاح', 'success');
+                showMessage('تم تحضير PDF بنجاح', 'success');
 
             } catch (err) {
                 console.error(err);
