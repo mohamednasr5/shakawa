@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>لوحة التحكم - نظام الشكاوى الموحد</title>
+    <!-- إضافة manifest لتثبيت التطبيق -->
+    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- أيقونة التطبيق -->
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3067/3067256.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3067/3067256.png">
     <style>
         *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent}
         html{font-size:16px;scroll-behavior:smooth}
@@ -156,10 +161,15 @@
         .status-form select{width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:.95rem;background:#fff}
         .status-form select:focus{border-color:#1a5fb4;outline:none}
         .status-form .form-actions{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
-        .mobile-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid #1a5fb4;display:flex;justify-content:space-around;padding:12px 10px;z-index:999;box-shadow:0 -5px 20px rgba(0,0,0,.1);display:none}
-        .mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:5px;color:#666;text-decoration:none;font-size:.8rem;flex:1;padding:8px 5px;border-radius:10px;transition:all .2s}
+        .mobile-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid #1a5fb4;display:flex;justify-content:space-around;padding:12px 10px;z-index:999;box-shadow:0 -5px 20px rgba(0,0,0,.1);display:flex}
+        .mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:5px;color:#666;text-decoration:none;font-size:.8rem;flex:1;padding:8px 5px;border-radius:10px;transition:all .2s;position:relative;cursor:pointer}
+        .mobile-nav-item:hover{background:#f8f9fa}
         .mobile-nav-item.active{background:#1a5fb4;color:#fff}
         .mobile-nav-icon{font-size:1.2rem}
+        .mobile-nav-badge{position:absolute;top:-5px;right:10px;background:#e74c3c;color:#fff;border-radius:50%;padding:2px 6px;font-size:.7rem;min-width:18px;text-align:center;font-weight:700;display:none}
+        .install-btn-container{text-align:center;margin:15px 0;display:none}
+        .install-btn{background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;padding:12px 20px;border:none;border-radius:10px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:8px;font-size:1rem;transition:all .3s}
+        .install-btn:hover{background:linear-gradient(135deg,#229954,#27ae60);transform:translateY(-2px)}
         .national-id{font-family:monospace;font-size:1.05rem;letter-spacing:1px;direction:ltr;text-align:right}
         .new-request-indicator{display:inline-block;width:10px;height:10px;background:#e74c3c;border-radius:50%;margin-left:8px;animation:blink 1.5s infinite}
         @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
@@ -361,6 +371,14 @@
                             <span>الأقسام</span>
                         </li>
                     </ul>
+                    
+                    <!-- زر تثبيت التطبيق -->
+                    <div class="install-btn-container" id="installBtnContainer">
+                        <button class="install-btn" id="installBtn">
+                            <i class="fas fa-download"></i>
+                            تثبيت التطبيق
+                        </button>
+                    </div>
                 </div>
 
                 <div class="main-content">
@@ -525,6 +543,14 @@
                                     </label>
                                     <p class="setting-description">تفعيل إشعارات الطلبات الجديدة</p>
                                 </div>
+                                <div class="setting-item">
+                                    <label class="setting-label">طلب إذن الإشعارات</label>
+                                    <button class="btn-add" onclick="requestNotificationPermission()">
+                                        <i class="fas fa-bell"></i>
+                                        تفعيل الإشعارات
+                                    </button>
+                                    <p class="setting-description">يجب تفعيل الإشعارات لتلقي تنبيهات الطلبات الجديدة</p>
+                                </div>
                                 <button class="btn-add" onclick="saveSettings()">
                                     <i class="fas fa-save"></i>
                                     حفظ الإعدادات
@@ -551,6 +577,27 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- القائمة السفلية للهواتف -->
+            <div class="mobile-nav" id="mobileNav">
+                <div class="mobile-nav-item active" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt mobile-nav-icon"></i>
+                    <span>الرئيسية</span>
+                </div>
+                <div class="mobile-nav-item" data-section="complaints">
+                    <i class="fas fa-file-alt mobile-nav-icon"></i>
+                    <span>الشكاوى</span>
+                    <span class="mobile-nav-badge" id="mobileNavBadge" style="display:none;">0</span>
+                </div>
+                <div class="mobile-nav-item admin-only" data-section="users">
+                    <i class="fas fa-users mobile-nav-icon"></i>
+                    <span>المستخدمين</span>
+                </div>
+                <div class="mobile-nav-item admin-only" data-section="settings">
+                    <i class="fas fa-cog mobile-nav-icon"></i>
+                    <span>الإعدادات</span>
                 </div>
             </div>
 
@@ -675,7 +722,155 @@
         let unreadComplaints = new Set();
         let complaintsListener = null;
         let currentEditingUser = null;
+        let deferredPrompt = null;
+        let notificationPermission = 'default';
+        let serviceWorkerRegistered = false;
+
+        // ==================== إشعارات المتصفح ====================
         
+        // طلب إذن الإشعارات
+        async function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                showMessage('المتصفح لا يدعم الإشعارات', 'error');
+                return;
+            }
+
+            try {
+                const permission = await Notification.requestPermission();
+                notificationPermission = permission;
+                
+                if (permission === 'granted') {
+                    showMessage('تم تفعيل الإشعارات بنجاح', 'success');
+                    localStorage.setItem('notificationPermission', 'granted');
+                    
+                    // تسجيل service worker للإشعارات
+                    if ('serviceWorker' in navigator) {
+                        try {
+                            const registration = await navigator.serviceWorker.register('sw.js');
+                            serviceWorkerRegistered = true;
+                            console.log('Service Worker registered successfully');
+                        } catch (error) {
+                            console.error('Service Worker registration failed:', error);
+                        }
+                    }
+                } else if (permission === 'denied') {
+                    showMessage('تم رفض الإشعارات. يمكنك تفعيلها من إعدادات المتصفح', 'error');
+                }
+            } catch (error) {
+                console.error('Error requesting notification permission:', error);
+                showMessage('حدث خطأ أثناء طلب إذن الإشعارات', 'error');
+            }
+        }
+
+        // إرسال إشعار
+        function sendNotification(title, body, icon = 'https://cdn-icons-png.flaticon.com/512/3067/3067256.png') {
+            // التحقق من تفعيل الإشعارات في الإعدادات
+            const enableNotifications = document.getElementById('enableNotifications').checked;
+            if (!enableNotifications) return;
+
+            // التحقق من إذن الإشعارات
+            if (notificationPermission !== 'granted') return;
+
+            // التحقق من دعم الإشعارات
+            if (!('Notification' in window)) return;
+
+            const options = {
+                body: body,
+                icon: icon,
+                badge: 'https://cdn-icons-png.flaticon.com/512/3067/3067256.png',
+                vibrate: [200, 100, 200],
+                tag: 'new-complaint',
+                renotify: true,
+                actions: [
+                    {
+                        action: 'view',
+                        title: 'عرض الطلبات'
+                    }
+                ]
+            };
+
+            // استخدام Service Worker إذا كان مسجلاً
+            if (serviceWorkerRegistered && 'showNotification' in ServiceWorkerRegistration.prototype) {
+                navigator.serviceWorker.ready.then(registration => {
+                    registration.showNotification(title, options);
+                });
+            } else {
+                // استخدام Notification API مباشرة
+                const notification = new Notification(title, options);
+                
+                notification.onclick = function(event) {
+                    event.preventDefault();
+                    window.focus();
+                    showSection('complaints');
+                };
+            }
+        }
+
+        // ==================== تثبيت التطبيق (PWA) ====================
+        
+        // عرض زر التثبيت عند توفر الإمكانية
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtnContainer = document.getElementById('installBtnContainer');
+            const installBtn = document.getElementById('installBtn');
+            
+            if (installBtnContainer && installBtn) {
+                installBtnContainer.style.display = 'block';
+                
+                installBtn.addEventListener('click', async () => {
+                    if (!deferredPrompt) return;
+                    
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    
+                    if (outcome === 'accepted') {
+                        showMessage('تم تثبيت التطبيق بنجاح على شاشتك الرئيسية', 'success');
+                        installBtnContainer.style.display = 'none';
+                    }
+                    
+                    deferredPrompt = null;
+                });
+            }
+        });
+
+        // التحقق إذا كان التطبيق مثبتاً
+        window.addEventListener('appinstalled', () => {
+            deferredPrompt = null;
+            const installBtnContainer = document.getElementById('installBtnContainer');
+            if (installBtnContainer) {
+                installBtnContainer.style.display = 'none';
+            }
+        });
+
+        // ==================== تحديث القائمة السفلية ====================
+        
+        function updateMobileNavBadge() {
+            const count = unreadComplaints.size;
+            const badge = document.getElementById('mobileNavBadge');
+            if (!badge) return;
+            
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : count.toString();
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // تحديث القائمة السفلية عند تغيير القسم
+        function updateMobileNav(section) {
+            const navItems = document.querySelectorAll('.mobile-nav-item');
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-section') === section) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        // ==================== تحديث الدوال الحالية ====================
+
         // دالة تحميل الإعدادات
         function loadSettings() {
             database.ref('settings').once('value', snapshot => {
@@ -692,6 +887,24 @@
                 }
                 if (typeof settings.enableNotifications !== 'undefined') {
                     document.getElementById('enableNotifications').checked = settings.enableNotifications;
+                }
+
+                // تحميل حالة إذن الإشعارات
+                const savedPermission = localStorage.getItem('notificationPermission');
+                if (savedPermission) {
+                    notificationPermission = savedPermission;
+                }
+
+                // التحقق من دعم Service Worker وتسجيله
+                if ('serviceWorker' in navigator && notificationPermission === 'granted') {
+                    navigator.serviceWorker.register('sw.js')
+                        .then(registration => {
+                            serviceWorkerRegistered = true;
+                            console.log('Service Worker registered');
+                        })
+                        .catch(error => {
+                            console.error('Service Worker registration failed:', error);
+                        });
                 }
             });
         }
@@ -800,12 +1013,20 @@
             document.getElementById('dashboardScreen').style.display = 'block';
             updateAdminWelcome();
             updateSidebarPermissions();
+            updateMobileNavPermissions();
             showSection('dashboard');
             loadSettings();
             loadDepartments();
             loadUsers();
             loadComplaints();
             setupRealtimeListener();
+            
+            // طلب إذن الإشعارات عند الدخول لأول مرة
+            if (Notification.permission === 'default') {
+                setTimeout(() => {
+                    requestNotificationPermission();
+                }, 2000);
+            }
         }
 
         function updateAdminWelcome() {
@@ -820,6 +1041,15 @@
 
         function updateSidebarPermissions() {
             const adminOnly = document.querySelectorAll('.admin-only');
+            if (currentUser && currentUser.role === 'admin') {
+                adminOnly.forEach(el => el.style.display = 'flex');
+            } else {
+                adminOnly.forEach(el => el.style.display = 'none');
+            }
+        }
+
+        function updateMobileNavPermissions() {
+            const adminOnly = document.querySelectorAll('.mobile-nav-item.admin-only');
             if (currentUser && currentUser.role === 'admin') {
                 adminOnly.forEach(el => el.style.display = 'flex');
             } else {
@@ -854,6 +1084,9 @@
                 sidebar.classList.remove('active');
                 overlay.style.display = 'none';
             }
+
+            // تحديث القائمة السفلية
+            updateMobileNav(section);
         }
 
         function showLoading() {
@@ -893,7 +1126,15 @@
                     if (!complaint.viewedBy || !complaint.viewedBy[currentUser.username]) {
                         unreadComplaints.add(complaint.key);
                         updateUnreadBadge();
+                        updateMobileNavBadge();
+                        
+                        // إرسال إشعار للمتصفح
                         if (document.getElementById('enableNotifications').checked) {
+                            sendNotification(
+                                'طلب جديد',
+                                `تم استلام طلب جديد من ${complaint.fullName || 'مستخدم'} - ${complaint.department || 'قسم غير محدد'}`,
+                                'https://cdn-icons-png.flaticon.com/512/3067/3067256.png'
+                            );
                             showMessage('تم استلام طلب جديد', 'success');
                         }
                     }
@@ -926,6 +1167,7 @@
                     allComplaints.splice(index, 1);
                     unreadComplaints.delete(snapshot.key);
                     updateUnreadBadge();
+                    updateMobileNavBadge();
                     filterComplaints();
                     updateDashboardStats();
                     displayLatestComplaints();
@@ -948,7 +1190,7 @@
             const badge = document.getElementById('complaintsBadge');
             if (!badge) return;
             if (count > 0) {
-                badge.textContent = count;
+                badge.textContent = count > 9 ? '9+' : count.toString();
                 badge.style.display = 'inline-block';
             } else {
                 badge.style.display = 'none';
@@ -1002,6 +1244,7 @@
                     }
                 });
                 updateUnreadBadge();
+                updateMobileNavBadge();
 
                 populateDepartmentFilter();
                 updateDashboardStats();
@@ -1230,6 +1473,7 @@
 
                 unreadComplaints.delete(key);
                 updateUnreadBadge();
+                updateMobileNavBadge();
                 displayComplaintDetails(key, complaint);
                 filterComplaints();
                 displayLatestComplaints();
@@ -1858,7 +2102,16 @@
                 logoutBtn.addEventListener('click', logout);
             }
 
+            // القائمة الجانبية
             document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const section = this.getAttribute('data-section');
+                    showSection(section);
+                });
+            });
+
+            // القائمة السفلية للهواتف
+            document.querySelectorAll('.mobile-nav-item').forEach(item => {
                 item.addEventListener('click', function() {
                     const section = this.getAttribute('data-section');
                     showSection(section);
@@ -1906,6 +2159,70 @@
                 closeUserModal();
             }
         };
+    </script>
+    
+    <!-- Service Worker للتطبيق -->
+    <script>
+        // تسجيل Service Worker للإشعارات
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // إنشاء ملف service worker ديناميكياً
+                const swContent = `
+                    self.addEventListener('install', event => {
+                        console.log('Service Worker installing.');
+                        self.skipWaiting();
+                    });
+
+                    self.addEventListener('activate', event => {
+                        console.log('Service Worker activating.');
+                    });
+
+                    self.addEventListener('push', event => {
+                        const options = {
+                            body: event.data ? event.data.text() : 'طلب جديد',
+                            icon: 'https://cdn-icons-png.flaticon.com/512/3067/3067256.png',
+                            badge: 'https://cdn-icons-png.flaticon.com/512/3067/3067256.png',
+                            vibrate: [200, 100, 200],
+                            tag: 'new-complaint'
+                        };
+
+                        event.waitUntil(
+                            self.registration.showNotification('نظام الشكاوى الموحد', options)
+                        );
+                    });
+
+                    self.addEventListener('notificationclick', event => {
+                        event.notification.close();
+                        event.waitUntil(
+                            clients.matchAll({type: 'window'}).then(windowClients => {
+                                for (let client of windowClients) {
+                                    if (client.url === self.registration.scope && 'focus' in client) {
+                                        return client.focus();
+                                    }
+                                }
+                                if (clients.openWindow) {
+                                    return clients.openWindow('/');
+                                }
+                            })
+                        );
+                    });
+                `;
+
+                // إنشاء blob من كود الـ service worker
+                const blob = new Blob([swContent], { type: 'application/javascript' });
+                const swURL = URL.createObjectURL(blob);
+
+                // تسجيل الـ service worker
+                navigator.serviceWorker.register(swURL)
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                        serviceWorkerRegistered = true;
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
     </script>
 </body>
 </html>
