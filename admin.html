@@ -1965,14 +1965,16 @@
                 const priority = complaint.priority || complaint.problemType || 'عادية';
                 const complaintDirectLink = `https://mohamednasr5.github.io/shakawa/?id=${complaint.complaintNumber}`;
 
+                // ترميز الرابط للاستخدام في Google Charts API
+                const encodedLink = encodeURIComponent(complaintDirectLink);
+                const qrCodeUrl = `https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodedLink}&choe=UTF-8`;
+
                 const htmlContent = `
                     <!DOCTYPE html>
                     <html dir="rtl">
                     <head>
                         <meta charset="UTF-8">
                         <title>تقرير الشكوى - ${complaint.complaintNumber}</title>
-                        <!-- QRCode.js Library -->
-                        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
                         <style>
                             body { 
                                 font-family: 'Cairo', sans-serif; 
@@ -2010,13 +2012,11 @@
                                 border: 3px solid #000;
                                 box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                             }
-                            #qrcode {
-                                display: inline-block;
-                                background: #fff;
-                            }
-                            #qrcode img {
-                                display: block !important;
-                                margin: 0 auto !important;
+                            .qrcode-container img {
+                                display: block;
+                                width: 200px;
+                                height: 200px;
+                                margin: 0 auto;
                             }
                             .qrcode-label {
                                 color: #000;
@@ -2070,7 +2070,7 @@
                                     -webkit-print-color-adjust: exact;
                                     print-color-adjust: exact;
                                 }
-                                #qrcode canvas {
+                                .qrcode-container img {
                                     -webkit-print-color-adjust: exact;
                                     print-color-adjust: exact;
                                 }
@@ -2084,10 +2084,10 @@
 
                             <!-- QR Code Container -->
                             <div class="qrcode-container">
-                                <div id="qrcode"></div>
+                                <img src="${qrCodeUrl}" alt="QR Code" onerror="this.style.display='none';">
                                 <div class="qrcode-label">
                                     📱 امسح QR Code للوصول المباشر للطلب<br>
-                                    أو ادخل الرابط: ${complaintDirectLink}
+                                    ${complaintDirectLink}
                                 </div>
                             </div>
 
@@ -2124,15 +2124,15 @@
                                     const isAdmin = response.senderRole === 'admin';
                                     const date = new Date(response.timestamp).toLocaleString('ar-EG');
                                     const senderName = isAdmin ? response.senderName : complaint.fullName;
-                                    return \`
-                                        <div class="response" style="border-right: 4px solid \${isAdmin ? '#28a745' : '#3498db'}; background: \${isAdmin ? '#d4edda' : '#e3f2fd'};">
+                                    return `
+                                        <div class="response" style="border-right: 4px solid ${isAdmin ? '#28a745' : '#3498db'}; background: ${isAdmin ? '#d4edda' : '#e3f2fd'};">
                                             <div style="display:flex;justify-content:space-between;">
-                                                <strong>\${senderName}</strong>
-                                                <small>\${date}</small>
+                                                <strong>${senderName}</strong>
+                                                <small>${date}</small>
                                             </div>
-                                            <div style="margin-top:5px;">\${response.message}</div>
+                                            <div style="margin-top:5px;">${response.message}</div>
                                         </div>
-                                    \`;
+                                    `;
                                 }).join('')}
                         ` : ''}
 
@@ -2145,36 +2145,11 @@
                         </div>
 
                         <script>
-                            // توليد QR Code بعد تحميل الصفحة
+                            // الطباعة التلقائية بعد تحميل QR Code
                             window.onload = function() {
-                                try {
-                                    if (typeof QRCode !== 'undefined') {
-                                        const qrcodeElement = document.getElementById('qrcode');
-                                        qrcodeElement.innerHTML = '';
-
-                                        new QRCode(qrcodeElement, {
-                                            text: "${complaintDirectLink}",
-                                            width: 180,
-                                            height: 180,
-                                            colorDark: "#000000",
-                                            colorLight: "#ffffff",
-                                            correctLevel: QRCode.CorrectLevel.H
-                                        });
-
-                                        console.log('QR Code generated successfully');
-
-                                        // الطباعة بعد توليد QR Code
-                                        setTimeout(function() {
-                                            window.print();
-                                        }, 600);
-                                    } else {
-                                        console.error('QRCode library not loaded');
-                                        alert('خطأ: مكتبة QR Code غير محملة');
-                                    }
-                                } catch(e) {
-                                    console.error('QR Code generation error:', e);
-                                    alert('خطأ في توليد QR Code: ' + e.message);
-                                }
+                                setTimeout(function() {
+                                    window.print();
+                                }, 1000);
                             };
                         </script>
                     </body>
@@ -2199,109 +2174,7 @@
             } finally {
                 hideLoading();
             }
-        } function displayUsersGrid() {
-            const container = document.getElementById('usersGrid');
-            if (!container) return;
-
-            if (!allUsers.length) {
-                container.innerHTML = '<p style="padding:20px;color:#666;">لا يوجد مستخدمون حتى الآن.</p>';
-                return;
-            }
-
-            let html = '';
-            allUsers.forEach(user => {
-                html += `
-                    <div class="user-card">
-                        <div class="user-card-header">
-                            <div class="user-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="user-info">
-                                <h3>${user.name || '-'}</h3>
-                                <span class="user-role ${user.role === 'admin' ? 'admin' : ''}">
-                                    ${user.role === 'admin' ? 'مدير' : 'مستخدم'}
-                                </span>
-                                <div class="user-email">
-                                    <i class="fas fa-user-tag"></i>
-                                    ${user.username || '-'}
-                                </div>
-                                <div class="user-email">
-                                    <i class="fas fa-envelope"></i>
-                                    ${user.email || '-'}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="user-departments">
-                            <div class="user-departments-title">الأقسام المخصصة:</div>
-                            <div class="department-tags">
-                `;
-                if (user.departments && user.departments.length) {
-                    user.departments.forEach(d => {
-                        html += `<span class="department-tag">${d}</span>`;
-                    });
-                } else {
-                    html += '<span style="color:#888;font-size:.85rem;">كل الأقسام</span>';
-                }
-
-                html += `
-                            </div>
-                        </div>
-                        <div class="user-actions">
-                            <button class="action-btn btn-edit" onclick="editUser('${user.key}')">
-                                <i class="fas fa-edit"></i>
-                                تعديل
-                            </button>
-                            <button class="action-btn btn-delete" onclick="deleteUser('${user.key}')">
-                                <i class="fas fa-trash"></i>
-                                حذف
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
         }
-
-        function openAddUserModal() {
-            currentEditingUser = null;
-            document.getElementById('userModalTitle').textContent = 'إضافة مستخدم جديد';
-            document.getElementById('userName').value = '';
-            document.getElementById('userUsername').value = '';
-            document.getElementById('userEmail').value = '';
-            document.getElementById('userPassword').value = '';
-            document.getElementById('userRole').value = 'user';
-
-            document.querySelectorAll('.user-dept-checkbox').forEach(ch => {
-                ch.checked = false;
-            });
-
-            document.getElementById('userModal').style.display = 'flex';
-        }
-
-        function closeUserModal() {
-            document.getElementById('userModal').style.display = 'none';
-        }
-
-        function editUser(key) {
-            const user = allUsers.find(u => u.key === key);
-            if (!user) return;
-            currentEditingUser = user;
-
-            document.getElementById('userModalTitle').textContent = 'تعديل بيانات المستخدم';
-            document.getElementById('userName').value = user.name || '';
-            document.getElementById('userUsername').value = user.username || '';
-            document.getElementById('userEmail').value = user.email || '';
-            document.getElementById('userPassword').value = '';
-            document.getElementById('userRole').value = user.role || 'user';
-
-            document.querySelectorAll('.user-dept-checkbox').forEach(ch => {
-                ch.checked = user.departments && user.departments.includes(ch.value);
-            });
-
-            document.getElementById('userModal').style.display = 'flex';
-        }
-
         async function saveUser() {
             const name = document.getElementById('userName').value.trim();
             const username = document.getElementById('userUsername').value.trim();
