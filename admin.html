@@ -1920,44 +1920,59 @@ async function exportAllToPDF() {
                 hideLoading();
             }
         }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<!-- QR Code -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
 async function downloadComplaintPDF(complaintKey) {
     const complaint = allComplaints.find(c => c.key === complaintKey);
     if (!complaint) return;
 
-    // افتح التفاصيل (علشان تتصور)
     viewComplaint(complaintKey);
-
     await new Promise(r => setTimeout(r, 600));
 
-    const modal = document.querySelector('#complaintDetailsModal .modal-content');
-    if (!modal) return;
+    const startEl = document.getElementById("complaint-start");
+    const container = document.querySelector('#complaintDetailsModal .modal-content');
+    if (!startEl || !container) return;
+
+    /* ===== إنشاء QR مؤقت ===== */
+    const qrDiv = document.createElement("div");
+    qrDiv.style.position = "absolute";
+    qrDiv.style.right = "20px";
+    qrDiv.style.top = "20px";
+    container.appendChild(qrDiv);
+
+    new QRCode(qrDiv, {
+        text: complaint.complaintNumber || "",
+        width: 90,
+        height: 90
+    });
 
     /* ===== إخفاء الأزرار ===== */
-    const hiddenElements = [];
-    modal.querySelectorAll('button, .no-print').forEach(el => {
-        hiddenElements.push({ el, display: el.style.display });
-        el.style.display = 'none';
+    const hidden = [];
+    container.querySelectorAll("button, .no-print").forEach(el => {
+        hidden.push({ el, display: el.style.display });
+        el.style.display = "none";
     });
 
     try {
         showLoading();
 
-        const canvas = await html2canvas(modal, {
-            scale: 3,                 // 👈 جودة طباعة عالية
-            useCORS: true,
+        const rect = startEl.getBoundingClientRect();
+        const contRect = container.getBoundingClientRect();
+        const offsetY = rect.top - contRect.top;
+
+        const canvas = await html2canvas(container, {
+            scale: 3,
             backgroundColor: "#ffffff",
-            scrollX: 0,
-            scrollY: -window.scrollY,
-            windowWidth: modal.scrollWidth,
-            windowHeight: modal.scrollHeight
+            useCORS: true,
+            y: offsetY,
+            height: container.scrollHeight - offsetY
         });
 
         const imgData = canvas.toDataURL("image/jpeg", 1.0);
-
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF("p", "mm", "a4");
 
@@ -1965,28 +1980,58 @@ async function downloadComplaintPDF(complaintKey) {
         const pageHeight = pdf.internal.pageSize.getHeight();
 
         const imgWidth = pageWidth;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const imgHeight = canvas.height * imgWidth / canvas.width;
 
-        /* ===== صفحة واحدة فقط ===== */
-        const y = (pageHeight - imgHeight) / 2;
-        pdf.addImage(imgData, "JPEG", 0, y, imgWidth, imgHeight);
+        let heightLeft = imgHeight;
+        let position = 25; // مسافة للـ Header
+        let pageNum = 1;
+        const totalPages = Math.ceil(imgHeight / pageHeight);
 
-        pdf.save(`شكوى_${complaint.complaintNumber || complaintKey}.pdf`);
-        showMessage("تم تصدير الشكوى PDF بجودة طباعة عالية", "success");
+        function drawHeaderFooter() {
+            pdf.setFontSize(12);
+            pdf.text("مكتب النائب أحمد الحديدي", 105, 10, { align: "center" });
+            pdf.setFontSize(10);
+            pdf.text("نظام تلقى الطلبات والشكاوي", 105, 16, { align: "center" });
+            pdf.line(15, 18, 195, 18);
+
+            pdf.setFontSize(9);
+            pdf.text(
+                `صفحة ${pageNum} / ${totalPages}`,
+                105,
+                290,
+                { align: "center" }
+            );
+        }
+
+        // الصفحة الأولى
+        drawHeaderFooter();
+        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        // صفحات إضافية
+        while (heightLeft > 0) {
+            pdf.addPage();
+            pageNum++;
+            position -= pageHeight;
+            drawHeaderFooter();
+            pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+
+        pdf.save(`شكوى_${complaint.complaintNumber}.pdf`);
+        showMessage("تم تصدير الشكوى كاملة بنجاح", "success");
 
     } catch (e) {
         console.error(e);
-        showMessage("حدث خطأ أثناء التصدير", "error");
+        showMessage("خطأ أثناء تصدير PDF", "error");
     } finally {
-
-        /* ===== إرجاع الأزرار ===== */
-        hiddenElements.forEach(item => {
-            item.el.style.display = item.display;
-        });
-
+        // تنظيف
+        qrDiv.remove();
+        hidden.forEach(h => h.el.style.display = h.display);
         hideLoading();
     }
 }
 </script>
+
 </body>
 </html>
