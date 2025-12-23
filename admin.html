@@ -6,6 +6,8 @@
     <title>لوحة التحكم - نظام الشكاوى الموحد</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent}
         html{font-size:16px;scroll-behavior:smooth}
@@ -296,7 +298,10 @@
                     <div id="complaintsSection" class="content-section">
                         <div class="section-header">
                             <h2 class="section-title">إدارة الشكاوى</h2>
-                            <div class="section-controls"><button class="save-btn" onclick="exportComplaints()"><i class="fas fa-download"></i> تصدير</button></div>
+                            <div class="section-controls">
+                                <button class="save-btn" onclick="exportComplaints()"><i class="fas fa-download"></i> تصدير</button>
+                                <button class="save-btn" onclick="exportAllToPDF()"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
+                            </div>
                         </div>
                         <div class="filter-controls">
                             <div class="filter-group"><label class="filter-label">بحث</label><input type="text" id="searchComplaints" class="filter-input" placeholder="ابحث برقم أو اسم أو رقم قومي..."></div>
@@ -567,19 +572,6 @@
             document.getElementById('editComplaintForm').addEventListener('submit', saveEditedComplaint);
             document.getElementById('departmentForm').addEventListener('submit', saveDepartment);
             document.getElementById('userDepartments').addEventListener('change', updateSelectedDepartments);
-
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    if (item.classList.contains('admin-only') && !(currentUser && currentUser.role === 'admin')) {
-                        showMessage('يجب تسجيل الدخول كمسؤول للوصول إلى هذا القسم', 'error');
-                        return;
-                    }
-                    document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-                    item.classList.add('active');
-                    showSection(item.getAttribute('data-section'));
-                    closeSidebar();
-                });
-            });
         }
 
         function handleLogin(e) {
@@ -588,7 +580,7 @@
             const password = document.getElementById('password').value;
             const loginError = document.getElementById('loginError');
             if (username === 'admin' && password === '123456') {
-                const userData = { username: 'admin', name: 'المدير العام', role: 'admin', phone: '' };
+                const userData = { username: 'admin', name: 'المدير العام', role: 'admin', phone: '', departments: [] };
                 loginError.style.display = 'none';
                 loginSuccess(userData);
             } else {
@@ -632,10 +624,12 @@
         function loginSuccess(userData) {
             isLoggedIn = true;
             currentUser = {
+                key: userData.key,
                 username: userData.username,
                 name: userData.name,
                 role: userData.role || 'user',
                 phone: userData.phone || '',
+                departments: userData.departments || [],
                 loginTime: new Date().toISOString()
             };
             localStorage.setItem('adminLoggedIn', 'true');
@@ -684,6 +678,7 @@
             loadDepartments();
             loadSettings();
             loadOfficeSettings();
+            updateDashboardStats();
         }
 
         function updateAdminWelcome() {
@@ -744,7 +739,16 @@
             }
             allComplaints.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
             updateDashboardStats();
-            filteredComplaints = allComplaints.slice();
+            
+            // تصفية الشكاوى حسب أقسام المستخدم إذا لم يكن مدير
+            if (currentUser && currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
+                filteredComplaints = allComplaints.filter(complaint => 
+                    currentUser.departments.includes(complaint.department)
+                );
+            } else {
+                filteredComplaints = allComplaints.slice();
+            }
+            
             if (currentSection === 'dashboard' || currentSection === 'complaints') {
                 displayComplaintsTable();
                 displayLatestComplaints();
@@ -804,7 +808,16 @@
                 }
                 allComplaints.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
                 updateDashboardStats();
-                filteredComplaints = allComplaints.slice();
+                
+                // تصفية الشكاوى حسب أقسام المستخدم إذا لم يكن مدير
+                if (currentUser && currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
+                    filteredComplaints = allComplaints.filter(complaint => 
+                        currentUser.departments.includes(complaint.department)
+                    );
+                } else {
+                    filteredComplaints = allComplaints.slice();
+                }
+                
                 displayComplaintsTable();
                 displayLatestComplaints();
                 updateDashboardCards();
@@ -830,7 +843,6 @@
                     });
                 }
                 displayUsersGrid();
-                populateUserDepartments();
             } catch(err) {
                 console.error(err);
             }
@@ -905,12 +917,23 @@
         }
 
         function updateDashboardStats() {
-            const total = allComplaints.length;
-            const newComplaints = allComplaints.filter(c => c.status === 'جديدة').length;
-            const resolvedComplaints = allComplaints.filter(c => c.status === 'مكتملة' || c.status === 'تم الرد').length;
+            let complaintsToShow = allComplaints;
+            
+            // إذا كان المستخدم ليس مديراً، نعرض فقط الشكاوى التابعة لأقسامه
+            if (currentUser && currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
+                complaintsToShow = allComplaints.filter(complaint => 
+                    currentUser.departments.includes(complaint.department)
+                );
+            }
+            
+            const total = complaintsToShow.length;
+            const newComplaints = complaintsToShow.filter(c => c.status === 'جديدة').length;
+            const resolvedComplaints = complaintsToShow.filter(c => c.status === 'مكتملة' || c.status === 'تم الرد').length;
+            
             document.getElementById('totalComplaints').textContent = total;
             document.getElementById('newComplaints').textContent = newComplaints;
             document.getElementById('resolvedComplaints').textContent = resolvedComplaints;
+            
             const badge = document.getElementById('complaintsBadge');
             if (newComplaints > 0) {
                 badge.textContent = newComplaints;
@@ -930,13 +953,22 @@
                 case 'month': startDate = new Date(now.setMonth(now.getMonth() - 1)); break;
                 default: startDate = new Date(0);
             }
-            const filtered = allComplaints.filter(c => new Date(c.createdAt) >= startDate);
+            
+            let complaintsToShow = allComplaints;
+            if (currentUser && currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
+                complaintsToShow = allComplaints.filter(complaint => 
+                    currentUser.departments.includes(complaint.department)
+                );
+            }
+            
+            const filtered = complaintsToShow.filter(c => new Date(c.createdAt) >= startDate);
             const newComplaints = filtered.filter(c => c.status === 'جديدة').length;
             const completed = filtered.filter(c => c.status === 'مكتملة').length;
             const inProgress = filtered.filter(c => c.status === 'قيد المراجعة' || c.status === 'قيد المعالجة').length;
             const highPriority = filtered.filter(c => c.priority === 'عاجلة').length;
             const mediumPriority = filtered.filter(c => c.priority === 'متوسطة').length;
             const lowPriority = filtered.filter(c => c.priority === 'منخفضة').length;
+            
             document.getElementById('cardNewComplaints').textContent = newComplaints;
             document.getElementById('cardCompletedComplaints').textContent = completed;
             document.getElementById('cardInProgress').textContent = inProgress;
@@ -972,8 +1004,10 @@
                     <td>${createdAt}</td>
                     <td class="actions">
                         <button class="action-btn btn-view" onclick="viewComplaint('${c.key}')"><i class="fas fa-eye"></i></button>
-                        <button class="action-btn btn-edit" onclick="editComplaint('${c.key}')"><i class="fas fa-edit"></i></button>
-                        <button class="action-btn btn-delete" onclick="deleteComplaint('${c.key}')"><i class="fas fa-trash"></i></button>
+                        ${currentUser.role === 'admin' || (currentUser.departments && currentUser.departments.includes(c.department)) ? 
+                            `<button class="action-btn btn-edit" onclick="editComplaint('${c.key}')"><i class="fas fa-edit"></i></button>
+                             <button class="action-btn btn-delete" onclick="deleteComplaint('${c.key}')"><i class="fas fa-trash"></i></button>` : 
+                            ''}
                     </td>
                 </tr>`;
             });
@@ -984,7 +1018,9 @@
         function displayLatestComplaints() {
             const tbody = document.getElementById('latestComplaintsBody');
             if (!tbody) return;
-            const latest = allComplaints.slice(0, 5);
+            
+            let latest = filteredComplaints.slice(0, 5);
+            
             if (!latest.length) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#666;">لا توجد شكاوى حديثة</td></tr>`;
                 return;
@@ -1018,6 +1054,9 @@
             }
             let html = '';
             allUsers.forEach(u => {
+                // إخفاء مستخدمين المدير إذا لم يكن المستخدم الحالي مديراً
+                if (currentUser.role !== 'admin' && u.role === 'admin') return;
+                
                 const roleColor = u.role === 'admin' ? '#e74c3c' : '#3498db';
                 const departments = u.departments ? u.departments.join(', ') : 'جميع الأقسام';
                 html += `
@@ -1030,9 +1069,11 @@
                         <div class="user-email">${departments}</div>
                     </div>
                     <div style="display:flex;gap:5px;">
+                        ${currentUser.role === 'admin' ? `
                         <button class="action-btn btn-edit" onclick="editUser('${u.key}')"><i class="fas fa-edit"></i></button>
                         <button class="action-btn btn-reset-password" onclick="resetUserPassword('${u.key}')"><i class="fas fa-key"></i></button>
                         <button class="action-btn btn-delete" onclick="deleteUser('${u.key}')"><i class="fas fa-trash"></i></button>
+                        ` : ''}
                     </div>
                 </div>`;
             });
@@ -1058,10 +1099,12 @@
                     <div class="card-value">${complaintsCount}</div>
                     <p class="card-label">شكوى</p>
                     <p style="font-size:.85rem;color:#666;margin-top:10px">${d.description || ''}</p>
+                    ${currentUser.role === 'admin' ? `
                     <div style="margin-top:15px;display:flex;gap:10px">
                         <button class="action-btn" style="background:${color};color:#fff" onclick="editDepartment('${d.key}')"><i class="fas fa-edit"></i></button>
                         <button class="action-btn" style="background:#e74c3c;color:#fff" onclick="deleteDepartment('${d.key}')"><i class="fas fa-trash"></i></button>
                     </div>
+                    ` : ''}
                 </div>`;
             });
             container.innerHTML = html;
@@ -1070,7 +1113,16 @@
         function populateDepartmentFilter() {
             const select = document.getElementById('filterDepartment');
             if (!select) return;
-            const departments = [...new Set(allComplaints.map(c => c.department).filter(Boolean))];
+            
+            let departments = [];
+            if (currentUser.role === 'admin') {
+                // المدير يرى جميع الأقسام
+                departments = [...new Set(allComplaints.map(c => c.department).filter(Boolean))];
+            } else {
+                // المستخدم العادي يرى فقط أقسامه
+                departments = currentUser.departments || [];
+            }
+            
             let options = '<option value="">جميع الأقسام</option>';
             departments.forEach(dept => options += `<option value="${dept}">${dept}</option>`);
             select.innerHTML = options;
@@ -1080,7 +1132,15 @@
             const select = document.getElementById('editDepartment');
             if (!select) return;
             let options = '';
-            allDepartments.forEach(dept => options += `<option value="${dept.name}">${dept.name}</option>`);
+            
+            let departmentsToShow = allDepartments;
+            if (currentUser.role !== 'admin' && currentUser.departments) {
+                departmentsToShow = allDepartments.filter(dept => 
+                    currentUser.departments.includes(dept.name)
+                );
+            }
+            
+            departmentsToShow.forEach(dept => options += `<option value="${dept.name}">${dept.name}</option>`);
             select.innerHTML = options;
         }
 
@@ -1097,7 +1157,13 @@
             const department = document.getElementById('filterDepartment').value;
             const status = document.getElementById('filterStatus').value;
             const priority = document.getElementById('filterPriority').value;
+            
             filteredComplaints = allComplaints.filter(c => {
+                // إذا لم يكن المستخدم مديراً، نعرض فقط الشكاوى التابعة لأقسامه
+                if (currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
+                    if (!currentUser.departments.includes(c.department)) return false;
+                }
+                
                 const searchMatch = !search ||
                     (c.complaintNumber && c.complaintNumber.toLowerCase().includes(search)) ||
                     (c.fullName && c.fullName.toLowerCase().includes(search)) ||
@@ -1155,6 +1221,13 @@
         function viewComplaint(complaintKey) {
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) return showMessage('لم يتم العثور على الشكوى','error');
+            
+            // التحقق من صلاحيات المستخدم
+            if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
+                showMessage('ليس لديك صلاحية لعرض هذه الشكوى', 'error');
+                return;
+            }
+            
             const modalBody = document.getElementById('modalBody');
             const createdAt = complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : '-';
             const updatedAt = complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : createdAt;
@@ -1204,13 +1277,22 @@
             } else {
                 documentsHTML = `<div class="documents-section"><h3 class="documents-title"><i class="fas fa-file-alt"></i> المستندات الداعمة</h3><div class="no-documents"><i class="far fa-file-alt"></i><p>لا توجد مستندات مرفقة</p></div></div>`;
             }
-            const downloadBtn = `<button class="action-btn btn-download-pdf" onclick="downloadComplaintPDF('${complaint.key}')"><i class="fas fa-download"></i> تنزيل PDF</button>`;
-            const replyBtn = `<button class="action-btn btn-reply" onclick="showReplyModal('${complaint.key}')"><i class="fas fa-reply"></i> الرد باسم مكتب النائب</button>`;
-            const controlBtns = `
-                <button class="action-btn btn-edit" onclick="editComplaint('${complaint.key}')"><i class="fas fa-edit"></i> تعديل</button>
-                <button class="action-btn btn-delete" onclick="deleteComplaint('${complaint.key}')"><i class="fas fa-trash"></i> حذف</button>
-            `;
-            document.getElementById('modalHeaderControls').innerHTML = downloadBtn + replyBtn + controlBtns;
+            
+            let controlBtns = '';
+            if (currentUser.role === 'admin' || (currentUser.departments && currentUser.departments.includes(complaint.department))) {
+                const downloadBtn = `<button class="action-btn btn-download-pdf" onclick="downloadComplaintPDF('${complaint.key}')"><i class="fas fa-download"></i> تنزيل PDF</button>`;
+                const replyBtn = `<button class="action-btn btn-reply" onclick="showReplyModal('${complaint.key}')"><i class="fas fa-reply"></i> الرد باسم مكتب النائب</button>`;
+                controlBtns = `
+                    ${downloadBtn}
+                    ${replyBtn}
+                    <button class="action-btn btn-edit" onclick="editComplaint('${complaint.key}')"><i class="fas fa-edit"></i> تعديل</button>
+                    <button class="action-btn btn-delete" onclick="deleteComplaint('${complaint.key}')"><i class="fas fa-trash"></i> حذف</button>
+                `;
+            } else {
+                controlBtns = `<button class="action-btn btn-download-pdf" onclick="downloadComplaintPDF('${complaint.key}')"><i class="fas fa-download"></i> تنزيل PDF</button>`;
+            }
+            
+            document.getElementById('modalHeaderControls').innerHTML = controlBtns;
             modalBody.innerHTML = `
                 <div class="details-grid">
                     <div class="detail-item"><div class="detail-label">رقم الشكوى</div><div><strong>${complaint.complaintNumber || ''}</strong></div></div>
@@ -1229,6 +1311,7 @@
                 </div>
                 ${documentsHTML}
                 ${responsesHTML}
+                ${currentUser.role === 'admin' || (currentUser.departments && currentUser.departments.includes(complaint.department)) ? `
                 <div style="margin-top:20px;padding-top:20px;border-top:1px solid #eee">
                     <h4 style="margin-bottom:10px;color:#2c3e50">تغيير الحالة:</h4>
                     <div style="display:flex;flex-wrap:wrap;gap:10px">
@@ -1238,6 +1321,7 @@
                         <button class="action-btn" style="background:#e74c3c;color:#fff" onclick="updateStatus('${complaint.key}', 'ملغاة')">ملغاة</button>
                     </div>
                 </div>
+                ` : ''}
             `;
             document.getElementById('complaintDetailsModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -1246,6 +1330,13 @@
         function editComplaint(complaintKey) {
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) return;
+            
+            // التحقق من صلاحيات المستخدم
+            if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
+                showMessage('ليس لديك صلاحية لتعديل هذه الشكوى', 'error');
+                return;
+            }
+            
             document.getElementById('editComplaintId').value = complaintKey;
             document.getElementById('editFullName').value = complaint.fullName || '';
             document.getElementById('editNationalId').value = complaint.nationalId || '';
@@ -1302,6 +1393,15 @@
         }
 
         async function updateStatus(complaintKey, newStatus) {
+            const complaint = allComplaints.find(c => c.key === complaintKey);
+            if (!complaint) return;
+            
+            // التحقق من صلاحيات المستخدم
+            if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
+                showMessage('ليس لديك صلاحية لتغيير حالة هذه الشكوى', 'error');
+                return;
+            }
+            
             if (!confirm(`هل تريد تغيير حالة الشكوى إلى "${newStatus}"؟`)) return;
             try {
                 showLoading();
@@ -1321,6 +1421,10 @@
         }
 
         function showAddUserModal() {
+            if (currentUser.role !== 'admin') {
+                showMessage('يجب تسجيل الدخول كمسؤول لإضافة مستخدمين', 'error');
+                return;
+            }
             document.getElementById('userModalTitle').textContent = 'إضافة مستخدم جديد';
             document.getElementById('userForm').reset();
             document.getElementById('userId').value = '';
@@ -1331,6 +1435,10 @@
         }
 
         function editUser(userKey) {
+            if (currentUser.role !== 'admin') {
+                showMessage('يجب تسجيل الدخول كمسؤول لتعديل المستخدمين', 'error');
+                return;
+            }
             const user = allUsers.find(u => u.key === userKey);
             if (!user) return;
             document.getElementById('userModalTitle').textContent = 'تعديل المستخدم';
@@ -1364,6 +1472,10 @@
 
         async function saveUser(e) {
             e.preventDefault();
+            if (currentUser.role !== 'admin') {
+                showMessage('يجب تسجيل الدخول كمسؤول لحفظ المستخدمين', 'error');
+                return;
+            }
             const userId = document.getElementById('userId').value;
             const name = document.getElementById('userName').value.trim();
             const username = document.getElementById('userUsername').value.trim();
@@ -1404,6 +1516,10 @@
         }
 
         async function resetUserPassword(userKey) {
+            if (currentUser.role !== 'admin') {
+                showMessage('يجب تسجيل الدخول كمسؤول لإعادة تعيين كلمات السر', 'error');
+                return;
+            }
             const newPassword = prompt('أدخل كلمة السر الجديدة:');
             if (!newPassword) return;
             try {
@@ -1423,6 +1539,10 @@
         }
 
         async function deleteUser(userKey) {
+            if (currentUser.role !== 'admin') {
+                showMessage('يجب تسجيل الدخول كمسؤول لحذف المستخدمين', 'error');
+                return;
+            }
             if (!confirm('هل تريد حذف هذا المستخدم؟')) return;
             try {
                 showLoading();
@@ -1442,6 +1562,15 @@
         }
 
         function showReplyModal(complaintKey) {
+            const complaint = allComplaints.find(c => c.key === complaintKey);
+            if (!complaint) return;
+            
+            // التحقق من صلاحيات المستخدم
+            if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
+                showMessage('ليس لديك صلاحية للرد على هذه الشكوى', 'error');
+                return;
+            }
+            
             document.getElementById('replyComplaintId').value = complaintKey;
             document.getElementById('replyModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -1488,6 +1617,10 @@
         }
 
         function showAddDepartmentModal() {
+            if (currentUser.role !== 'admin') {
+                showMessage('يجب تسجيل الدخول كمسؤول لإضافة أقسام', 'error');
+                return;
+            }
             document.getElementById('departmentModalTitle').textContent = 'إضافة قسم جديد';
             document.getElementById('departmentForm').reset();
             document.getElementById('departmentId').value = '';
@@ -1496,6 +1629,10 @@
         }
 
         function editDepartment(departmentKey) {
+            if (currentUser.role !== 'admin') {
+                showMessage('يجب تسجيل الدخول كمسؤول لتعديل الأقسام', 'error');
+                return;
+            }
             const department = allDepartments.find(d => d.key === departmentKey);
             if (!department) return;
             document.getElementById('departmentModalTitle').textContent = 'تعديل القسم';
@@ -1509,6 +1646,10 @@
 
         async function saveDepartment(e) {
             e.preventDefault();
+            if (currentUser.role !== 'admin') {
+                showMessage('يجب تسجيل الدخول كمسؤول لحفظ الأقسام', 'error');
+                return;
+            }
             const departmentId = document.getElementById('departmentId').value;
             const departmentData = {
                 name: document.getElementById('departmentName').value.trim(),
@@ -1536,6 +1677,10 @@
         }
 
         async function deleteDepartment(departmentKey) {
+            if (currentUser.role !== 'admin') {
+                showMessage('يجب تسجيل الدخول كمسؤول لحذف الأقسام', 'error');
+                return;
+            }
             if (!confirm('هل تريد حذف هذا القسم؟')) return;
             try {
                 showLoading();
@@ -1559,8 +1704,84 @@
             if (!complaint) return;
             try {
                 showLoading();
-                // يمكن إضافة jsPDF هنا إذا لزم الأمر
-                alert('ميزة التنزيل PDF قيد التطوير');
+                
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // إعدادات الوثيقة
+                doc.setFont('Amiri', 'normal');
+                doc.setFontSize(20);
+                doc.text('تفاصيل الشكوى', 105, 20, { align: 'center' });
+                
+                doc.setFontSize(12);
+                let y = 40;
+                
+                // معلومات الشكوى
+                doc.setFontSize(14);
+                doc.text('المعلومات الأساسية:', 20, y);
+                y += 10;
+                
+                doc.setFontSize(12);
+                doc.text(`رقم الشكوى: ${complaint.complaintNumber || 'غير معروف'}`, 20, y);
+                y += 8;
+                doc.text(`الاسم الكامل: ${complaint.fullName || ''}`, 20, y);
+                y += 8;
+                doc.text(`الرقم القومي: ${complaint.nationalId || 'غير متوفر'}`, 20, y);
+                y += 8;
+                doc.text(`القسم: ${complaint.department || ''}`, 20, y);
+                y += 8;
+                doc.text(`الأولوية: ${complaint.priority || ''}`, 20, y);
+                y += 8;
+                doc.text(`الحالة: ${complaint.status || ''}`, 20, y);
+                y += 8;
+                doc.text(`تاريخ الإرسال: ${new Date(complaint.createdAt).toLocaleDateString('ar-EG')}`, 20, y);
+                y += 10;
+                
+                // معلومات الاتصال
+                doc.setFontSize(14);
+                doc.text('معلومات الاتصال:', 20, y);
+                y += 10;
+                
+                doc.setFontSize(12);
+                doc.text(`رقم الهاتف 1: ${complaint.phone1 || ''}`, 20, y);
+                y += 8;
+                doc.text(`رقم الهاتف 2: ${complaint.phone2 || ''}`, 20, y);
+                y += 8;
+                doc.text(`العنوان: ${complaint.address || ''}`, 20, y);
+                y += 10;
+                
+                // تفاصيل المشكلة
+                doc.setFontSize(14);
+                doc.text('تفاصيل المشكلة:', 20, y);
+                y += 10;
+                
+                doc.setFontSize(12);
+                const problemText = doc.splitTextToSize(complaint.problemDetails || '', 170);
+                doc.text(problemText, 20, y);
+                y += (problemText.length * 8) + 10;
+                
+                // الردود إذا وجدت
+                if (complaint.responses && complaint.responses.length > 0) {
+                    doc.setFontSize(14);
+                    doc.text('الردود:', 20, y);
+                    y += 10;
+                    
+                    doc.setFontSize(12);
+                    complaint.responses.forEach(response => {
+                        const responseText = doc.splitTextToSize(`${new Date(response.timestamp).toLocaleString('ar-EG')} - ${response.message}`, 170);
+                        doc.text(responseText, 20, y);
+                        y += (responseText.length * 8) + 8;
+                    });
+                }
+                
+                // تذييل
+                doc.setFontSize(10);
+                doc.text(`تم إنشاء هذا التقرير في: ${new Date().toLocaleString('ar-EG')}`, 105, 280, { align: 'center' });
+                doc.text(`بواسطة: ${currentUser.name}`, 105, 285, { align: 'center' });
+                
+                // حفظ الملف
+                doc.save(`شكوى_${complaint.complaintNumber || complaintKey}.pdf`);
+                showMessage('تم تنزيل PDF بنجاح', 'success');
             } catch(err) {
                 console.error(err);
                 showMessage('حدث خطأ أثناء تنزيل PDF', 'error');
@@ -1569,7 +1790,82 @@
             }
         }
 
+        async function exportAllToPDF() {
+            try {
+                showLoading();
+                
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // إعدادات الوثيقة
+                doc.setFont('Amiri', 'normal');
+                doc.setFontSize(20);
+                doc.text('تقرير جميع الشكاوى', 105, 20, { align: 'center' });
+                
+                doc.setFontSize(12);
+                doc.text(`تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}`, 105, 30, { align: 'center' });
+                doc.text(`إجمالي الشكاوى: ${filteredComplaints.length}`, 105, 40, { align: 'center' });
+                
+                let y = 60;
+                let page = 1;
+                
+                filteredComplaints.forEach((complaint, index) => {
+                    // إضافة صفحة جديدة إذا وصلنا لنهاية الصفحة
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 20;
+                        page++;
+                        doc.setFontSize(10);
+                        doc.text(`الصفحة ${page}`, 195, 10);
+                    }
+                    
+                    doc.setFontSize(14);
+                    doc.text(`الشكوى ${index + 1}: ${complaint.complaintNumber || 'غير معروف'}`, 20, y);
+                    y += 8;
+                    
+                    doc.setFontSize(12);
+                    doc.text(`الاسم: ${complaint.fullName || ''}`, 20, y);
+                    y += 6;
+                    doc.text(`القسم: ${complaint.department || ''}`, 20, y);
+                    y += 6;
+                    doc.text(`الحالة: ${complaint.status || ''}`, 20, y);
+                    y += 6;
+                    doc.text(`الأولوية: ${complaint.priority || ''}`, 20, y);
+                    y += 6;
+                    doc.text(`التاريخ: ${new Date(complaint.createdAt).toLocaleDateString('ar-EG')}`, 20, y);
+                    y += 10;
+                    
+                    // خط فاصل بين الشكاوى
+                    doc.line(20, y, 190, y);
+                    y += 5;
+                });
+                
+                // تذييل
+                doc.setFontSize(10);
+                doc.text(`تم إنشاء هذا التقرير بواسطة: ${currentUser.name}`, 105, 285, { align: 'center' });
+                doc.text(`إجمالي عدد الشكاوى: ${filteredComplaints.length}`, 105, 290, { align: 'center' });
+                
+                // حفظ الملف
+                doc.save(`تقرير_الشكاوى_${new Date().toISOString().split('T')[0]}.pdf`);
+                showMessage('تم تصدير جميع الشكاوى إلى PDF بنجاح', 'success');
+            } catch(err) {
+                console.error(err);
+                showMessage('حدث خطأ أثناء تصدير PDF', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
         async function deleteComplaint(complaintKey) {
+            const complaint = allComplaints.find(c => c.key === complaintKey);
+            if (!complaint) return;
+            
+            // التحقق من صلاحيات المستخدم
+            if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
+                showMessage('ليس لديك صلاحية لحذف هذه الشكوى', 'error');
+                return;
+            }
+            
             if (!confirm('هل تريد حذف هذه الشكوى؟')) return;
             try {
                 showLoading();
@@ -1646,7 +1942,9 @@
                 case 'year': startDate = new Date(now.setFullYear(now.getFullYear() - 1)); break;
                 default: startDate = new Date(now.setDate(now.getDate() - 7));
             }
-            const filtered = allComplaints.filter(c => new Date(c.createdAt) >= startDate);
+            
+            let complaintsToShow = filteredComplaints;
+            const filtered = complaintsToShow.filter(c => new Date(c.createdAt) >= startDate);
             const completed = filtered.filter(c => c.status === 'مكتملة' || c.status === 'تم الرد').length;
             const total = filtered.length;
             const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
