@@ -7,8 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
    <!-- استبدل مكتبة jsPDF بهذه المكتبات -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent}
         html{font-size:16px;scroll-behavior:smooth}
@@ -1920,20 +1918,34 @@ async function exportAllToPDF() {
                 hideLoading();
             }
         }
- 
+</script>
+    <!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- jsPDF AutoTable (للتقارير العامة فقط) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<!-- html2canvas (تصوير الشكوى) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- QR Code -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 async function downloadComplaintPDF(complaintKey) {
     const complaint = allComplaints.find(c => c.key === complaintKey);
     if (!complaint) return;
 
+    /* 1️⃣ افتح الشكوى */
     viewComplaint(complaintKey);
     await new Promise(r => setTimeout(r, 600));
 
-    const startEl = document.getElementById("complaint-start");
-    const container = document.querySelector('#complaintDetailsModal .modal-content');
-    if (!startEl || !container) return;
+    /* 2️⃣ حدد محتوى الشكوى */
+    const container = document.querySelector(
+        '#complaintDetailsModal .modal-content'
+    );
+    if (!container) return;
 
-    /* ===== إنشاء QR مؤقت ===== */
+    /* 3️⃣ إنشاء QR */
     const qrDiv = document.createElement("div");
     qrDiv.style.position = "absolute";
     qrDiv.style.right = "20px";
@@ -1946,26 +1958,21 @@ async function downloadComplaintPDF(complaintKey) {
         height: 90
     });
 
-    /* ===== إخفاء الأزرار ===== */
+    /* 4️⃣ إخفاء الأزرار */
     const hidden = [];
-    container.querySelectorAll("button, .no-print").forEach(el => {
-        hidden.push({ el, display: el.style.display });
+    container.querySelectorAll("button").forEach(el => {
+        hidden.push({ el, d: el.style.display });
         el.style.display = "none";
     });
 
     try {
         showLoading();
 
-        const rect = startEl.getBoundingClientRect();
-        const contRect = container.getBoundingClientRect();
-        const offsetY = rect.top - contRect.top;
-
+        /* 5️⃣ تصوير الشكوى */
         const canvas = await html2canvas(container, {
             scale: 3,
-            backgroundColor: "#ffffff",
-            useCORS: true,
-            y: offsetY,
-            height: container.scrollHeight - offsetY
+            backgroundColor: "#fff",
+            useCORS: true
         });
 
         const imgData = canvas.toDataURL("image/jpeg", 1.0);
@@ -1979,32 +1986,27 @@ async function downloadComplaintPDF(complaintKey) {
         const imgHeight = canvas.height * imgWidth / canvas.width;
 
         let heightLeft = imgHeight;
-        let position = 25; // مسافة للـ Header
+        let position = 25;
         let pageNum = 1;
         const totalPages = Math.ceil(imgHeight / pageHeight);
 
+        /* 6️⃣ Header + Footer */
         function drawHeaderFooter() {
             pdf.setFontSize(12);
             pdf.text("مكتب النائب أحمد الحديدي", 105, 10, { align: "center" });
             pdf.setFontSize(10);
             pdf.text("نظام تلقى الطلبات والشكاوي", 105, 16, { align: "center" });
             pdf.line(15, 18, 195, 18);
-
             pdf.setFontSize(9);
-            pdf.text(
-                `صفحة ${pageNum} / ${totalPages}`,
-                105,
-                290,
-                { align: "center" }
-            );
+            pdf.text(`صفحة ${pageNum} / ${totalPages}`, 105, 290, { align: "center" });
         }
 
-        // الصفحة الأولى
+        /* 7️⃣ الصفحة الأولى */
         drawHeaderFooter();
         pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
 
-        // صفحات إضافية
+        /* 8️⃣ الصفحات التالية */
         while (heightLeft > 0) {
             pdf.addPage();
             pageNum++;
@@ -2014,22 +2016,20 @@ async function downloadComplaintPDF(complaintKey) {
             heightLeft -= pageHeight;
         }
 
+        /* 9️⃣ حفظ */
         pdf.save(`شكوى_${complaint.complaintNumber}.pdf`);
-        showMessage("تم تصدير الشكوى كاملة بنجاح", "success");
+        showMessage("تم تصدير الشكوى بنجاح", "success");
 
     } catch (e) {
         console.error(e);
-        showMessage("خطأ أثناء تصدير PDF", "error");
+        showMessage("خطأ أثناء إنشاء PDF", "error");
     } finally {
-        // تنظيف
         qrDiv.remove();
-        hidden.forEach(h => h.el.style.display = h.display);
+        hidden.forEach(h => h.el.style.display = h.d);
         hideLoading();
     }
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 </body>
 </html>
