@@ -6,7 +6,9 @@
     <title>نظام الشكاوى الموحد</title>
     
     <!-- PWA Meta Tags -->
-    <link rel="manifest" href="manifest-index.json">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192x192.png">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
     <meta name="theme-color" content="#667eea">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1343,10 +1345,10 @@ textarea {
             </div>
             <div class="install-text">
                 <h3>تثبيت التطبيق</h3>
-                <p>ثبت التطبيق على شاشتك الرئيسية لتجربة أفضل</p>
+                <p id="installDescription">ثبت التطبيق على شاشتك الرئيسية لتجربة أفضل</p>
             </div>
             <button class="install-btn" id="installButton">
-                تثبيت
+                <i class="fas fa-download"></i> تثبيت
             </button>
             <button class="cancel-btn" id="cancelInstall">
                 لاحقاً
@@ -1598,7 +1600,7 @@ textarea {
         // تسجيل Service Worker
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw-index.js')
+                navigator.serviceWorker.register('sw.js')
                     .then(registration => {
                         console.log('Service Worker registered successfully:', registration);
                         
@@ -1619,21 +1621,29 @@ textarea {
         
         // التحقق من تثبيت التطبيق
         function checkIfAppInstalled() {
+            // للكشف عن تطبيقات PWA المثبتة
             if (window.matchMedia('(display-mode: standalone)').matches) {
                 isAppInstalled = true;
                 document.getElementById('floatingInstallBtn').style.display = 'none';
                 return true;
             }
             
-            // التحقق من تطبيقات iOS
+            // للكشف على iOS
             if (window.navigator.standalone === true) {
                 isAppInstalled = true;
                 document.getElementById('floatingInstallBtn').style.display = 'none';
                 return true;
             }
             
-            // التحقق من Chrome على Android
+            // للكشف على أندرويد
             if (window.matchMedia('(display-mode: fullscreen)').matches) {
+                isAppInstalled = true;
+                document.getElementById('floatingInstallBtn').style.display = 'none';
+                return true;
+            }
+            
+            // تحقق من localStorage
+            if (localStorage.getItem('appInstalled') === 'true') {
                 isAppInstalled = true;
                 document.getElementById('floatingInstallBtn').style.display = 'none';
                 return true;
@@ -1642,10 +1652,43 @@ textarea {
             return false;
         }
         
+        // التحقق إذا كان الجهاز iOS
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+        
+        // التحقق إذا كان الجهاز أندرويد
+        function isAndroid() {
+            return /Android/.test(navigator.userAgent);
+        }
+        
         // عرض نافذة التثبيت
         function showInstallPrompt() {
             const installContainer = document.getElementById('installContainer');
+            const installDescription = document.getElementById('installDescription');
+            
             if (installContainer) {
+                if (isIOS()) {
+                    // رسالة خاصة بـ iOS
+                    installDescription.innerHTML = `
+                        لتثبيت التطبيق على جهاز iOS:
+                        <br>1. اضغط على زر "مشاركة" في أسفل المتصفح.
+                        <br>2. اختر "أضف إلى الشاشة الرئيسية".
+                        <br>3. اضغط على "إضافة" في الزاوية العليا اليمنى.
+                    `;
+                } else if (isAndroid()) {
+                    // رسالة خاصة بـ Android
+                    installDescription.innerHTML = `
+                        لتثبيت التطبيق على جهاز أندرويد:
+                        <br>1. اضغط على زر التثبيت أدناه.
+                        <br>2. في النافذة المنبثقة، اضغط على "تثبيت".
+                        <br>3. سيظهر التطبيق على شاشتك الرئيسية.
+                    `;
+                } else {
+                    // رسالة عامة
+                    installDescription.innerHTML = 'ثبت التطبيق على شاشتك الرئيسية لتجربة أفضل';
+                }
+                
                 installContainer.style.display = 'flex';
             }
         }
@@ -1670,17 +1713,17 @@ textarea {
         
         // =============== استماع لأحداث PWA ===============
         
-        // حدث قبل التثبيت
+        // حدث قبل التثبيت (لأندرويد)
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
             
-            // عرض نافذة التثبيت بعد 3 ثواني من تحميل الصفحة
+            // عرض نافذة التثبيت بعد 5 ثواني من تحميل الصفحة
             setTimeout(() => {
                 if (!isAppInstalled && deferredPrompt) {
                     showInstallPrompt();
                 }
-            }, 3000);
+            }, 5000);
             
             updateInstallButton();
         });
@@ -1689,23 +1732,12 @@ textarea {
         window.addEventListener('appinstalled', () => {
             console.log('App installed successfully');
             isAppInstalled = true;
+            localStorage.setItem('appInstalled', 'true');
             hideInstallPrompt();
             updateInstallButton();
             
             // عرض رسالة نجاح
-            const messageDiv = document.getElementById('message');
-            if (messageDiv) {
-                messageDiv.innerHTML = `
-                    <div class="message success">
-                        <p>✅ تم تثبيت التطبيق بنجاح على شاشتك الرئيسية!</p>
-                        <p>يمكنك الآن الوصول للتطبيق بسهولة من أي وقت.</p>
-                    </div>
-                `;
-                messageDiv.style.display = 'block';
-                setTimeout(() => {
-                    messageDiv.style.display = 'none';
-                }, 5000);
-            }
+            showMessage('success', '✅ تم تثبيت التطبيق بنجاح على شاشتك الرئيسية!');
         });
         
         // =============== ربط أحداث الأزرار ===============
@@ -1722,6 +1754,9 @@ textarea {
                         deferredPrompt = null;
                         updateInstallButton();
                     });
+                } else if (isIOS()) {
+                    // لـ iOS، نعرض التعليمات
+                    showInstallPrompt();
                 }
             });
             
@@ -1737,6 +1772,9 @@ textarea {
                         hideInstallPrompt();
                         updateInstallButton();
                     });
+                } else if (isIOS()) {
+                    // لـ iOS، نعرض رسالة تأكيد
+                    alert('يرجى اتباع التعليمات أعلاه لتثبيت التطبيق على iOS');
                 }
             });
             
@@ -1745,6 +1783,13 @@ textarea {
                 hideInstallPrompt();
                 // عرض زر التثبيت العائم بدلاً من النافذة
                 updateInstallButton();
+            });
+            
+            // إخفاء نافذة التثبيت عند الضغط خارجها
+            document.getElementById('installContainer').addEventListener('click', (e) => {
+                if (e.target.id === 'installContainer') {
+                    hideInstallPrompt();
+                }
             });
         });
         
@@ -1823,6 +1868,28 @@ textarea {
             
             // التحقق من تثبيت التطبيق
             checkIfAppInstalled();
+            
+            // عرض رسالة ترحيب بالتطبيق
+            setTimeout(() => {
+                if (!isAppInstalled && !localStorage.getItem('installPromptShown')) {
+                    // عرض رسالة ترحيبية عن التطبيق
+                    const welcomeMessage = `
+                        <div class="message success" style="margin: 20px 0;">
+                            <p>📱 <strong>تطبيق نظام الشكاوى الموحد</strong></p>
+                            <p>يمكنك تثبيت التطبيق على شاشتك الرئيسية للوصول السريع!</p>
+                            <p>اضغط على زر التثبيت <i class="fas fa-download"></i> في الزاوية اليمنى السفلية</p>
+                        </div>
+                    `;
+                    const mainContainer = document.getElementById('mainContainer');
+                    if (mainContainer) {
+                        const welcomeElement = document.createElement('div');
+                        welcomeElement.innerHTML = welcomeMessage;
+                        mainContainer.insertBefore(welcomeElement, mainContainer.firstChild);
+                        
+                        localStorage.setItem('installPromptShown', 'true');
+                    }
+                }
+            }, 2000);
             
             loadDepartments();
             submitBox.addEventListener('click', openSubmitSection);
@@ -1930,8 +1997,8 @@ textarea {
                         navigator.serviceWorker.ready.then(registration => {
                             registration.showNotification('مرحباً بالنائب أحمد الحديدي', {
                                 body: 'تم تفعيل الإشعارات بنجاح! ستتلقى تحديثات على شكواك.',
-                                icon: 'icons/icon-192x192.png',
-                                badge: 'icons/icon-192x192.png',
+                                icon: 'icon-192x192.png',
+                                badge: 'icon-192x192.png',
                                 vibrate: [200, 100, 200]
                             });
                         });
@@ -2227,8 +2294,8 @@ textarea {
                     navigator.serviceWorker.ready.then(registration => {
                         registration.showNotification('تم تقديم شكوى جديدة', {
                             body: `شكوى رقم: ${complaintNumber} - ${fullName}`,
-                            icon: 'icons/icon-192x192.png',
-                            badge: 'icons/icon-192x192.png',
+                            icon: 'icon-192x192.png',
+                            badge: 'icon-192x192.png',
                             tag: 'new-complaint',
                             data: {
                                 url: '/shakawa/',
