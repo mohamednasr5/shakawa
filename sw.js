@@ -1,16 +1,20 @@
 // Service Worker لنظام الشكاوى الموحد
-const CACHE_NAME = 'shakawa-cache-v1';
-
+const CACHE_NAME = 'shakawa-cache-v2';
 const urlsToCache = [
+  // الصفحات الرئيسية
   '/shakawa/',
-  '/shakawa/admin.html',
   '/shakawa/index.html',
-
-  // أيقونات PWA
+  '/shakawa/admin.html',
+  
+  // الأيقونات
   '/shakawa/icon-192x192.png',
   '/shakawa/icon-512x512.png',
-
-  // خطوط ومكتبات خارجية
+  
+  // ملفات الـ manifest
+  '/shakawa/manifest-index.json',
+  '/shakawa/manifest-admin.json',
+  
+  // مكتبات خارجية
   'https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
@@ -53,11 +57,7 @@ self.addEventListener('fetch', event => {
       }
 
       return fetch(event.request).then(networkResponse => {
-        if (
-          !networkResponse ||
-          networkResponse.status !== 200 ||
-          networkResponse.type !== 'basic'
-        ) {
+        if (!networkResponse || networkResponse.status !== 200) {
           return networkResponse;
         }
 
@@ -70,7 +70,13 @@ self.addEventListener('fetch', event => {
       }).catch(() => {
         // في حالة عدم الاتصال
         if (event.request.mode === 'navigate') {
-          return caches.match('/shakawa/admin.html');
+          // التحقق من الصفحة المطلوبة
+          const url = new URL(event.request.url);
+          if (url.pathname.includes('admin')) {
+            return caches.match('/shakawa/admin.html');
+          } else {
+            return caches.match('/shakawa/index.html');
+          }
         }
         return new Response('لا يوجد اتصال بالإنترنت', {
           status: 408,
@@ -81,20 +87,55 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// إشعارات Push
+// إشعارات Push - إصدار محسن
 self.addEventListener('push', event => {
   const data = event.data ? event.data.json() : {};
+  
+  // تحديد نوع الإشعار
+  const notificationType = data.type || 'general';
+  let title, body, icon, url;
+  
+  switch(notificationType) {
+    case 'new-complaint':
+      title = 'شكوى جديدة 📝';
+      body = `تم استلام شكوى جديدة من ${data.clientName || 'عميل'}`;
+      icon = '/shakawa/icon-192x192.png';
+      url = '/shakawa/admin.html';
+      break;
+    case 'status-update':
+      title = 'تحديث حالة الشكوى 🔄';
+      body = `تم تحديث حالة الشكوى ${data.complaintNumber || ''}`;
+      icon = '/shakawa/icon-192x192.png';
+      url = '/shakawa/index.html';
+      break;
+    default:
+      title = data.title || 'إشعار جديد';
+      body = data.body || 'لديك إشعار جديد من النظام';
+      icon = '/shakawa/icon-192x192.png';
+      url = data.url || '/shakawa/';
+  }
 
-  const title = data.title || 'طلب جديد';
   const options = {
-    body: data.body || 'تم استلام طلب جديد في النظام',
-    icon: '/shakawa/icon-192x192.png',
+    body: body,
+    icon: icon,
     badge: '/shakawa/icon-192x192.png',
     vibrate: [200, 100, 200],
-    tag: 'new-complaint',
+    tag: notificationType,
     data: {
-      url: data.url || '/shakawa/admin.html'
-    }
+      url: url,
+      type: notificationType,
+      timestamp: new Date().toISOString()
+    },
+    actions: [
+      {
+        action: 'open',
+        title: 'فتح'
+      },
+      {
+        action: 'close',
+        title: 'إغلاق'
+      }
+    ]
   };
 
   event.waitUntil(
@@ -106,17 +147,41 @@ self.addEventListener('push', event => {
 self.addEventListener('notificationclick', event => {
   event.notification.close();
 
+  if (event.action === 'close') {
+    return;
+  }
+
+  const notificationData = event.notification.data || {};
+  const urlToOpen = notificationData.url || '/shakawa/';
+
   event.waitUntil(
     clients.matchAll({
       type: 'window',
       includeUncontrolled: true
     }).then(windowClients => {
+      // البحث عن نافذة مفتوحة بالفعل
       for (const client of windowClients) {
         if (client.url.includes('/shakawa/') && 'focus' in client) {
-          return client.focus();
+          return client.focus().then(() => {
+            // إرسال رسالة إلى الصفحة إذا لزم الأمر
+            if (notificationData.type) {
+              client.postMessage({
+                type: 'notificationClick',
+                data: notificationData
+              });
+            }
+          });
         }
       }
-      return clients.openWindow('/shakawa/admin.html');
+      // فتح نافذة جديدة إذا لم تكن هناك نافذة مفتوحة
+      return clients.openWindow(urlToOpen);
     })
   );
+});
+
+// استقبال الرسائل من الصفحة
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
