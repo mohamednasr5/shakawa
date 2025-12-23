@@ -1,6 +1,6 @@
 {
   "name": "نظام الشكاوى الموحد",
-  "short_name": "الشكاوى",
+  "short_name": "متابعة الطلبات",
   "description": "لوحة تحكم نظام إدارة الشكاوى والطلبات",
   "start_url": "/shakawa/admin.html",
   "display": "standalone",
