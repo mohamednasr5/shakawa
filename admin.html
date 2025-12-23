@@ -1920,11 +1920,7 @@ async function exportAllToPDF() {
                 hideLoading();
             }
         }
-  <!-- html2canvas -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<!-- QR Code -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
+ 
 <script>
 async function downloadComplaintPDF(complaintKey) {
     const complaint = allComplaints.find(c => c.key === complaintKey);
@@ -2032,6 +2028,8 @@ async function downloadComplaintPDF(complaintKey) {
     }
 }
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 </body>
 </html>
