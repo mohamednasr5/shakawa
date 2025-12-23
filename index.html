@@ -2398,7 +2398,7 @@ textarea {
 
         await complaintRef.set(complaintData);
         await database.ref('lastComplaintNumber').set(complaintNumber);
-        await saveUserResidence(nationalId, localUnit);
+        // await saveUserResidence(nationalId, localUnit); // معطل - لا نريد إنشاء مستخدمين
 
         currentComplaintKey = complaintKey;
         currentComplaintData = complaintData;
