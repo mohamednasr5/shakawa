@@ -1707,19 +1707,9 @@ async function downloadComplaintPDF(complaintKey) {
         showLoading();
 
         const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
 
-        const doc = new jsPDF({
-            orientation: "p",
-            unit: "mm",
-            format: "a4",
-            encryption: {
-                userPassword: "742018",
-                ownerPassword: "742018",
-                userPermissions: ["print"]
-            }
-        });
-
-        // ================= HEADER =================
+        /* ================= HEADER ================= */
         doc.setFont("helvetica", "bold");
         doc.setFontSize(18);
         doc.text("الجمهورية العربية المصرية", 105, 15, { align: "center" });
@@ -1730,13 +1720,13 @@ async function downloadComplaintPDF(complaintKey) {
         doc.setDrawColor(0);
         doc.line(20, 28, 190, 28);
 
-        // ================= META =================
-        doc.setFontSize(10);
+        /* ================= META ================= */
         doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
         doc.text(`رقم الشكوى: ${complaint.complaintNumber || "-"}`, 190, 35, { align: "right" });
         doc.text(`تاريخ الطباعة: ${new Date().toLocaleDateString("ar-EG")}`, 20, 35);
 
-        // ================= TABLE =================
+        /* ================= BASIC DATA TABLE ================= */
         const tableData = [
             ["الاسم بالكامل", complaint.fullName || ""],
             ["الرقم القومي", complaint.nationalId || "غير متوفر"],
@@ -1745,7 +1735,8 @@ async function downloadComplaintPDF(complaintKey) {
             ["حالة الشكوى", complaint.status || ""],
             ["رقم الهاتف 1", complaint.phone1 || ""],
             ["رقم الهاتف 2", complaint.phone2 || "غير متوفر"],
-            ["العنوان", complaint.address || ""]
+            ["العنوان", complaint.address || ""],
+            ["تاريخ الإرسال", complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString("ar-EG") : ""]
         ];
 
         doc.autoTable({
@@ -1758,39 +1749,46 @@ async function downloadComplaintPDF(complaintKey) {
                 cellPadding: 4
             },
             headStyles: {
-                fillColor: [220, 220, 220],
+                fillColor: [230, 230, 230],
                 textColor: 0,
                 halign: "right",
                 fontStyle: "bold"
             },
             columnStyles: {
-                0: { cellWidth: 50 },
-                1: { cellWidth: 120 }
+                0: { cellWidth: 55 },
+                1: { cellWidth: 115 }
             },
             theme: "grid",
             margin: { left: 20, right: 20 }
         });
 
-        // ================= PROBLEM DETAILS =================
-        let y = doc.lastAutoTable.finalY + 10;
+        /* ================= PROBLEM DETAILS (IMPORTANT) ================= */
+        doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 10,
+            head: [["تفاصيل المشكلة"]],
+            body: [[complaint.problemDetails || "لا توجد تفاصيل"]],
+            styles: {
+                fontSize: 11,
+                halign: "right",
+                valign: "top",
+                cellPadding: 6
+            },
+            headStyles: {
+                fillColor: [240, 240, 240],
+                textColor: 0,
+                halign: "right",
+                fontStyle: "bold"
+            },
+            columnStyles: {
+                0: { cellWidth: 170 }
+            },
+            theme: "grid",
+            margin: { left: 20, right: 20 }
+        });
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(13);
-        doc.text("تفاصيل المشكلة", 190, y, { align: "right" });
-        y += 6;
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(11);
-        doc.text(
-            complaint.problemDetails || "لا توجد تفاصيل",
-            190,
-            y,
-            { align: "right", maxWidth: 170 }
-        );
-
-        // ================= FOOTER =================
-        doc.line(20, 280, 190, 280);
+        /* ================= FOOTER ================= */
         doc.setFontSize(9);
+        doc.line(20, 280, 190, 280);
         doc.text(
             `تم إصدار هذا التقرير بواسطة نظام الشكاوى الموحد - ${currentUser.name}`,
             105,
@@ -1799,16 +1797,15 @@ async function downloadComplaintPDF(complaintKey) {
         );
 
         doc.save(`شكوى_${complaint.complaintNumber || complaintKey}.pdf`);
-        showMessage("تم تنزيل ملف PDF الحكومي بنجاح 🔐", "success");
+        showMessage("تم تنزيل ملف PDF بنجاح", "success");
 
     } catch (err) {
         console.error(err);
-        showMessage("حدث خطأ أثناء إنشاء PDF", "error");
+        showMessage("حدث خطأ أثناء إنشاء ملف PDF", "error");
     } finally {
         hideLoading();
     }
 }
-
 async function exportAllToPDF() {
     try {
         showLoading();
@@ -1816,57 +1813,70 @@ async function exportAllToPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF("p", "mm", "a4");
 
-        doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
-        doc.setFont("Amiri");
-
-        let y = 20;
-
+        /* ================= HEADER ================= */
+        doc.setFont("helvetica", "bold");
         doc.setFontSize(18);
-        doc.text(fixArabic("تقرير جميع الشكاوى"), 190, y, { align: "right" });
-        y += 10;
+        doc.text("الجمهورية العربية المصرية", 105, 15, { align: "center" });
 
-        doc.setFontSize(12);
-        doc.text(
-            fixArabic(`إجمالي الشكاوى: ${filteredComplaints.length}`),
-            190, y, { align: "right" }
-        );
-        y += 12;
+        doc.setFontSize(14);
+        doc.text("تقرير جميع الشكاوى", 105, 23, { align: "center" });
 
-        filteredComplaints.forEach((c, i) => {
-            if (y > 260) {
-                doc.addPage();
-                y = 20;
-            }
+        doc.line(20, 28, 190, 28);
 
-            doc.setFontSize(13);
-            doc.text(
-                fixArabic(`(${i + 1}) شكوى رقم: ${c.complaintNumber || "—"}`),
-                190, y, { align: "right" }
-            );
-            y += 7;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(`تاريخ التقرير: ${new Date().toLocaleDateString("ar-EG")}`, 20, 35);
+        doc.text(`إجمالي الشكاوى: ${filteredComplaints.length}`, 190, 35, { align: "right" });
 
-            doc.setFontSize(11);
-            doc.text(fixArabic(`الاسم: ${c.fullName}`), 190, y, { align: "right" });
-            y += 6;
-            doc.text(fixArabic(`القسم: ${c.department}`), 190, y, { align: "right" });
-            y += 6;
-            doc.text(fixArabic(`الحالة: ${c.status}`), 190, y, { align: "right" });
-            y += 8;
+        /* ================= TABLE ================= */
+        const rows = filteredComplaints.map((c, i) => ([
+            i + 1,
+            c.complaintNumber || "",
+            c.fullName || "",
+            c.department || "",
+            c.status || "",
+            c.priority || ""
+        ]));
 
-            doc.line(20, y, 190, y);
-            y += 6;
+        doc.autoTable({
+            startY: 45,
+            head: [["#", "رقم الشكوى", "الاسم", "القسم", "الحالة", "الأولوية"]],
+            body: rows,
+            styles: {
+                fontSize: 10,
+                halign: "right",
+                cellPadding: 4
+            },
+            headStyles: {
+                fillColor: [230, 230, 230],
+                textColor: 0,
+                fontStyle: "bold",
+                halign: "right"
+            },
+            theme: "grid",
+            margin: { left: 15, right: 15 }
         });
+
+        /* ================= FOOTER ================= */
+        doc.setFontSize(9);
+        doc.text(
+            "تم إنشاء هذا التقرير بواسطة نظام الشكاوى الموحد",
+            105,
+            286,
+            { align: "center" }
+        );
 
         doc.save(`تقرير_الشكاوى_${Date.now()}.pdf`);
         showMessage("تم تصدير التقرير بنجاح", "success");
 
-    } catch (e) {
-        console.error(e);
-        showMessage("فشل إنشاء التقرير", "error");
+    } catch (err) {
+        console.error(err);
+        showMessage("فشل تصدير التقرير", "error");
     } finally {
         hideLoading();
     }
 }
+
      async function deleteComplaint(complaintKey) {
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) return;
