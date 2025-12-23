@@ -935,51 +935,64 @@
             if (responsesListener) {
                 responsesListener.off();
             }
+            
             responsesListener = database.ref(`complaints/${complaintKey}/responses`);
-            responsesListener.on('child_added', (snapshot) => {
-                const response = snapshot.val();
-                displayResponseInRealTime(response);
-            });
-            responsesListener.on('child_changed', (snapshot) => {
-                const response = snapshot.val();
-                updateResponseInRealTime(response);
-            });
-        }
-        function displayResponseInRealTime(response) {
-            const responsesList = document.querySelector('.responses-list');
-            if (!responsesList) return;
             
-            const date = new Date(response.timestamp).toLocaleString('ar-EG');
-            const isAdmin = response.senderRole === 'admin';
-            
-            const responseHTML = `
-                <div class="response-item ${isAdmin ? 'response-admin' : 'response-client'}" data-id="${response.timestamp}">
-                    <div class="response-header">
-                        <div class="response-sender">
-                            <i class="fas ${isAdmin ? 'fa-user-tie' : 'fa-user'}"></i>
-                            ${isAdmin ? (response.respondedBy || 'المكتب الخدمي للنائب أحمد الحديدي') : 'أنت'}
-                        </div>
-                        <div class="response-time">${date}</div>
-                    </div>
-                    <div class="response-content">${response.message}</div>
-                </div>
-            `;
-            
-            responsesList.insertAdjacentHTML('beforeend', responseHTML);
-        }
-        function updateResponseInRealTime(response) {
-            const responseElement = document.querySelector(`.response-item[data-id="${response.timestamp}"]`);
-            if (responseElement) {
-                const contentElement = responseElement.querySelector('.response-content');
-                if (contentElement) {
-                    contentElement.textContent = response.message;
+            // عرض الردود الحالية والاستماع للجديدة
+            responsesListener.on('value', (snapshot) => {
+                const responsesList = document.getElementById('responsesList');
+                const noResponsesMessage = document.getElementById('noResponsesMessage');
+                
+                if (!responsesList) return;
+                
+                // مسح القائمة الحالية
+                responsesList.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    const responses = snapshot.val();
+                    const responsesArray = Object.values(responses);
+                    
+                    // إخفاء رسالة عدم وجود ردود
+                    if (noResponsesMessage) {
+                        noResponsesMessage.style.display = 'none';
+                    }
+                    
+                    // فرز الردود حسب التاريخ
+                    responsesArray.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    
+                    // عرض جميع الردود
+                    responsesArray.forEach(response => {
+                        const isAdmin = response.senderRole === 'admin';
+                        const date = new Date(response.timestamp).toLocaleString('ar-EG');
+                        
+                        const responseHTML = `
+                            <div class="response-item ${isAdmin ? 'response-admin' : 'response-client'}" data-id="${response.timestamp}">
+                                <div class="response-header">
+                                    <div class="response-sender">
+                                        <i class="fas ${isAdmin ? 'fa-user-tie' : 'fa-user'}"></i>
+                                        ${isAdmin ? (response.respondedBy || 'المكتب الخدمي للنائب أحمد الحديدي') : 'أنت'}
+                                    </div>
+                                    <div class="response-time">${date}</div>
+                                </div>
+                                <div class="response-content">${response.message}</div>
+                            </div>
+                        `;
+                        
+                        responsesList.insertAdjacentHTML('beforeend', responseHTML);
+                    });
+                } else {
+                    // إذا لم توجد ردود، عرض رسالة عدم وجود ردود
+                    if (noResponsesMessage) {
+                        noResponsesMessage.style.display = 'block';
+                    }
                 }
-            }
+            });
         }
         async function displayComplaintDetails(complaint) {
             const detailsContainer = document.getElementById('complaintDetails');
             const createdAt = complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : 'غير معروف';
             const updatedAt = complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : createdAt;
+            
             let statusClass = '';
             switch(complaint.status) {
                 case 'جديدة': statusClass = 'status-new'; break;
@@ -989,12 +1002,14 @@
                 case 'مكتملة': statusClass = 'status-resolved'; break;
                 case 'ملغاة': statusClass = 'status-closed'; break;
             }
+            
             let priorityClass = '';
             switch(complaint.priority) {
                 case 'فى غاية الأهمية': priorityClass = 'priority-high'; break;
                 case 'مهمة': priorityClass = 'priority-medium'; break;
                 case 'عادية': priorityClass = 'priority-low'; break;
             }
+            
             let whatsappButton = '';
             if (complaint.sendDocuments && !complaint.documentsSent) {
                 whatsappButton = `
@@ -1009,45 +1024,22 @@
                     </div>
                 `;
             }
-            let responsesHTML = '';
-            if (complaint.responses && Object.keys(complaint.responses).length > 0) {
-                const responsesArray = Object.values(complaint.responses);
-                responsesArray.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-                
-                responsesHTML = `
-                    <div class="responses-container">
-                        <h3 class="responses-title"><i class="fas fa-comments"></i> سجل المحادثة</h3>
-                        <div class="responses-list">
-                `;
-                responsesArray.forEach(response => {
-                    const isAdmin = response.senderRole === 'admin';
-                    const date = new Date(response.timestamp).toLocaleString('ar-EG');
-                    responsesHTML += `
-                        <div class="response-item ${isAdmin ? 'response-admin' : 'response-client'}" data-id="${response.timestamp}">
-                            <div class="response-header">
-                                <div class="response-sender">
-                                    <i class="fas ${isAdmin ? 'fa-user-tie' : 'fa-user'}"></i>
-                                    ${isAdmin ? (response.respondedBy || 'المكتب الخدمي للنائب أحمد الحديدي') : 'أنت'}
-                                </div>
-                                <div class="response-time">${date}</div>
-                            </div>
-                            <div class="response-content">${response.message}</div>
-                        </div>
-                    `;
-                });
-                responsesHTML += `</div></div>`;
-            } else {
-                responsesHTML = `
-                    <div class="responses-container">
-                        <h3 class="responses-title"><i class="fas fa-comments"></i> سجل المحادثة</h3>
-                        <div style="text-align: center; padding: 40px; color: #666;">
+            
+            // إضافة قسم الردود فقط بدون محتوى (سيعبأ بواسطة المستمع في الوقت الحقيقي)
+            const responsesHTML = `
+                <div class="responses-container">
+                    <h3 class="responses-title"><i class="fas fa-comments"></i> سجل متابعة الطلب </h3>
+                    <div class="responses-list" id="responsesList">
+                        <!-- سيتم تعبئة الردود هنا تلقائياً عبر المستمع في الوقت الحقيقي -->
+                        <div style="text-align: center; padding: 40px; color: #666;" id="noResponsesMessage">
                             <i class="far fa-comment-alt fa-3x" style="margin-bottom: 15px;"></i>
                             <p style="font-size: 1.1rem; font-weight: 600;">لا توجد ردود بعد</p>
                             <p>شكراً لتواصلك معنا، سيتم الرد عليك في أقرب وقت.</p>
                         </div>
                     </div>
-                `;
-            }
+                </div>
+            `;
+            
             const replyVerificationHTML = `
                 <div class="verify-national-id-container" id="verifyNationalIdContainer">
                     <h3><i class="fas fa-shield-alt"></i> التحقق من الرقم القومي للرد على الشكوى</h3>
@@ -1070,6 +1062,7 @@
                     </button>
                 </div>
             `;
+            
             const detailsHTML = `
                 <h3 style="color: var(--primary-color); margin-bottom: 25px; text-align: center;"><i class="fas fa-file-alt"></i> تفاصيل الشكوى</h3>
                 <div class="details-grid">
@@ -1130,17 +1123,22 @@
                     </button>
                 </div>
             `;
+            
             detailsContainer.innerHTML = detailsHTML;
             detailsContainer.style.display = 'block';
             detailsContainer.scrollIntoView({ behavior: 'smooth' });
+            
             currentComplaintKey = complaint.key;
             currentComplaintData = complaint;
+            
             document.getElementById('verifyNationalIdInput').addEventListener('input', function(e) {
                 this.value = this.value.replace(/\D/g, '');
                 if (this.value.length > 14) {
                     this.value = this.value.substring(0, 14);
                 }
             });
+            
+            // الآن ننشئ المستمع في الوقت الحقيقي فقط
             setupRealtimeResponses(complaint.key);
         }
         function displayMultipleComplaints(complaints) {
