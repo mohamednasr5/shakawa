@@ -78,7 +78,7 @@
         .detail-item.full-width{grid-column:1/-1}
         .detail-label{font-weight:700;color:#1a5fb4;margin-bottom:8px;font-size:.95rem}
         .detail-value{color:#333;line-height:1.6;white-space:pre-wrap;word-break:break-word}
-        .action-btn{padding:10px 15px;border:none;border-radius:8px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .2s.ease;min-width:100px;font-weight:600}
+        .action-btn{padding:10px 15px;border:none;border-radius:8px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .2s ease;min-width:100px;font-weight:600}
         .btn-view{background:#3498db;color:#fff}
         .btn-view:hover{background:#2980b9}
         .btn-reply{background:#9b59b6;color:#fff}
@@ -675,6 +675,7 @@
         let unreadComplaints = new Set();
         let complaintsListener = null;
         let currentEditingUser = null;
+        
         // دالة تحميل الإعدادات
         function loadSettings() {
             database.ref('settings').once('value', snapshot => {
@@ -736,10 +737,37 @@
                 return;
             }
 
-            // لو حابب تضيف مستخدمين من قاعدة البيانات فيما بعد يمكن استكمال الكود هنا
-            showMessage('اسم المستخدم أو كلمة المرور غير صحيحة', 'error');
-            const loginError = document.getElementById('loginError');
-            if (loginError) loginError.style.display = 'block';
+            // للتحقق من المستخدمين من قاعدة البيانات
+            database.ref('users').once('value').then(snapshot => {
+                const users = snapshot.val() || {};
+                let userFound = false;
+                
+                Object.keys(users).forEach(key => {
+                    const user = users[key];
+                    if (user.username === username && user.password === password) {
+                        isLoggedIn = true;
+                        currentUser = {
+                            name: user.name,
+                            username: user.username,
+                            role: user.role || 'user',
+                            departments: user.departments || [],
+                            loginTime: new Date().toISOString()
+                        };
+
+                        localStorage.setItem('adminLoggedIn', 'true');
+                        localStorage.setItem('adminUser', JSON.stringify(currentUser));
+
+                        showDashboard();
+                        userFound = true;
+                    }
+                });
+                
+                if (!userFound) {
+                    showMessage('اسم المستخدم أو كلمة المرور غير صحيحة', 'error');
+                    const loginError = document.getElementById('loginError');
+                    if (loginError) loginError.style.display = 'block';
+                }
+            });
         }
 
         function initAuth() {
@@ -958,12 +986,12 @@
         async function loadComplaints() {
             showLoading();
             try {
-                const snapshot = await database.ref('complaints').orderByChild('timestamp').once('value');
+                const snapshot = await database.ref('complaints').orderByChild('createdAt').once('value');
                 const data = snapshot.val() || {};
                 allComplaints = Object.keys(data)
                     .map(key => ({ key, ...data[key] }))
                     .filter(c => shouldShowComplaint(c))
-                    .sort((a, b) => new Date(b.timestamp || b.createdAt || 0) - new Date(a.timestamp || a.createdAt || 0));
+                    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
                 filteredComplaints = [...allComplaints];
 
@@ -1064,7 +1092,7 @@
                         <td>${complaint.fullName || '-'}</td>
                         <td>${complaint.department || '-'}</td>
                         <td><span class="status-badge ${getStatusClass(complaint.status)}">${complaint.status || 'جديدة'}</span></td>
-                        <td>${formatDate(complaint.timestamp || complaint.createdAt)}</td>
+                        <td>${formatDate(complaint.createdAt)}</td>
                         <td class="actions">
                             <button class="action-btn btn-view" onclick="viewComplaint('${complaint.key}')">
                                 <i class="fas fa-eye"></i>
@@ -1103,7 +1131,7 @@
                         <td>${complaint.fullName || '-'}</td>
                         <td>${complaint.department || '-'}</td>
                         <td><span class="status-badge ${getStatusClass(complaint.status)}">${complaint.status || 'جديدة'}</span></td>
-                        <td>${formatDate(complaint.timestamp || complaint.createdAt)}</td>
+                        <td>${formatDate(complaint.createdAt)}</td>
                         <td class="actions">
                             <button class="action-btn btn-view" onclick="viewComplaint('${complaint.key}')">
                                 <i class="fas fa-eye"></i>
@@ -1216,7 +1244,7 @@
         function displayComplaintDetails(key, complaint) {
             const modalBody = document.getElementById('modalBody');
 
-            const priority = complaint.problemPriority || complaint.problemType || 'عادية';
+            const priority = complaint.priority || complaint.problemType || 'عادية';
 
             let html = `
                 <div class="details-grid">
@@ -1283,8 +1311,7 @@
                     <select id="complaintPrioritySelect">
                         <option value="عادية" ${priority === 'عادية' ? 'selected' : ''}>عادية</option>
                         <option value="مهمة" ${priority === 'مهمة' ? 'selected' : ''}>مهمة</option>
-                        <option value="عاجلة" ${priority === 'عاجلة' ? 'selected' : ''}>عاجلة</option>
-                        <option value="تستدعي التدخل الفوري" ${priority === 'تستدعي التدخل الفوري' ? 'selected' : ''}>تستدعي التدخل الفوري</option>
+                        <option value="فى غاية الأهمية" ${priority === 'فى غاية الأهمية' ? 'selected' : ''}>فى غاية الأهمية</option>
                     </select>
 
                     <div class="form-actions">
@@ -1300,20 +1327,20 @@
                 <div class="responses-container">
                     <div class="responses-title">
                         <i class="fas fa-comments"></i>
-                        الردود على الشكوى
+                        سجل المحادثة
                     </div>
                     <div class="responses-list">
             `;
 
-            if (complaint.responses) {
-                const responsesArray = Object.values(complaint.responses).sort(
-                    (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
-                );
-                responsesArray.forEach(res => {
-                    const isAdmin = res.senderRole === 'admin';
+            if (complaint.responses && Object.keys(complaint.responses).length > 0) {
+                const responsesArray = Object.values(complaint.responses);
+                responsesArray.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                
+                responsesArray.forEach(response => {
+                    const isAdmin = response.senderRole === 'admin';
                     const senderName = isAdmin
                         ? 'المكتب الخدمي للنائب أحمد الحديدي'
-                        : (res.senderName || complaint.fullName || 'العميل');
+                        : (response.senderName || complaint.fullName || 'العميل');
 
                     html += `
                         <div class="response-item ${isAdmin ? 'response-admin' : 'response-client'}">
@@ -1323,10 +1350,10 @@
                                     <span>${senderName}</span>
                                 </div>
                                 <div class="response-time">
-                                    ${formatDate(res.timestamp)}
+                                    ${formatDate(response.timestamp)}
                                 </div>
                             </div>
-                            <div class="response-content">${res.message || ''}</div>
+                            <div class="response-content">${response.message || ''}</div>
                         </div>
                     `;
                 });
@@ -1385,7 +1412,7 @@
             try {
                 await database.ref(`complaints/${key}`).update({
                     status,
-                    problemPriority: priority,
+                    priority: priority,
                     updatedAt: new Date().toISOString()
                 });
                 showMessage('تم تحديث حالة الشكوى ودرجة الأهمية بنجاح', 'success');
@@ -1404,16 +1431,21 @@
                 return;
             }
 
-            const newRef = database.ref(`complaints/${key}/responses`).push();
+            const timestamp = new Date().toISOString();
+            const responseKey = `response_${timestamp.replace(/[^0-9]/g, '')}`;
             const data = {
                 message,
                 senderName: 'المكتب الخدمي للنائب أحمد الحديدي',
                 senderRole: 'admin',
-                timestamp: new Date().toISOString()
+                timestamp: timestamp
             };
 
             try {
-                await newRef.set(data);
+                await database.ref(`complaints/${key}/responses/${responseKey}`).set(data);
+                await database.ref(`complaints/${key}`).update({
+                    updatedAt: timestamp,
+                    status: 'تم الرد'
+                });
                 textarea.value = '';
                 showMessage('تم إرسال الرد بنجاح', 'success');
                 viewComplaint(key);
@@ -1446,11 +1478,11 @@
                 'رقم الشكوى': c.complaintNumber || '',
                 'الاسم بالكامل': c.fullName || '',
                 'القسم': c.department || '',
-                'درجة الأهمية': c.problemPriority || c.problemType || 'عادية',
+                'درجة الأهمية': c.priority || c.problemType || 'عادية',
                 'الحالة': c.status || 'جديدة',
                 'تاريخ الإرسال': c.createdAt
                     ? new Date(c.createdAt).toLocaleString('ar-EG')
-                    : (c.timestamp ? new Date(c.timestamp).toLocaleString('ar-EG') : '')
+                    : ''
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(data);
@@ -1489,7 +1521,7 @@
             try {
                 showLoading();
 
-                const priority = complaint.problemPriority || complaint.problemType || 'عادية';
+                const priority = complaint.priority || complaint.problemType || 'عادية';
 
                 const htmlContent = `
                     <!DOCTYPE html>
@@ -1531,14 +1563,14 @@
                             <tr><td class="label">درجة أهمية المشكلة:</td><td>${priority}</td></tr>
                             <tr><td class="label">نوع المشكلة:</td><td>${complaint.problemType || ''}</td></tr>
                             <tr><td class="label">الحالة:</td><td>${complaint.status || ''}</td></tr>
-                            <tr><td class="label">تاريخ الإرسال:</td><td>${complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : (complaint.timestamp ? new Date(complaint.timestamp).toLocaleString('ar-EG') : '-')}</td></tr>
+                            <tr><td class="label">تاريخ الإرسال:</td><td>${complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : '-'}</td></tr>
                             <tr><td class="label">آخر تحديث:</td><td>${complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : '-'}</td></tr>
                         </table>
 
                         <h3>تفاصيل المشكلة:</h3>
                         <div class="details">${complaint.problemDetails || ''}</div>
 
-                        ${complaint.responses ? `
+                        ${complaint.responses && Object.keys(complaint.responses).length > 0 ? `
                         <h3>سجل المحادثة:</h3>
                         ${Object.values(complaint.responses)
                             .sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp))
@@ -1582,6 +1614,7 @@
                 hideLoading();
             }
         }
+        
         // دوال المستخدمين
         function displayUsersGrid() {
             const container = document.getElementById('usersGrid');
