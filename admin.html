@@ -702,44 +702,49 @@
             document.getElementById('filterStatus').addEventListener('change', filterComplaints);
         }
 
-        async function handleLogin(e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
+       function handleLogin(e) {
+           // متغيرات عامة
+let isLoggedIn = false;
+let currentUser = null;
+let settings = {};
+let allComplaints = [];
+let filteredComplaints = [];
+let allUsers = [];
+let allDepartments = [];
 
-            showLoading();
+    e.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const loginError = document.getElementById('loginError');
 
-            try {
-                const snapshot = await database.ref('users').orderByChild('username').equalTo(username).once('value');
-                
-                if (snapshot.exists()) {
-                    let userFound = false;
-                    snapshot.forEach(childSnapshot => {
-                        const user = childSnapshot.val();
-                        if (user.password === password) {
-                            userFound = true;
-                            currentUser = {
-                                key: childSnapshot.key,
-                                ...user
-                            };
-                            localStorage.setItem('adminUser', JSON.stringify(currentUser));
-                            showDashboard();
-                        }
-                    });
+    if (username === 'admin' && password === '742018') {
+        const userData = {
+            username: 'admin',
+            name: 'المدير العام',
+            role: 'admin',
+            phone: ''
+        };
+        loginError.style.display = 'none';
+        loginSuccess(userData);
+    } else {
+        loginError.style.display = 'block';
+    }
+}
+function loginSuccess(userData) {
+    isLoggedIn = true;
+    currentUser = {
+        username: userData.username,
+        name: userData.name,
+        role: userData.role || 'user',
+        phone: userData.phone || '',
+        loginTime: new Date().toISOString()
+    };
+    localStorage.setItem('adminLoggedIn', 'true');
+    localStorage.setItem('adminUser', JSON.stringify(currentUser));
+    showDashboard();
+    showMessage(`مرحباً ${currentUser.name}! ${settings.welcomeMessage || 'تم تسجيل الدخول بنجاح'}`, 'success');
+}
 
-                    if (!userFound) {
-                        document.getElementById('loginError').style.display = 'block';
-                    }
-                } else {
-                    document.getElementById('loginError').style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                showMessage('حدث خطأ أثناء تسجيل الدخول', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
 
         function handleLogout() {
             if (confirm('هل تريد تسجيل الخروج؟')) {
