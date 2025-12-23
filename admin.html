@@ -6,8 +6,9 @@
     <title>لوحة التحكم - نظام الشكاوى الموحد</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+   <!-- استبدل مكتبة jsPDF بهذه المكتبات -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent}
         html{font-size:16px;scroll-behavior:smooth}
@@ -1698,97 +1699,127 @@
             document.getElementById('departmentModal').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
-
-        async function downloadComplaintPDF(complaintKey) {
-            const complaint = allComplaints.find(c => c.key === complaintKey);
-            if (!complaint) return;
-            try {
-                showLoading();
-                
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                
-                // إعدادات الوثيقة
-                doc.setFont('Amiri', 'normal');
-                doc.setFontSize(20);
-                doc.text('تفاصيل الشكوى', 105, 20, { align: 'center' });
-                
-                doc.setFontSize(12);
-                let y = 40;
-                
-                // معلومات الشكوى
-                doc.setFontSize(14);
-                doc.text('المعلومات الأساسية:', 20, y);
-                y += 10;
-                
-                doc.setFontSize(12);
-                doc.text(`رقم الشكوى: ${complaint.complaintNumber || 'غير معروف'}`, 20, y);
+async function downloadComplaintPDF(complaintKey) {
+    const complaint = allComplaints.find(c => c.key === complaintKey);
+    if (!complaint) return;
+    
+    try {
+        showLoading();
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // تحويل النصوص العربية بشكل صحيح
+        const convertArabic = (text) => {
+            return text || '';
+        };
+        
+        // إنشاء جدول تفاصيل الشكوى
+        const tableData = [
+            ['رقم الشكوى', convertArabic(complaint.complaintNumber) || 'غير معروف'],
+            ['الاسم الكامل', convertArabic(complaint.fullName)],
+            ['الرقم القومي', convertArabic(complaint.nationalId) || 'غير متوفر'],
+            ['القسم', convertArabic(complaint.department)],
+            ['الأولوية', convertArabic(complaint.priority)],
+            ['الحالة', convertArabic(complaint.status)],
+            ['تاريخ الإرسال', new Date(complaint.createdAt).toLocaleDateString('ar-EG')],
+            ['رقم الهاتف 1', convertArabic(complaint.phone1)],
+            ['رقم الهاتف 2', convertArabic(complaint.phone2) || 'غير متوفر'],
+            ['العنوان', convertArabic(complaint.address)]
+        ];
+        
+        // العنوان الرئيسي
+        doc.setFontSize(20);
+        doc.text('تفاصيل الشكوى', 105, 20, { align: 'center' });
+        
+        doc.setFontSize(12);
+        doc.text(`تم إنشاء التقرير في: ${new Date().toLocaleString('ar-EG')}`, 105, 30, { align: 'center' });
+        
+        let y = 50;
+        
+        // رسم الجدول يدوياً
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('المعلومات الأساسية', 20, y);
+        y += 10;
+        
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'normal');
+        
+        tableData.forEach((row, index) => {
+            doc.setFillColor(index % 2 === 0 ? [240, 240, 240] : [255, 255, 255]);
+            doc.rect(20, y - 5, 170, 10, 'F');
+            
+            doc.setFont(undefined, 'bold');
+            doc.text(row[0] + ':', 25, y);
+            doc.setFont(undefined, 'normal');
+            doc.text(row[1], 100, y);
+            y += 10;
+        });
+        
+        y += 10;
+        
+        // تفاصيل المشكلة
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('تفاصيل المشكلة:', 20, y);
+        y += 10;
+        
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'normal');
+        
+        const problemText = convertArabic(complaint.problemDetails) || 'لا توجد تفاصيل';
+        const problemLines = doc.splitTextToSize(problemText, 170);
+        problemLines.forEach(line => {
+            doc.text(line, 25, y);
+            y += 8;
+        });
+        
+        // الردود إذا وجدت
+        if (complaint.responses && complaint.responses.length > 0) {
+            y += 10;
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('الردود:', 20, y);
+            y += 10;
+            
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+            
+            complaint.responses.forEach((response, index) => {
+                doc.setFont(undefined, 'bold');
+                doc.text(`الرد ${index + 1}:`, 25, y);
                 y += 8;
-                doc.text(`الاسم الكامل: ${complaint.fullName || ''}`, 20, y);
-                y += 8;
-                doc.text(`الرقم القومي: ${complaint.nationalId || 'غير متوفر'}`, 20, y);
-                y += 8;
-                doc.text(`القسم: ${complaint.department || ''}`, 20, y);
-                y += 8;
-                doc.text(`الأولوية: ${complaint.priority || ''}`, 20, y);
-                y += 8;
-                doc.text(`الحالة: ${complaint.status || ''}`, 20, y);
-                y += 8;
-                doc.text(`تاريخ الإرسال: ${new Date(complaint.createdAt).toLocaleDateString('ar-EG')}`, 20, y);
-                y += 10;
                 
-                // معلومات الاتصال
-                doc.setFontSize(14);
-                doc.text('معلومات الاتصال:', 20, y);
-                y += 10;
+                doc.setFont(undefined, 'normal');
+                const responseLines = doc.splitTextToSize(convertArabic(response.message), 160);
+                responseLines.forEach(line => {
+                    doc.text(line, 30, y);
+                    y += 8;
+                });
                 
-                doc.setFontSize(12);
-                doc.text(`رقم الهاتف 1: ${complaint.phone1 || ''}`, 20, y);
-                y += 8;
-                doc.text(`رقم الهاتف 2: ${complaint.phone2 || ''}`, 20, y);
-                y += 8;
-                doc.text(`العنوان: ${complaint.address || ''}`, 20, y);
-                y += 10;
-                
-                // تفاصيل المشكلة
-                doc.setFontSize(14);
-                doc.text('تفاصيل المشكلة:', 20, y);
-                y += 10;
-                
-                doc.setFontSize(12);
-                const problemText = doc.splitTextToSize(complaint.problemDetails || '', 170);
-                doc.text(problemText, 20, y);
-                y += (problemText.length * 8) + 10;
-                
-                // الردود إذا وجدت
-                if (complaint.responses && complaint.responses.length > 0) {
-                    doc.setFontSize(14);
-                    doc.text('الردود:', 20, y);
-                    y += 10;
-                    
-                    doc.setFontSize(12);
-                    complaint.responses.forEach(response => {
-                        const responseText = doc.splitTextToSize(`${new Date(response.timestamp).toLocaleString('ar-EG')} - ${response.message}`, 170);
-                        doc.text(responseText, 20, y);
-                        y += (responseText.length * 8) + 8;
-                    });
-                }
-                
-                // تذييل
                 doc.setFontSize(10);
-                doc.text(`تم إنشاء هذا التقرير في: ${new Date().toLocaleString('ar-EG')}`, 105, 280, { align: 'center' });
-                doc.text(`بواسطة: ${currentUser.name}`, 105, 285, { align: 'center' });
-                
-                // حفظ الملف
-                doc.save(`شكوى_${complaint.complaintNumber || complaintKey}.pdf`);
-                showMessage('تم تنزيل PDF بنجاح', 'success');
-            } catch(err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء تنزيل PDF', 'error');
-            } finally {
-                hideLoading();
-            }
+                doc.text(`بواسطة: ${convertArabic(response.respondedBy || 'الإدارة')} - ${new Date(response.timestamp).toLocaleString('ar-EG')}`, 30, y);
+                y += 10;
+                doc.setFontSize(12);
+            });
         }
+        
+        // تذييل الصفحة
+        doc.setFontSize(10);
+        doc.text(`تم إنشاء التقرير بواسطة: ${currentUser.name}`, 105, 280, { align: 'center' });
+        doc.text('نظام الشكاوى الموحد © 2026', 105, 285, { align: 'center' });
+        
+        // حفظ الملف
+        doc.save(`شكوى_${complaint.complaintNumber || complaintKey}.pdf`);
+        showMessage('تم تنزيل PDF بنجاح', 'success');
+    } catch(err) {
+        console.error(err);
+        showMessage('حدث خطأ أثناء تنزيل PDF', 'error');
+    } finally {
+        hideLoading();
+    }
+}
 
         async function exportAllToPDF() {
             try {
