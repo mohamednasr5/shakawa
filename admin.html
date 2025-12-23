@@ -1057,6 +1057,46 @@
             currentPage = 1;
             displayComplaintsTable();
         }
+function displayComplaintsTable() {
+    const tbody = document.getElementById('complaintsTableBody');
+    if (!tbody) return;
+
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageComplaints = filteredComplaints.slice(start, end);
+
+    let html = '';
+    pageComplaints.forEach(complaint => {
+        const isUnread = unreadComplaints.has(complaint.key);
+        const rowClass = isUnread ? 'unread' : '';
+
+        html += `
+            <tr class="${rowClass}">
+                <td>
+                    ${isUnread ? '<span class="new-request-indicator"></span>' : ''}
+                    ${complaint.complaintNumber || '-'}
+                </td>
+                <td>${complaint.fullName || '-'}</td>
+                <td>${complaint.department || '-'}</td>
+                <td><span class="status-badge ${getStatusClass(complaint.status)}">${complaint.status || 'جديدة'}</span></td>
+                <td>${formatDate(complaint.timestamp || complaint.createdAt)}</td>
+                <td class="actions">
+                    <button class="action-btn btn-view" onclick="viewComplaint('${complaint.key}')">
+                        <i class="fas fa-eye"></i>
+                        عرض
+                    </button>
+                    <button class="action-btn btn-secondary" onclick="downloadComplaintPDF('${complaint.key}')">
+                        <i class="fas fa-file-pdf"></i>
+                        PDF
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:40px;color:#666;">لا توجد شكاوى</td></tr>';
+    updatePagination();
+}
 
         function displayComplaintsTable() {
             const tbody = document.getElementById('complaintsTableBody');
@@ -1667,6 +1707,118 @@
             XLSX.utils.book_append_sheet(wb, ws, 'الشكاوى');
             XLSX.writeFile(wb, 'complaints.xlsx');
         }
+function getComplaintField(c, field) {
+    // مساعد لجلب الحقول باختلاف الأسماء بين النسخ
+    switch (field) {
+        case 'country':
+            return c.country || c.countryName || c.residence || '-';
+        case 'governorate':
+            return c.governorate || 'الدقهلية';
+        case 'city':
+            return c.city || c.localUnit || '-';
+        case 'address':
+            return c.address || c.fullAddress || '-';
+        case 'phone':
+            return c.phone1 || c.phone || '-';
+        case 'phone2':
+            return c.phone2 || '-';
+        case 'email':
+            return c.email || '-';
+        default:
+            return '-';
+    }
+}
+
+async function downloadComplaintPDF(complaintKey) {
+    const complaint = allComplaints.find(c => c.key === complaintKey);
+    if (!complaint) return;
+
+    try {
+        showLoading();
+
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <title>تقرير الشكوى</title>
+                <style>
+                    body { font-family: 'Cairo', sans-serif; padding: 20px; color: #333; }
+                    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1a5fb4; padding-bottom: 15px; }
+                    .header h1 { color: #1a5fb4; margin-bottom: 10px; }
+                    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    .info-table td { padding: 10px; border: 1px solid #ddd; }
+                    .info-table .label { background: #f8f9fa; font-weight: bold; width: 30%; }
+                    .details { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; border-right: 4px solid #1a5fb4; }
+                    .response { padding: 15px; border-radius: 8px; margin: 10px 0; }
+                    .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 15px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>نظام الشكاوى الموحد</h1>
+                    <h2>تفاصيل الشكوى رقم: ${complaint.complaintNumber || ''}</h2>
+                    <p>تم إنشاء هذا التقرير في: ${new Date().toLocaleString('ar-EG')}</p>
+                </div>
+
+                <table class="info-table">
+                    <tr><td class="label">رقم الشكوى:</td><td>${complaint.complaintNumber || ''}</td></tr>
+                    <tr><td class="label">الاسم بالكامل:</td><td>${complaint.fullName || ''}</td></tr>
+                    <tr><td class="label">الرقم القومي:</td><td>${complaint.nationalId || 'غير متوفر'}</td></tr>
+                    <tr><td class="label">بلد الإقامة:</td><td>${getComplaintField(complaint, 'country')}</td></tr>
+                    <tr><td class="label">المحافظة:</td><td>${getComplaintField(complaint, 'governorate')}</td></tr>
+                    <tr><td class="label">المدينة/القرية:</td><td>${getComplaintField(complaint, 'city')}</td></tr>
+                    <tr><td class="label">العنوان بالتفصيل:</td><td>${getComplaintField(complaint, 'address')}</td></tr>
+                    <tr><td class="label">رقم الهاتف (1):</td><td>${getComplaintField(complaint, 'phone')}</td></tr>
+                    <tr><td class="label">رقم الهاتف (2):</td><td>${getComplaintField(complaint, 'phone2')}</td></tr>
+                    <tr><td class="label">البريد الإلكتروني:</td><td>${getComplaintField(complaint, 'email')}</td></tr>
+                    <tr><td class="label">القسم:</td><td>${complaint.department || ''}</td></tr>
+                    <tr><td class="label">نوع المشكلة:</td><td>${complaint.problemType || complaint.priority || ''}</td></tr>
+                    <tr><td class="label">الحالة:</td><td>${complaint.status || ''}</td></tr>
+                    <tr><td class="label">تاريخ الإرسال:</td><td>${complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : (complaint.timestamp ? new Date(complaint.timestamp).toLocaleString('ar-EG') : '-')}</td></tr>
+                </table>
+
+                <h3>تفاصيل المشكلة:</h3>
+                <div class="details">${complaint.problemDetails || ''}</div>
+
+                ${complaint.responses ? `
+                <h3>سجل المحادثة:</h3>
+                ${Object.values(complaint.responses).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).map(response => {
+                    const isAdmin = response.senderRole === 'admin';
+                    const date = new Date(response.timestamp).toLocaleString('ar-EG');
+                    return `
+                    <div class="response" style="border-right:4px solid ${isAdmin ? '#28a745' : '#3498db'}; background:${isAdmin ? '#d4edda' : '#e3f2fd'};">
+                        <div style="display:flex;justify-content:space-between;">
+                            <strong>${response.senderName || (isAdmin ? 'الإدارة' : complaint.fullName || 'العميل')}</strong>
+                            <small>${date}</small>
+                        </div>
+                        <div style="margin-top:5px;">${response.message || ''}</div>
+                    </div>
+                    `;
+                }).join('')}
+                ` : ''}
+
+                <div class="footer">
+                    <p>© 2026 نظام الشكاوى الموحد - جميع الحقوق محفوظة</p>
+                </div>
+            </body>
+            </html>
+        `;
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+
+        showMessage('جاري تحضير ملف PDF للطباعة أو الحفظ', 'success');
+    } catch (err) {
+        console.error(err);
+        showMessage('حدث خطأ أثناء إنشاء ملف PDF', 'error');
+    } finally {
+        hideLoading();
+    }
+}
 
         window.onclick = function(event) {
             const complaintModal = document.getElementById('complaintModal');
