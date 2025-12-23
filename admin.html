@@ -1699,109 +1699,6 @@
             document.getElementById('departmentModal').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
-async function downloadComplaintPDF(complaintKey) {
-    const complaint = allComplaints.find(c => c.key === complaintKey);
-    if (!complaint) return;
-
-    try {
-        showLoading();
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF("p", "mm", "a4");
-
-        /* ========== HEADER (autoTable ONLY) ========== */
-        doc.autoTable({
-            startY: 10,
-            body: [
-                ["جمهورية مصر العربية"],
-                ["نظام الشكاوى الموحد"],
-                [`رقم الشكوى: ${complaint.complaintNumber || "-"}`],
-                [`تاريخ الطباعة: ${new Date().toLocaleDateString("ar-EG")}`]
-            ],
-            styles: {
-                halign: "center",
-                fontSize: 12,
-                cellPadding: 3
-            },
-            bodyStyles: { textColor: 0 },
-            theme: "plain"
-        });
-
-        /* ========== BASIC DATA TABLE ========== */
-        doc.autoTable({
-            startY: doc.lastAutoTable.finalY + 5,
-            head: [["البيان", "القيمة"]],
-            body: [
-                ["الاسم بالكامل", complaint.fullName || ""],
-                ["الرقم القومي", complaint.nationalId || "غير متوفر"],
-                ["القسم", complaint.department || ""],
-                ["نوع المشكلة", complaint.priority || ""],
-                ["حالة الشكوى", complaint.status || ""],
-                ["رقم الهاتف 1", complaint.phone1 || ""],
-                ["رقم الهاتف 2", complaint.phone2 || "غير متوفر"],
-                ["العنوان", complaint.address || ""],
-                ["تاريخ الإرسال", complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString("ar-EG") : ""]
-            ],
-            styles: {
-                halign: "right",
-                fontSize: 11,
-                cellPadding: 4
-            },
-            headStyles: {
-                fillColor: [230,230,230],
-                textColor: 0,
-                halign: "right",
-                fontStyle: "bold"
-            },
-            theme: "grid",
-            margin: { left: 20, right: 20 }
-        });
-
-        /* ========== PROBLEM DETAILS (CRITICAL) ========== */
-        doc.autoTable({
-            startY: doc.lastAutoTable.finalY + 8,
-            head: [["تفاصيل المشكلة"]],
-            body: [[complaint.problemDetails || "لا توجد تفاصيل"]],
-            styles: {
-                halign: "right",
-                valign: "top",
-                fontSize: 11,
-                cellPadding: 6
-            },
-            headStyles: {
-                fillColor: [240,240,240],
-                textColor: 0,
-                halign: "right",
-                fontStyle: "bold"
-            },
-            columnStyles: {
-                0: { cellWidth: 170 }
-            },
-            theme: "grid",
-            margin: { left: 20, right: 20 }
-        });
-
-        /* ========== FOOTER (autoTable) ========== */
-        doc.autoTable({
-            startY: 280,
-            body: [[`تم إصدار هذا التقرير بواسطة نظام الشكاوى الموحد - ${currentUser.name}`]],
-            styles: {
-                halign: "center",
-                fontSize: 9
-            },
-            theme: "plain"
-        });
-
-        doc.save(`شكوى_${complaint.complaintNumber || complaintKey}.pdf`);
-        showMessage("تم تنزيل ملف PDF بنجاح", "success");
-
-    } catch (err) {
-        console.error(err);
-        showMessage("حدث خطأ أثناء إنشاء ملف PDF", "error");
-    } finally {
-        hideLoading();
-    }
-}
 
 async function exportAllToPDF() {
     try {
@@ -2024,5 +1921,72 @@ async function exportAllToPDF() {
             }
         }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+async function downloadComplaintPDF(complaintKey) {
+    const complaint = allComplaints.find(c => c.key === complaintKey);
+    if (!complaint) return;
+
+    // افتح التفاصيل (علشان تتصور)
+    viewComplaint(complaintKey);
+
+    await new Promise(r => setTimeout(r, 600));
+
+    const modal = document.querySelector('#complaintDetailsModal .modal-content');
+    if (!modal) return;
+
+    /* ===== إخفاء الأزرار ===== */
+    const hiddenElements = [];
+    modal.querySelectorAll('button, .no-print').forEach(el => {
+        hiddenElements.push({ el, display: el.style.display });
+        el.style.display = 'none';
+    });
+
+    try {
+        showLoading();
+
+        const canvas = await html2canvas(modal, {
+            scale: 3,                 // 👈 جودة طباعة عالية
+            useCORS: true,
+            backgroundColor: "#ffffff",
+            scrollX: 0,
+            scrollY: -window.scrollY,
+            windowWidth: modal.scrollWidth,
+            windowHeight: modal.scrollHeight
+        });
+
+        const imgData = canvas.toDataURL("image/jpeg", 1.0);
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF("p", "mm", "a4");
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        /* ===== صفحة واحدة فقط ===== */
+        const y = (pageHeight - imgHeight) / 2;
+        pdf.addImage(imgData, "JPEG", 0, y, imgWidth, imgHeight);
+
+        pdf.save(`شكوى_${complaint.complaintNumber || complaintKey}.pdf`);
+        showMessage("تم تصدير الشكوى PDF بجودة طباعة عالية", "success");
+
+    } catch (e) {
+        console.error(e);
+        showMessage("حدث خطأ أثناء التصدير", "error");
+    } finally {
+
+        /* ===== إرجاع الأزرار ===== */
+        hiddenElements.forEach(item => {
+            item.el.style.display = item.display;
+        });
+
+        hideLoading();
+    }
+}
+</script>
 </body>
 </html>
