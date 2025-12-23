@@ -6,7 +6,6 @@
     <title>لوحة التحكم - نظام الشكاوى الموحد</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-   <!-- استبدل مكتبة jsPDF بهذه المكتبات -->
     <style>
         *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent}
         html{font-size:16px;scroll-behavior:smooth}
@@ -514,6 +513,9 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/amiri-font/1.0.0/Amiri-Regular-normal.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBIIStbiZD0ZJ6su7C1bwZlBvqx-PP-t58",
@@ -571,6 +573,22 @@
             document.getElementById('editComplaintForm').addEventListener('submit', saveEditedComplaint);
             document.getElementById('departmentForm').addEventListener('submit', saveDepartment);
             document.getElementById('userDepartments').addEventListener('change', updateSelectedDepartments);
+            
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const section = this.getAttribute('data-section');
+                    if (section) {
+                        if (this.classList.contains('admin-only') && currentUser && currentUser.role !== 'admin') {
+                            showMessage('يجب تسجيل الدخول كمسؤول', 'error');
+                            return;
+                        }
+                        document.querySelectorAll('.menu-item').forEach(mi => mi.classList.remove('active'));
+                        this.classList.add('active');
+                        showSection(section);
+                        if (window.innerWidth < 769) closeSidebar();
+                    }
+                });
+            });
         }
 
         function handleLogin(e) {
@@ -739,7 +757,6 @@
             allComplaints.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
             updateDashboardStats();
             
-            // تصفية الشكاوى حسب أقسام المستخدم إذا لم يكن مدير
             if (currentUser && currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
                 filteredComplaints = allComplaints.filter(complaint => 
                     currentUser.departments.includes(complaint.department)
@@ -808,7 +825,6 @@
                 allComplaints.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
                 updateDashboardStats();
                 
-                // تصفية الشكاوى حسب أقسام المستخدم إذا لم يكن مدير
                 if (currentUser && currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
                     filteredComplaints = allComplaints.filter(complaint => 
                         currentUser.departments.includes(complaint.department)
@@ -918,7 +934,6 @@
         function updateDashboardStats() {
             let complaintsToShow = allComplaints;
             
-            // إذا كان المستخدم ليس مديراً، نعرض فقط الشكاوى التابعة لأقسامه
             if (currentUser && currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
                 complaintsToShow = allComplaints.filter(complaint => 
                     currentUser.departments.includes(complaint.department)
@@ -1053,7 +1068,6 @@
             }
             let html = '';
             allUsers.forEach(u => {
-                // إخفاء مستخدمين المدير إذا لم يكن المستخدم الحالي مديراً
                 if (currentUser.role !== 'admin' && u.role === 'admin') return;
                 
                 const roleColor = u.role === 'admin' ? '#e74c3c' : '#3498db';
@@ -1115,10 +1129,8 @@
             
             let departments = [];
             if (currentUser.role === 'admin') {
-                // المدير يرى جميع الأقسام
                 departments = [...new Set(allComplaints.map(c => c.department).filter(Boolean))];
             } else {
-                // المستخدم العادي يرى فقط أقسامه
                 departments = currentUser.departments || [];
             }
             
@@ -1158,7 +1170,6 @@
             const priority = document.getElementById('filterPriority').value;
             
             filteredComplaints = allComplaints.filter(c => {
-                // إذا لم يكن المستخدم مديراً، نعرض فقط الشكاوى التابعة لأقسامه
                 if (currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
                     if (!currentUser.departments.includes(c.department)) return false;
                 }
@@ -1221,7 +1232,6 @@
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) return showMessage('لم يتم العثور على الشكوى','error');
             
-            // التحقق من صلاحيات المستخدم
             if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
                 showMessage('ليس لديك صلاحية لعرض هذه الشكوى', 'error');
                 return;
@@ -1330,7 +1340,6 @@
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) return;
             
-            // التحقق من صلاحيات المستخدم
             if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
                 showMessage('ليس لديك صلاحية لتعديل هذه الشكوى', 'error');
                 return;
@@ -1395,7 +1404,6 @@
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) return;
             
-            // التحقق من صلاحيات المستخدم
             if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
                 showMessage('ليس لديك صلاحية لتغيير حالة هذه الشكوى', 'error');
                 return;
@@ -1564,7 +1572,6 @@
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) return;
             
-            // التحقق من صلاحيات المستخدم
             if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
                 showMessage('ليس لديك صلاحية للرد على هذه الشكوى', 'error');
                 return;
@@ -1698,82 +1705,138 @@
             document.body.style.overflow = 'auto';
         }
 
-async function exportAllToPDF() {
-    try {
-        showLoading();
+        async function exportAllToPDF() {
+            try {
+                showLoading();
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF("p", "mm", "a4");
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF("p", "mm", "a4");
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(18);
+                doc.text("جمهورية مصر العربية", 105, 15, { align: "center" });
+                doc.setFontSize(14);
+                doc.text("تقرير جميع الشكاوى", 105, 23, { align: "center" });
+                doc.line(20, 28, 190, 28);
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(10);
+                doc.text(`تاريخ التقرير: ${new Date().toLocaleDateString("ar-EG")}`, 20, 35);
+                doc.text(`إجمالي الشكاوى: ${filteredComplaints.length}`, 190, 35, { align: "right" });
 
-        /* ================= HEADER ================= */
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(18);
-        doc.text("جمهورية مصر العربية", 105, 15, { align: "center" });
+                const rows = filteredComplaints.map((c, i) => ([
+                    i + 1,
+                    c.complaintNumber || "",
+                    c.fullName || "",
+                    c.department || "",
+                    c.status || "",
+                    c.priority || ""
+                ]));
 
-        doc.setFontSize(14);
-        doc.text("تقرير جميع الشكاوى", 105, 23, { align: "center" });
+                doc.autoTable({
+                    startY: 45,
+                    head: [["#", "رقم الشكوى", "الاسم", "القسم", "الحالة", "الأولوية"]],
+                    body: rows,
+                    styles: { fontSize: 10, halign: "right", cellPadding: 4 },
+                    headStyles: { fillColor: [230, 230, 230], textColor: 0, fontStyle: "bold", halign: "right" },
+                    theme: "grid",
+                    margin: { left: 15, right: 15 }
+                });
 
-        doc.line(20, 28, 190, 28);
+                doc.setFontSize(9);
+                doc.text("تم إنشاء هذا التقرير بواسطة نظام الشكاوى الموحد", 105, 286, { align: "center" });
+                doc.save(`تقرير_الشكاوى_${Date.now()}.pdf`);
+                showMessage("تم تصدير التقرير بنجاح", "success");
+            } catch (err) {
+                console.error(err);
+                showMessage("فشل تصدير التقرير", "error");
+            } finally {
+                hideLoading();
+            }
+        }
 
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.text(`تاريخ التقرير: ${new Date().toLocaleDateString("ar-EG")}`, 20, 35);
-        doc.text(`إجمالي الشكاوى: ${filteredComplaints.length}`, 190, 35, { align: "right" });
+        async function downloadComplaintPDF(complaintKey) {
+            const complaint = allComplaints.find(c => c.key === complaintKey);
+            if (!complaint) return;
 
-        /* ================= TABLE ================= */
-        const rows = filteredComplaints.map((c, i) => ([
-            i + 1,
-            c.complaintNumber || "",
-            c.fullName || "",
-            c.department || "",
-            c.status || "",
-            c.priority || ""
-        ]));
+            try {
+                showLoading();
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 
-        doc.autoTable({
-            startY: 45,
-            head: [["#", "رقم الشكوى", "الاسم", "القسم", "الحالة", "الأولوية"]],
-            body: rows,
-            styles: {
-                fontSize: 10,
-                halign: "right",
-                cellPadding: 4
-            },
-            headStyles: {
-                fillColor: [230, 230, 230],
-                textColor: 0,
-                fontStyle: "bold",
-                halign: "right"
-            },
-            theme: "grid",
-            margin: { left: 15, right: 15 }
-        });
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const margin = 20;
+                let yPos = margin;
 
-        /* ================= FOOTER ================= */
-        doc.setFontSize(9);
-        doc.text(
-            "تم إنشاء هذا التقرير بواسطة نظام الشكاوى الموحد",
-            105,
-            286,
-            { align: "center" }
-        );
+                doc.setFont("Amiri", "normal");
+                doc.setFontSize(16);
+                doc.text("جمهورية مصر العربية", pageWidth / 2, yPos, { align: "center" });
+                yPos += 10;
+                
+                doc.setFontSize(14);
+                doc.text("تفاصيل الشكوى", pageWidth / 2, yPos, { align: "center" });
+                yPos += 10;
 
-        doc.save(`تقرير_الشكاوى_${Date.now()}.pdf`);
-        showMessage("تم تصدير التقرير بنجاح", "success");
+                doc.setDrawColor(200, 200, 200);
+                doc.line(margin, yPos, pageWidth - margin, yPos);
+                yPos += 10;
 
-    } catch (err) {
-        console.error(err);
-        showMessage("فشل تصدير التقرير", "error");
-    } finally {
-        hideLoading();
-    }
-}
+                doc.setFontSize(11);
+                const addField = (label, value) => {
+                    if (yPos > pageHeight - 30) {
+                        doc.addPage();
+                        yPos = margin;
+                    }
+                    doc.setFont("Amiri", "bold");
+                    doc.text(label, pageWidth - margin, yPos, { align: "right" });
+                    doc.setFont("Amiri", "normal");
+                    doc.text(String(value || '-'), pageWidth - margin - 50, yPos, { align: "right" });
+                    yPos += 8;
+                };
 
-     async function deleteComplaint(complaintKey) {
+                addField("رقم الشكوى:", complaint.complaintNumber);
+                addField("الاسم الكامل:", complaint.fullName);
+                addField("الرقم القومي:", complaint.nationalId);
+                addField("بلد الإقامة:", complaint.localUnit);
+                addField("العنوان:", complaint.address);
+                addField("رقم الهاتف 1:", complaint.phone1);
+                addField("رقم الهاتف 2:", complaint.phone2);
+                addField("القسم:", complaint.department);
+                addField("نوع المشكلة:", complaint.priority);
+                addField("الحالة:", complaint.status);
+                addField("تاريخ الإرسال:", complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString('ar-EG') : '-');
+
+                yPos += 5;
+                doc.setFont("Amiri", "bold");
+                doc.text("تفاصيل المشكلة:", pageWidth - margin, yPos, { align: "right" });
+                yPos += 8;
+                doc.setFont("Amiri", "normal");
+                const problemLines = doc.splitTextToSize(complaint.problemDetails || '', pageWidth - 2 * margin);
+                problemLines.forEach(line => {
+                    if (yPos > pageHeight - 30) {
+                        doc.addPage();
+                        yPos = margin;
+                    }
+                    doc.text(line, pageWidth - margin, yPos, { align: "right" });
+                    yPos += 7;
+                });
+
+                doc.setFontSize(9);
+                doc.text("تم إنشاء هذا المستند بواسطة نظام الشكاوى الموحد", pageWidth / 2, pageHeight - 10, { align: "center" });
+
+                doc.save(`شكوى_${complaint.complaintNumber}.pdf`);
+                showMessage("تم تنزيل PDF بنجاح", "success");
+            } catch (err) {
+                console.error(err);
+                showMessage("حدث خطأ أثناء إنشاء PDF", "error");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteComplaint(complaintKey) {
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) return;
             
-            // التحقق من صلاحيات المستخدم
             if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
                 showMessage('ليس لديك صلاحية لحذف هذه الشكوى', 'error');
                 return;
@@ -1918,137 +1981,6 @@ async function exportAllToPDF() {
                 hideLoading();
             }
         }
-</script>
-    <!-- jsPDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<!-- jsPDF AutoTable (للتقارير العامة فقط) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-
-<!-- html2canvas (تصوير الشكوى) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-<!-- QR Code -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-async function downloadComplaintPDF(complaintKey) {
-    const complaint = allComplaints.find(c => c.key === complaintKey);
-    if (!complaint) return;
-
-    /* افتح الشكوى */
-    viewComplaint(complaintKey);
-    await new Promise(r => setTimeout(r, 600));
-
-    const container = document.querySelector('#complaintDetailsModal .modal-content');
-    if (!container) return;
-
-    /* ===== QR CODE (يمين) ===== */
-    const qrDiv = document.createElement("div");
-    qrDiv.style.position = "absolute";
-    qrDiv.style.right = "25px";
-    qrDiv.style.top = "25px";
-    qrDiv.style.padding = "6px";
-    qrDiv.style.background = "#fff";
-    qrDiv.style.borderRadius = "8px";
-    qrDiv.style.boxShadow = "0 2px 8px rgba(0,0,0,.2)";
-    container.appendChild(qrDiv);
-
-    new QRCode(qrDiv, {
-        text: complaint.complaintNumber || "",
-        width: 90,
-        height: 90
-    });
-
-    /* ===== إخفاء الأزرار ===== */
-    const hidden = [];
-    container.querySelectorAll("button").forEach(el => {
-        hidden.push({ el, d: el.style.display });
-        el.style.display = "none";
-    });
-
-    try {
-        showLoading();
-
-        /* تصوير المحتوى كامل */
-        const canvas = await html2canvas(container, {
-            scale: 3,
-            backgroundColor: "#ffffff",
-            useCORS: true,
-            windowWidth: container.scrollWidth,
-            windowHeight: container.scrollHeight
-        });
-
-        const imgData = canvas.toDataURL("image/jpeg", 1.0);
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF("p", "mm", "a4");
-
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-
-        /* ===== HEADER IMAGE ===== */
-        const headerImg = "01.jpeg";
-        const headerHeight = 28;
-
-        const imgWidth = pageWidth;
-        const imgHeight = canvas.height * imgWidth / canvas.width;
-
-        let position = headerHeight + 5;
-        let heightLeft = imgHeight;
-        let pageNum = 1;
-        const totalPages = Math.ceil(imgHeight / (pageHeight - headerHeight));
-
-        function drawHeader() {
-            pdf.addImage(headerImg, "JPEG", 0, 0, pageWidth, headerHeight);
-            pdf.setFontSize(13);
-            pdf.text(
-                `رقم الطلب: ${complaint.complaintNumber}`,
-                pageWidth / 2,
-                headerHeight - 8,
-                { align: "center" }
-            );
-        }
-
-        function drawFooter() {
-            pdf.setFontSize(9);
-            pdf.text(
-                `صفحة ${pageNum} / ${totalPages}`,
-                pageWidth / 2,
-                290,
-                { align: "center" }
-            );
-        }
-
-        /* الصفحة الأولى */
-        drawHeader();
-        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-        drawFooter();
-        heightLeft -= (pageHeight - headerHeight);
-
-        /* الصفحات التالية */
-        while (heightLeft > 0) {
-            pdf.addPage();
-            pageNum++;
-            position = headerHeight + 5 - (pageHeight - headerHeight) * (pageNum - 1);
-            drawHeader();
-            pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-            drawFooter();
-            heightLeft -= (pageHeight - headerHeight);
-        }
-
-        pdf.save(`شكوى_${complaint.complaintNumber}.pdf`);
-        showMessage("تم إنشاء PDF بنجاح", "success");
-
-    } catch (e) {
-        console.error(e);
-        showMessage("خطأ أثناء إنشاء PDF", "error");
-    } finally {
-        qrDiv.remove();
-        hidden.forEach(h => h.el.style.display = h.d);
-        hideLoading();
-    }
-}
-</script>
-
-
+    </script>
 </body>
 </html>
