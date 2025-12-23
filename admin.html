@@ -826,7 +826,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form id="userForm">
+                <form id="userForm" onsubmit="return false;">
                     <div class="form-row">
                         <div class="form-group">
                             <label>الاسم الكامل</label>
@@ -1963,101 +1963,208 @@
                 showLoading();
 
                 const priority = complaint.priority || complaint.problemType || 'عادية';
+                const complaintDirectLink = `https://mohamednasr5.github.io/shakawa/?id=${complaint.complaintNumber}`;
 
                 const htmlContent = `
                     <!DOCTYPE html>
                     <html dir="rtl">
                     <head>
                         <meta charset="UTF-8">
-                        <title>تقرير الشكوى</title>
+                        <title>تقرير الشكوى - ${complaint.complaintNumber}</title>
+                        <!-- JsBarcode Library -->
+                        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
                         <style>
-                            body { font-family: 'Cairo', sans-serif; padding: 20px; color: #333; }
-                            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1a5fb4; padding-bottom: 15px; }
-                            .header h1 { color: #1a5fb4; margin-bottom: 10px; }
-                            .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                            .info-table td { padding: 10px; border: 1px solid #ddd; }
-                            .info-table .label { background: #f8f9fa; font-weight: bold; width: 30%; }
-                            .details { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; border-right: 4px solid #1a5fb4; }
-                            .response { padding: 15px; border-radius: 8px; margin: 10px 0; }
-                            .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 15px; }
+                            body { 
+                                font-family: 'Cairo', sans-serif; 
+                                padding: 20px; 
+                                color: #333; 
+                            }
+                            .header { 
+                                text-align: center; 
+                                margin-bottom: 30px; 
+                                border: 3px solid #000; 
+                                padding: 20px; 
+                                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                                border-radius: 10px;
+                            }
+                            .header h1 { 
+                                color: #000; 
+                                margin-bottom: 15px; 
+                                font-size: 28px;
+                                font-weight: bold;
+                            }
+                            .barcode-container {
+                                background: #fff;
+                                padding: 15px;
+                                border-radius: 8px;
+                                margin: 15px auto;
+                                display: inline-block;
+                                border: 2px solid #000;
+                            }
+                            .barcode-container svg {
+                                display: block;
+                                margin: 0 auto;
+                            }
+                            .barcode-label {
+                                color: #000;
+                                font-size: 12px;
+                                margin-top: 10px;
+                                font-weight: bold;
+                                text-align: center;
+                            }
+                            .complaint-number-display {
+                                font-size: 24px;
+                                color: #000;
+                                font-weight: bold;
+                                margin: 10px 0;
+                                letter-spacing: 2px;
+                            }
+                            .info-table { 
+                                width: 100%; 
+                                border-collapse: collapse; 
+                                margin-bottom: 20px; 
+                            }
+                            .info-table td { 
+                                padding: 10px; 
+                                border: 1px solid #ddd; 
+                            }
+                            .info-table .label { 
+                                background: #f8f9fa; 
+                                font-weight: bold; 
+                                width: 30%; 
+                            }
+                            .details { 
+                                background: #f8f9fa; 
+                                padding: 15px; 
+                                border-radius: 8px; 
+                                margin: 20px 0; 
+                                border-right: 4px solid #1a5fb4; 
+                            }
+                            .response { 
+                                padding: 15px; 
+                                border-radius: 8px; 
+                                margin: 10px 0; 
+                            }
+                            .footer { 
+                                margin-top: 40px; 
+                                text-align: center; 
+                                color: #666; 
+                                font-size: 12px; 
+                                border-top: 1px solid #ddd; 
+                                padding-top: 15px; 
+                            }
+                            @media print {
+                                .header {
+                                    -webkit-print-color-adjust: exact;
+                                    print-color-adjust: exact;
+                                }
+                            }
                         </style>
                     </head>
                     <body>
                         <div class="header">
-                            <h1>نظام الشكاوى الموحد</h1>
-                            <h2>تفاصيل الشكوى رقم: ${complaint.complaintNumber || ''}</h2>
-                            <p>تم إنشاء هذا التقرير في: ${new Date().toLocaleString('ar-EG')}</p>
+                            <h1>🏛️ نظام الشكاوى الموحد - الإدارة</h1>
+                            <div class="complaint-number-display">${complaint.complaintNumber}</div>
+
+                            <!-- Barcode Container -->
+                            <div class="barcode-container">
+                                <svg id="barcode"></svg>
+                                <div class="barcode-label">امسح الباركود للوصول المباشر للطلب</div>
+                            </div>
+
+                            <p>تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')}</p>
                         </div>
 
                         <table class="info-table">
-                            <tr><td class="label">رقم الشكوى:</td><td>${complaint.complaintNumber || ''}</td></tr>
-                            <tr><td class="label">الاسم بالكامل:</td><td>${complaint.fullName || ''}</td></tr>
-                            <tr><td class="label">الرقم القومي:</td><td>${complaint.nationalId || 'غير متوفر'}</td></tr>
-                            <tr><td class="label">بلد الإقامة:</td><td>${getComplaintField(complaint, 'country')}</td></tr>
-                            <tr><td class="label">المحافظة:</td><td>${getComplaintField(complaint, 'governorate')}</td></tr>
-                            <tr><td class="label">المدينة/القرية:</td><td>${getComplaintField(complaint, 'city')}</td></tr>
-                            <tr><td class="label">العنوان بالتفصيل:</td><td>${getComplaintField(complaint, 'address')}</td></tr>
-                            <tr><td class="label">رقم الهاتف (1):</td><td>${getComplaintField(complaint, 'phone')}</td></tr>
-                            <tr><td class="label">رقم الهاتف (2):</td><td>${getComplaintField(complaint, 'phone2')}</td></tr>
-                            <tr><td class="label">البريد الإلكتروني:</td><td>${getComplaintField(complaint, 'email')}</td></tr>
-                            <tr><td class="label">القسم:</td><td>${complaint.department || ''}</td></tr>
-                            <tr><td class="label">درجة أهمية المشكلة:</td><td>${priority}</td></tr>
-                            <tr><td class="label">نوع المشكلة:</td><td>${complaint.problemType || ''}</td></tr>
-                            <tr><td class="label">الحالة:</td><td>${complaint.status || ''}</td></tr>
-                            <tr><td class="label">تاريخ الإرسال:</td><td>${complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : '-'}</td></tr>
-                            <tr><td class="label">آخر تحديث:</td><td>${complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : '-'}</td></tr>
+                            <tr><td class="label">رقم الشكوى</td><td>${complaint.complaintNumber || '-'}</td></tr>
+                            <tr><td class="label">الاسم الكامل</td><td>${complaint.fullName || '-'}</td></tr>
+                            <tr><td class="label">الرقم القومي</td><td>${complaint.nationalId || '-'}</td></tr>
+                            <tr><td class="label">بلد الإقامة</td><td>${getComplaintField(complaint, 'country')}</td></tr>
+                            <tr><td class="label">المحافظة</td><td>${getComplaintField(complaint, 'governorate')}</td></tr>
+                            <tr><td class="label">المدينة</td><td>${getComplaintField(complaint, 'city')}</td></tr>
+                            <tr><td class="label">العنوان</td><td>${getComplaintField(complaint, 'address')}</td></tr>
+                            <tr><td class="label">رقم الهاتف 1</td><td>${getComplaintField(complaint, 'phone')}</td></tr>
+                            <tr><td class="label">رقم الهاتف 2</td><td>${getComplaintField(complaint, 'phone2')}</td></tr>
+                            <tr><td class="label">البريد الإلكتروني</td><td>${getComplaintField(complaint, 'email')}</td></tr>
+                            <tr><td class="label">القسم المختص</td><td>${complaint.department || '-'}</td></tr>
+                            <tr><td class="label">الأولوية</td><td>${priority}</td></tr>
+                            <tr><td class="label">نوع المشكلة</td><td>${complaint.problemType || '-'}</td></tr>
+                            <tr><td class="label">حالة الشكوى</td><td>${complaint.status || '-'}</td></tr>
+                            <tr><td class="label">تاريخ التقديم</td><td>${complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : '-'}</td></tr>
+                            <tr><td class="label">آخر تحديث</td><td>${complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : '-'}</td></tr>
                         </table>
 
-                        <h3>تفاصيل المشكلة:</h3>
-                        <div class="details">${complaint.problemDetails || ''}</div>
+                        <h3>📝 تفاصيل المشكلة</h3>
+                        <div class="details">${complaint.problemDetails || '-'}</div>
 
                         ${complaint.responses && Object.keys(complaint.responses).length > 0 ? `
-                        <h3>سجل متابعة الطلب:</h3>
-                        ${Object.values(complaint.responses)
-                            .sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp))
-                            .map(response => {
-                                const isAdmin = response.senderRole === 'admin';
-                                const date = new Date(response.timestamp).toLocaleString('ar-EG');
-                                const senderName = isAdmin
-                                    ? 'المكتب الخدمي للنائب أحمد الحديدي'
-                                    : (response.senderName || complaint.fullName || 'العميل');
-                                return `
-                                <div class="response" style="border-right:4px solid ${isAdmin ? '#28a745' : '#3498db'}; background:${isAdmin ? '#d4edda' : '#e3f2fd'};">
-                                    <div style="display:flex;justify-content:space-between;">
-                                        <strong>${senderName}</strong>
-                                        <small>${date}</small>
-                                    </div>
-                                    <div style="margin-top:5px;">${response.message || ''}</div>
-                                </div>
-                                `;
-                            }).join('')}
+                            <h3>💬 الردود والمتابعات</h3>
+                            ${Object.values(complaint.responses)
+                                .sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp))
+                                .map(response => {
+                                    const isAdmin = response.senderRole === 'admin';
+                                    const date = new Date(response.timestamp).toLocaleString('ar-EG');
+                                    const senderName = isAdmin ? response.senderName : complaint.fullName;
+                                    return \`
+                                        <div class="response" style="border-right: 4px solid \${isAdmin ? '#28a745' : '#3498db'}; background: \${isAdmin ? '#d4edda' : '#e3f2fd'};">
+                                            <div style="display:flex;justify-content:space-between;">
+                                                <strong>\${senderName}</strong>
+                                                <small>\${date}</small>
+                                            </div>
+                                            <div style="margin-top:5px;">\${response.message}</div>
+                                        </div>
+                                    \`;
+                                }).join('')}
                         ` : ''}
 
                         <div class="footer">
-                            <p>© 2026 نظام الشكاوى الموحد - جميع الحقوق محفوظة</p>
-                            <p>المكتب الخدمي للنائب أحمد الحديدي</p>
+                            <p>© 2026 نظام الشكاوى الموحد - الإدارة</p>
+                            <p>تم الإنشاء بواسطة: <strong>Mohamed Nasr</strong></p>
+                            <p style="margin-top: 10px; font-size: 10px;">الرابط المباشر: ${complaintDirectLink}</p>
                         </div>
+
+                        <script>
+                            // توليد الباركود بعد تحميل الصفحة
+                            window.onload = function() {
+                                try {
+                                    JsBarcode("#barcode", "${complaintDirectLink}", {
+                                        format: "CODE128",
+                                        width: 2,
+                                        height: 80,
+                                        displayValue: false,
+                                        background: "#ffffff",
+                                        lineColor: "#000000",
+                                        margin: 10
+                                    });
+
+                                    // الطباعة بعد توليد الباركود
+                                    setTimeout(function() {
+                                        window.print();
+                                    }, 500);
+                                } catch(e) {
+                                    console.error("Barcode generation error:", e);
+                                    window.print();
+                                }
+                            };
+                        </script>
                     </body>
                     </html>
                 `;
 
+                // فتح نافذة جديدة وطباعة
                 const printWindow = window.open('', '_blank');
                 printWindow.document.write(htmlContent);
                 printWindow.document.close();
-                printWindow.focus();
-                printWindow.print();
 
-                showMessage('جاري تحضير ملف PDF للطباعة أو الحفظ', 'success');
+                showMessage('تم تحميل PDF بنجاح', 'success');
+
             } catch (err) {
                 console.error(err);
                 showMessage('حدث خطأ أثناء إنشاء ملف PDF', 'error');
             } finally {
                 hideLoading();
             }
-        }
-        
-        // دوال المستخدمين
-        function displayUsersGrid() {
+        } function displayUsersGrid() {
             const container = document.getElementById('usersGrid');
             if (!container) return;
 
@@ -2170,6 +2277,15 @@
             if (!name || !username || !email) {
                 showMessage('من فضلك أكمل جميع الحقول الأساسية', 'error');
                 return;
+            }
+
+            // التحقق من عدم وجود مستخدم بنفس اسم المستخدم (في حالة الإضافة فقط)
+            if (!currentEditingUser) {
+                const existingUser = allUsers.find(u => u.username === username);
+                if (existingUser) {
+                    showMessage('اسم المستخدم هذا موجود بالفعل', 'error');
+                    return;
+                }
             }
 
             const departments = [];
