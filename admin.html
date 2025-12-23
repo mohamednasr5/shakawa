@@ -1707,74 +1707,69 @@ async function downloadComplaintPDF(complaintKey) {
         showLoading();
 
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+        const doc = new jsPDF("p", "mm", "a4");
 
-        /* ================= HEADER ================= */
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(18);
-        doc.text("الجمهورية العربية المصرية", 105, 15, { align: "center" });
-
-        doc.setFontSize(14);
-        doc.text("نظام الشكاوى الموحد", 105, 23, { align: "center" });
-
-        doc.setDrawColor(0);
-        doc.line(20, 28, 190, 28);
-
-        /* ================= META ================= */
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.text(`رقم الشكوى: ${complaint.complaintNumber || "-"}`, 190, 35, { align: "right" });
-        doc.text(`تاريخ الطباعة: ${new Date().toLocaleDateString("ar-EG")}`, 20, 35);
-
-        /* ================= BASIC DATA TABLE ================= */
-        const tableData = [
-            ["الاسم بالكامل", complaint.fullName || ""],
-            ["الرقم القومي", complaint.nationalId || "غير متوفر"],
-            ["القسم", complaint.department || ""],
-            ["نوع المشكلة", complaint.priority || ""],
-            ["حالة الشكوى", complaint.status || ""],
-            ["رقم الهاتف 1", complaint.phone1 || ""],
-            ["رقم الهاتف 2", complaint.phone2 || "غير متوفر"],
-            ["العنوان", complaint.address || ""],
-            ["تاريخ الإرسال", complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString("ar-EG") : ""]
-        ];
-
+        /* ========== HEADER (autoTable ONLY) ========== */
         doc.autoTable({
-            startY: 45,
-            head: [["البيان", "القيمة"]],
-            body: tableData,
+            startY: 10,
+            body: [
+                ["جمهورية مصر العربية"],
+                ["نظام الشكاوى الموحد"],
+                [`رقم الشكوى: ${complaint.complaintNumber || "-"}`],
+                [`تاريخ الطباعة: ${new Date().toLocaleDateString("ar-EG")}`]
+            ],
             styles: {
-                fontSize: 11,
+                halign: "center",
+                fontSize: 12,
+                cellPadding: 3
+            },
+            bodyStyles: { textColor: 0 },
+            theme: "plain"
+        });
+
+        /* ========== BASIC DATA TABLE ========== */
+        doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 5,
+            head: [["البيان", "القيمة"]],
+            body: [
+                ["الاسم بالكامل", complaint.fullName || ""],
+                ["الرقم القومي", complaint.nationalId || "غير متوفر"],
+                ["القسم", complaint.department || ""],
+                ["نوع المشكلة", complaint.priority || ""],
+                ["حالة الشكوى", complaint.status || ""],
+                ["رقم الهاتف 1", complaint.phone1 || ""],
+                ["رقم الهاتف 2", complaint.phone2 || "غير متوفر"],
+                ["العنوان", complaint.address || ""],
+                ["تاريخ الإرسال", complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString("ar-EG") : ""]
+            ],
+            styles: {
                 halign: "right",
+                fontSize: 11,
                 cellPadding: 4
             },
             headStyles: {
-                fillColor: [230, 230, 230],
+                fillColor: [230,230,230],
                 textColor: 0,
                 halign: "right",
                 fontStyle: "bold"
-            },
-            columnStyles: {
-                0: { cellWidth: 55 },
-                1: { cellWidth: 115 }
             },
             theme: "grid",
             margin: { left: 20, right: 20 }
         });
 
-        /* ================= PROBLEM DETAILS (IMPORTANT) ================= */
+        /* ========== PROBLEM DETAILS (CRITICAL) ========== */
         doc.autoTable({
-            startY: doc.lastAutoTable.finalY + 10,
+            startY: doc.lastAutoTable.finalY + 8,
             head: [["تفاصيل المشكلة"]],
             body: [[complaint.problemDetails || "لا توجد تفاصيل"]],
             styles: {
-                fontSize: 11,
                 halign: "right",
                 valign: "top",
+                fontSize: 11,
                 cellPadding: 6
             },
             headStyles: {
-                fillColor: [240, 240, 240],
+                fillColor: [240,240,240],
                 textColor: 0,
                 halign: "right",
                 fontStyle: "bold"
@@ -1786,15 +1781,16 @@ async function downloadComplaintPDF(complaintKey) {
             margin: { left: 20, right: 20 }
         });
 
-        /* ================= FOOTER ================= */
-        doc.setFontSize(9);
-        doc.line(20, 280, 190, 280);
-        doc.text(
-            `تم إصدار هذا التقرير بواسطة نظام الشكاوى الموحد - ${currentUser.name}`,
-            105,
-            286,
-            { align: "center" }
-        );
+        /* ========== FOOTER (autoTable) ========== */
+        doc.autoTable({
+            startY: 280,
+            body: [[`تم إصدار هذا التقرير بواسطة نظام الشكاوى الموحد - ${currentUser.name}`]],
+            styles: {
+                halign: "center",
+                fontSize: 9
+            },
+            theme: "plain"
+        });
 
         doc.save(`شكوى_${complaint.complaintNumber || complaintKey}.pdf`);
         showMessage("تم تنزيل ملف PDF بنجاح", "success");
@@ -1806,6 +1802,7 @@ async function downloadComplaintPDF(complaintKey) {
         hideLoading();
     }
 }
+
 async function exportAllToPDF() {
     try {
         showLoading();
@@ -1816,7 +1813,7 @@ async function exportAllToPDF() {
         /* ================= HEADER ================= */
         doc.setFont("helvetica", "bold");
         doc.setFontSize(18);
-        doc.text("الجمهورية العربية المصرية", 105, 15, { align: "center" });
+        doc.text("جمهورية مصر العربية", 105, 15, { align: "center" });
 
         doc.setFontSize(14);
         doc.text("تقرير جميع الشكاوى", 105, 23, { align: "center" });
