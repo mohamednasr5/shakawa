@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>نظام الشكاوى الموحد</title>
+    <title>نظام الشكاوى الموحد - العميل</title>
     
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="manifest.json">
+    <!-- PWA Meta Tags for Client App -->
+    <link rel="manifest" href="manifest-index.json">
     <link rel="icon" href="icon-192x192.png">
     <link rel="apple-touch-icon" href="icon-192x192.png">
     <meta name="theme-color" content="#667eea">
@@ -1344,11 +1344,11 @@ textarea {
                 <i class="fas fa-download"></i>
             </div>
             <div class="install-text">
-                <h3>تثبيت التطبيق</h3>
-                <p id="installDescription">ثبت التطبيق على شاشتك الرئيسية لتجربة أفضل</p>
+                <h3>تثبيت تطبيق الشكاوى</h3>
+                <p id="installDescription">ثبت تطبيق الشكاوى على شاشتك الرئيسية لتقديم ومتابعة الشكاوى بسهولة</p>
             </div>
             <button class="install-btn" id="installButton">
-                <i class="fas fa-download"></i> تثبيت
+                <i class="fas fa-download"></i> تثبيت التطبيق
             </button>
             <button class="cancel-btn" id="cancelInstall">
                 لاحقاً
@@ -1360,6 +1360,9 @@ textarea {
     <div class="floating-install-btn" id="floatingInstallBtn">
         <i class="fas fa-download"></i>
     </div>
+    
+    <!-- Toast للإشعارات -->
+    <div id="pwa-toast" style="display: none;"></div>
     
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
@@ -1591,210 +1594,263 @@ textarea {
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <script>
-        // =============== متغيرات PWA ===============
-        let deferredPrompt;
-        let isAppInstalled = false;
-        
-        // =============== وظائف PWA ===============
-        
-        // تسجيل Service Worker
-        function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered successfully:', registration);
-                        
-                        // تفعيل الإشعارات
-                        if ('Notification' in window && Notification.permission === 'default') {
-                            Notification.requestPermission().then(permission => {
-                                if (permission === 'granted') {
-                                    console.log('Notification permission granted');
-                                }
-                            });
+        // =============== PWA Handler للعميل ===============
+        class PWAClientHandler {
+            constructor() {
+                this.deferredPrompt = null;
+                this.isAppInstalled = false;
+                this.appType = 'client';
+                this.init();
+            }
+
+            init() {
+                this.checkIfAppInstalled();
+                this.registerServiceWorker();
+                this.setupEventListeners();
+                this.showWelcomeMessage();
+                this.checkOnlineStatus();
+            }
+
+            registerServiceWorker() {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js')
+                        .then(registration => {
+                            console.log('Service Worker registered successfully:', registration);
+                            this.requestNotificationPermission();
+                        })
+                        .catch(error => {
+                            console.error('Service Worker registration failed:', error);
+                        });
+                }
+            }
+
+            checkIfAppInstalled() {
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+                const isFullscreen = window.matchMedia('(display-mode: fullscreen)').matches;
+                const isIOS = window.navigator.standalone === true;
+                const localStorageInstalled = localStorage.getItem(`appInstalled_${this.appType}`) === 'true';
+
+                this.isAppInstalled = isStandalone || isFullscreen || isIOS || localStorageInstalled;
+                
+                if (this.isAppInstalled) {
+                    this.hideInstallButton();
+                }
+            }
+
+            setupEventListeners() {
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    this.deferredPrompt = e;
+                    setTimeout(() => {
+                        if (!this.isAppInstalled && this.deferredPrompt) {
+                            this.showInstallPrompt();
                         }
-                    })
-                    .catch(error => {
-                        console.error('Service Worker registration failed:', error);
-                    });
+                    }, 5000);
+                });
+
+                window.addEventListener('appinstalled', () => {
+                    console.log('App installed successfully');
+                    this.isAppInstalled = true;
+                    localStorage.setItem(`appInstalled_${this.appType}`, 'true');
+                    this.hideInstallPrompt();
+                    this.showToast('✅ تم تثبيت تطبيق الشكاوى بنجاح على شاشتك الرئيسية!', 'success');
+                });
+
+                // ربط أزرار التثبيت
+                document.addEventListener('click', (e) => {
+                    if (e.target.id === 'installButton' || e.target.closest('#installButton')) {
+                        this.install();
+                    }
+                    
+                    if (e.target.id === 'cancelInstall' || e.target.closest('#cancelInstall')) {
+                        this.hideInstallPrompt();
+                    }
+                    
+                    if (e.target.id === 'floatingInstallBtn' || e.target.closest('#floatingInstallBtn')) {
+                        this.showInstallPrompt();
+                    }
+                });
+
+                // إخفاء نافذة التثبيت عند الضغط خارجها
+                document.getElementById('installContainer').addEventListener('click', (e) => {
+                    if (e.target.id === 'installContainer') {
+                        this.hideInstallPrompt();
+                    }
+                });
             }
-        }
-        
-        // التحقق من تثبيت التطبيق
-        function checkIfAppInstalled() {
-            // للكشف عن تطبيقات PWA المثبتة
-            if (window.matchMedia('(display-mode: standalone)').matches) {
-                isAppInstalled = true;
-                document.getElementById('floatingInstallBtn').style.display = 'none';
-                return true;
+
+            showWelcomeMessage() {
+                if (!this.isAppInstalled && !localStorage.getItem(`welcomeShown_${this.appType}`)) {
+                    setTimeout(() => {
+                        this.showToast('📱 يمكنك تثبيت تطبيق الشكاوى على شاشتك الرئيسية للوصول السريع!', 'info');
+                        localStorage.setItem(`welcomeShown_${this.appType}`, 'true');
+                    }, 3000);
+                }
             }
-            
-            // للكشف على iOS
-            if (window.navigator.standalone === true) {
-                isAppInstalled = true;
-                document.getElementById('floatingInstallBtn').style.display = 'none';
-                return true;
-            }
-            
-            // للكشف على أندرويد
-            if (window.matchMedia('(display-mode: fullscreen)').matches) {
-                isAppInstalled = true;
-                document.getElementById('floatingInstallBtn').style.display = 'none';
-                return true;
-            }
-            
-            // تحقق من localStorage
-            if (localStorage.getItem('appInstalled') === 'true') {
-                isAppInstalled = true;
-                document.getElementById('floatingInstallBtn').style.display = 'none';
-                return true;
-            }
-            
-            return false;
-        }
-        
-        // التحقق إذا كان الجهاز iOS
-        function isIOS() {
-            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        }
-        
-        // التحقق إذا كان الجهاز أندرويد
-        function isAndroid() {
-            return /Android/.test(navigator.userAgent);
-        }
-        
-        // عرض نافذة التثبيت
-        function showInstallPrompt() {
-            const installContainer = document.getElementById('installContainer');
-            const installDescription = document.getElementById('installDescription');
-            
-            if (installContainer) {
-                if (isIOS()) {
-                    // رسالة خاصة بـ iOS
-                    installDescription.innerHTML = `
-                        لتثبيت التطبيق على جهاز iOS:
-                        <br>1. اضغط على زر "مشاركة" في أسفل المتصفح.
-                        <br>2. اختر "أضف إلى الشاشة الرئيسية".
-                        <br>3. اضغط على "إضافة" في الزاوية العليا اليمنى.
-                    `;
-                } else if (isAndroid()) {
-                    // رسالة خاصة بـ Android
-                    installDescription.innerHTML = `
-                        لتثبيت التطبيق على جهاز أندرويد:
-                        <br>1. اضغط على زر التثبيت أدناه.
-                        <br>2. في النافذة المنبثقة، اضغط على "تثبيت".
-                        <br>3. سيظهر التطبيق على شاشتك الرئيسية.
+
+            showInstallPrompt() {
+                if (this.isAppInstalled || !this.deferredPrompt) return;
+
+                const installContainer = document.getElementById('installContainer');
+                const installDescription = document.getElementById('installDescription');
+                
+                if (!installContainer) return;
+
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                let instructions = '';
+
+                if (isIOS) {
+                    instructions = `
+                        <p><strong>لتثبيت التطبيق على iOS:</strong></p>
+                        <ol style="text-align: right; margin-right: 15px;">
+                            <li>اضغط على زر "مشاركة" في أسفل المتصفح</li>
+                            <li>اختر "أضف إلى الشاشة الرئيسية"</li>
+                            <li>اضغط على "إضافة" في الزاوية العليا اليمنى</li>
+                        </ol>
                     `;
                 } else {
-                    // رسالة عامة
-                    installDescription.innerHTML = 'ثبت التطبيق على شاشتك الرئيسية لتجربة أفضل';
+                    instructions = `
+                        <p><strong>لتثبيت التطبيق على Android:</strong></p>
+                        <ol style="text-align: right; margin-right: 15px;">
+                            <li>اضغط على زر "تثبيت" أدناه</li>
+                            <li>في النافذة المنبثقة، اضغط على "تثبيت"</li>
+                            <li>سيظهر التطبيق على شاشتك الرئيسية</li>
+                        </ol>
+                    `;
                 }
-                
+
+                installDescription.innerHTML = `
+                    <p>ثبت تطبيق الشكاوى على شاشتك الرئيسية لتقديم ومتابعة الشكاوى بسهولة</p>
+                    ${instructions}
+                `;
+
                 installContainer.style.display = 'flex';
             }
-        }
-        
-        // إخفاء نافذة التثبيت
-        function hideInstallPrompt() {
-            const installContainer = document.getElementById('installContainer');
-            if (installContainer) {
-                installContainer.style.display = 'none';
+
+            hideInstallPrompt() {
+                const installContainer = document.getElementById('installContainer');
+                if (installContainer) {
+                    installContainer.style.display = 'none';
+                }
+            }
+
+            hideInstallButton() {
+                const floatingBtn = document.getElementById('floatingInstallBtn');
+                if (floatingBtn) {
+                    floatingBtn.style.display = 'none';
+                }
+            }
+
+            async install() {
+                if (this.deferredPrompt) {
+                    this.deferredPrompt.prompt();
+                    const { outcome } = await this.deferredPrompt.userChoice;
+                    
+                    if (outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    
+                    this.deferredPrompt = null;
+                    this.hideInstallPrompt();
+                } else if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                    this.showToast('يرجى اتباع التعليمات أعلاه لتثبيت التطبيق على iOS', 'info');
+                }
+            }
+
+            requestNotificationPermission() {
+                if ('Notification' in window && Notification.permission === 'default') {
+                    setTimeout(() => {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === 'granted') {
+                                console.log('Notification permission granted');
+                                this.sendWelcomeNotification();
+                            }
+                        });
+                    }, 2000);
+                }
+            }
+
+            sendWelcomeNotification() {
+                if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification('مرحباً بكم في تطبيق الشكاوى', {
+                            body: 'يمكنك الآن تقديم ومتابعة شكواك بسهولة',
+                            icon: 'icon-192x192.png',
+                            badge: 'icon-192x192.png',
+                            vibrate: [200, 100, 200]
+                        });
+                    });
+                }
+            }
+
+            checkOnlineStatus() {
+                if (!navigator.onLine) {
+                    this.showToast('⚠️ أنت غير متصل بالإنترنت', 'warning', 5000);
+                }
+                
+                window.addEventListener('online', () => {
+                    this.showToast('✅ تم استعادة الاتصال بالإنترنت', 'success', 3000);
+                });
+                
+                window.addEventListener('offline', () => {
+                    this.showToast('⚠️ فقدت الاتصال بالإنترنت', 'warning', 5000);
+                });
+            }
+
+            showToast(message, type = 'info', duration = 3000) {
+                let toast = document.getElementById('pwa-toast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'pwa-toast';
+                    toast.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 15px 20px;
+                        border-radius: 10px;
+                        color: white;
+                        font-weight: bold;
+                        z-index: 10000;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                        max-width: 400px;
+                        animation: slideIn 0.3s ease;
+                    `;
+                    document.body.appendChild(toast);
+                }
+
+                const colors = {
+                    success: 'linear-gradient(135deg, #2ecc71, #27ae60)',
+                    error: 'linear-gradient(135deg, #e74c3c, #c0392b)',
+                    info: 'linear-gradient(135deg, #3498db, #2980b9)',
+                    warning: 'linear-gradient(135deg, #f39c12, #e67e22)'
+                };
+
+                toast.style.background = colors[type] || colors.info;
+                toast.innerHTML = message;
+                toast.style.display = 'block';
+
+                setTimeout(() => {
+                    toast.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {
+                        toast.style.display = 'none';
+                        toast.style.animation = '';
+                    }, 300);
+                }, duration);
+            }
+
+            updateInstallButton() {
+                const floatingBtn = document.getElementById('floatingInstallBtn');
+                if (this.deferredPrompt && !this.isAppInstalled) {
+                    floatingBtn.style.display = 'flex';
+                } else {
+                    floatingBtn.style.display = 'none';
+                }
             }
         }
-        
-        // تحديث زر التثبيت العائم
-        function updateInstallButton() {
-            const floatingBtn = document.getElementById('floatingInstallBtn');
-            if (deferredPrompt && !isAppInstalled) {
-                floatingBtn.style.display = 'flex';
-            } else {
-                floatingBtn.style.display = 'none';
-            }
-        }
-        
-        // =============== استماع لأحداث PWA ===============
-        
-        // حدث قبل التثبيت (لأندرويد)
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            
-            // عرض نافذة التثبيت بعد 5 ثواني من تحميل الصفحة
-            setTimeout(() => {
-                if (!isAppInstalled && deferredPrompt) {
-                    showInstallPrompt();
-                }
-            }, 5000);
-            
-            updateInstallButton();
-        });
-        
-        // حدث بعد التثبيت
-        window.addEventListener('appinstalled', () => {
-            console.log('App installed successfully');
-            isAppInstalled = true;
-            localStorage.setItem('appInstalled', 'true');
-            hideInstallPrompt();
-            updateInstallButton();
-            
-            // عرض رسالة نجاح
-            showMessage('success', '✅ تم تثبيت التطبيق بنجاح على شاشتك الرئيسية!');
-        });
-        
-        // =============== ربط أحداث الأزرار ===============
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            // زر التثبيت العائم
-            document.getElementById('floatingInstallBtn').addEventListener('click', () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('User accepted the install prompt');
-                        }
-                        deferredPrompt = null;
-                        updateInstallButton();
-                    });
-                } else if (isIOS()) {
-                    // لـ iOS، نعرض التعليمات
-                    showInstallPrompt();
-                }
-            });
-            
-            // زر التثبيت في النافذة
-            document.getElementById('installButton').addEventListener('click', () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('User accepted the install prompt');
-                        }
-                        deferredPrompt = null;
-                        hideInstallPrompt();
-                        updateInstallButton();
-                    });
-                } else if (isIOS()) {
-                    // لـ iOS، نعرض رسالة تأكيد
-                    alert('يرجى اتباع التعليمات أعلاه لتثبيت التطبيق على iOS');
-                }
-            });
-            
-            // زر إلغاء التثبيت
-            document.getElementById('cancelInstall').addEventListener('click', () => {
-                hideInstallPrompt();
-                // عرض زر التثبيت العائم بدلاً من النافذة
-                updateInstallButton();
-            });
-            
-            // إخفاء نافذة التثبيت عند الضغط خارجها
-            document.getElementById('installContainer').addEventListener('click', (e) => {
-                if (e.target.id === 'installContainer') {
-                    hideInstallPrompt();
-                }
-            });
-        });
-        
+
         // =============== الكود الأصلي المعدل ===============
-        
+        let pwaHandler;
+
         function createParticles() {
             const particlesContainer = document.getElementById('particles');
             const particleCount = 20;
@@ -1809,7 +1865,6 @@ textarea {
                 particlesContainer.appendChild(particle);
             }
         }
-        createParticles();
         
         let currentComplaintKey = null;
         let currentComplaintData = null;
@@ -1817,7 +1872,6 @@ textarea {
         let clientReplyEnabled = false;
         let departmentsList = [];
         let responsesListener = null;
-        // إضافة متغير لتتبع الردود المعروضة
         let displayedResponses = new Set();
         
         const firebaseConfig = {
@@ -1863,33 +1917,22 @@ textarea {
         });
         
         function initApp() {
-            // تسجيل Service Worker
-            registerServiceWorker();
+            // تهيئة PWA Handler
+            pwaHandler = new PWAClientHandler();
             
-            // التحقق من تثبيت التطبيق
-            checkIfAppInstalled();
-            
-            // عرض رسالة ترحيب بالتطبيق
-            setTimeout(() => {
-                if (!isAppInstalled && !localStorage.getItem('installPromptShown')) {
-                    // عرض رسالة ترحيبية عن التطبيق
-                    const welcomeMessage = `
-                        <div class="message success" style="margin: 20px 0;">
-                            <p>📱 <strong>تطبيق نظام الشكاوى الموحد</strong></p>
-                            <p>يمكنك تثبيت التطبيق على شاشتك الرئيسية للوصول السريع!</p>
-                            <p>اضغط على زر التثبيت <i class="fas fa-download"></i> في الزاوية اليمنى السفلية</p>
-                        </div>
-                    `;
-                    const mainContainer = document.getElementById('mainContainer');
-                    if (mainContainer) {
-                        const welcomeElement = document.createElement('div');
-                        welcomeElement.innerHTML = welcomeMessage;
-                        mainContainer.insertBefore(welcomeElement, mainContainer.firstChild);
-                        
-                        localStorage.setItem('installPromptShown', 'true');
-                    }
+            // إضافة أنماط CSS للـ Toast
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
                 }
-            }, 2000);
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
             
             loadDepartments();
             submitBox.addEventListener('click', openSubmitSection);
@@ -1950,63 +1993,8 @@ textarea {
                 this.value = this.value.replace(/[^ء-ي\s]/g, '');
             });
             
-            // إضافة زر إشعارات
-            addNotificationButton();
-        }
-        
-        function addNotificationButton() {
-            if ('Notification' in window && Notification.permission === 'granted') {
-                const header = document.querySelector('header .container');
-                if (header) {
-                    const notificationBtn = document.createElement('button');
-                    notificationBtn.className = 'notification-btn';
-                    notificationBtn.innerHTML = '<i class="fas fa-bell"></i> تفعيل الإشعارات';
-                    notificationBtn.style.cssText = `
-                        position: absolute;
-                        left: 20px;
-                        top: 20px;
-                        background: rgba(255,255,255,0.2);
-                        color: white;
-                        border: 1px solid rgba(255,255,255,0.3);
-                        padding: 8px 15px;
-                        border-radius: 20px;
-                        cursor: pointer;
-                        font-size: 0.9rem;
-                        transition: all 0.3s;
-                    `;
-                    notificationBtn.addEventListener('click', requestNotificationPermission);
-                    header.style.position = 'relative';
-                    header.appendChild(notificationBtn);
-                }
-            }
-        }
-        
-        async function requestNotificationPermission() {
-            if (!('Notification' in window)) {
-                alert('المتصفح لا يدعم الإشعارات');
-                return;
-            }
-            
-            try {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    showMessage('success', 'تم تفعيل الإشعارات بنجاح!');
-                    
-                    // إرسال إشعار تجريبي
-                    if ('serviceWorker' in navigator) {
-                        navigator.serviceWorker.ready.then(registration => {
-                            registration.showNotification('مرحباً بالنائب أحمد الحديدي', {
-                                body: 'تم تفعيل الإشعارات بنجاح! ستتلقى تحديثات على شكواك.',
-                                icon: 'icon-192x192.png',
-                                badge: 'icon-192x192.png',
-                                vibrate: [200, 100, 200]
-                            });
-                        });
-                    }
-                }
-            } catch (error) {
-                console.error('Error requesting notification:', error);
-            }
+            // تحديث زر التثبيت
+            pwaHandler.updateInstallButton();
         }
         
         async function loadDepartments() {
@@ -2107,7 +2095,6 @@ textarea {
                 responsesListener.off();
                 responsesListener = null;
             }
-            // مسح الردود المعروضة السابقة
             displayedResponses.clear();
         }
         
@@ -2135,7 +2122,6 @@ textarea {
                 responsesListener.off();
                 responsesListener = null;
             }
-            // مسح الردود المعروضة
             displayedResponses.clear();
         }
         
@@ -2168,7 +2154,6 @@ textarea {
                     responsesListener.off();
                     responsesListener = null;
                 }
-                // مسح الردود المعروضة
                 displayedResponses.clear();
             }
         }
@@ -2485,31 +2470,24 @@ textarea {
             return nationalId === complaintNationalId;
         }
         
-        // =============== إصلاح مشكلة تكرار الردود ===============
-        
         function setupRealtimeResponses(complaintKey) {
-            // إيقاف المستمع السابق إذا كان موجوداً
             if (responsesListener) {
                 responsesListener.off();
             }
             
-            // مسح مجموعة الردود المعروضة
             displayedResponses.clear();
             
             responsesListener = database.ref(`complaints/${complaintKey}/responses`);
             
-            // استمع للتغييرات
             responsesListener.on('value', (snapshot) => {
                 const responsesList = document.getElementById('responsesList');
                 const noResponsesMessage = document.getElementById('noResponsesMessage');
                 
                 if (!responsesList) return;
                 
-                // الحصول على الردود الحالية
                 const currentResponses = [];
                 const responsesContainer = responsesList.parentElement;
                 
-                // جمع الردود الحالية من DOM
                 const existingResponseElements = responsesList.querySelectorAll('.response-item');
                 existingResponseElements.forEach(element => {
                     const timestamp = element.getAttribute('data-timestamp');
@@ -2522,24 +2500,19 @@ textarea {
                     const responses = snapshot.val();
                     const responsesArray = Object.values(responses);
                     
-                    // إخفاء رسالة عدم وجود ردود
                     if (noResponsesMessage) {
                         noResponsesMessage.style.display = 'none';
                     }
                     
-                    // فرز الردود حسب التاريخ
                     responsesArray.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
                     
-                    // تحديث DOM فقط بالردود الجديدة
                     responsesArray.forEach(response => {
                         const responseId = response.timestamp || response.id;
                         
-                        // التحقق إذا كان الرد معروضاً بالفعل
                         if (!displayedResponses.has(responseId)) {
                             const isAdmin = response.senderRole === 'admin';
                             const date = new Date(response.timestamp).toLocaleString('ar-EG');
                             
-                            // إصلاح: منع تكرار عرض نفس الرد
                             const existingResponse = responsesList.querySelector(`[data-timestamp="${responseId}"]`);
                             if (!existingResponse) {
                                 const responseHTML = `
@@ -2561,7 +2534,6 @@ textarea {
                         }
                     });
                     
-                    // إزالة الردود التي لم تعد موجودة في قاعدة البيانات
                     const currentTimestamps = responsesArray.map(r => r.timestamp || r.id);
                     const existingElements = responsesList.querySelectorAll('.response-item');
                     existingElements.forEach(element => {
@@ -2572,11 +2544,9 @@ textarea {
                         }
                     });
                 } else {
-                    // إذا لم توجد ردود، عرض رسالة عدم وجود ردود
                     if (noResponsesMessage) {
                         noResponsesMessage.style.display = 'block';
                     }
-                    // مسح جميع الردود المعروضة
                     responsesList.innerHTML = '';
                     displayedResponses.clear();
                 }
@@ -2731,7 +2701,6 @@ textarea {
                 }
             });
             
-            // إعداد المستمع في الوقت الحقيقي للردود
             setupRealtimeResponses(complaint.key);
         }
         
@@ -2813,14 +2782,13 @@ textarea {
                 showLoading(true);
                 const timestamp = new Date().toISOString();
                 
-                // إصلاح: استخدام معرف فريد لكل رد
                 const responseKey = `response_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 const responseData = {
                     type: 'client',
                     message: replyMessage,
                     timestamp: timestamp,
                     senderRole: 'client',
-                    id: responseKey  // إضافة حقل معرف فريد
+                    id: responseKey
                 };
                 
                 await database.ref(`complaints/${complaintKey}/responses/${responseKey}`).set(responseData);
@@ -2833,7 +2801,6 @@ textarea {
                 showSearchResult('success', '✅ تم إرسال ردك بنجاح!');
                 document.getElementById('clientReplyMessage').value = '';
                 
-                // تحديث العرض دون إعادة تحميل كامل
                 const complaint = await database.ref(`complaints/${complaintKey}`).get();
                 const updatedComplaint = { key: complaintKey, ...complaint.val() };
                 await displayComplaintDetails(updatedComplaint);
@@ -2914,6 +2881,9 @@ textarea {
         function showLoading(show) {
             loadingOverlay.style.display = show ? 'flex' : 'none';
         }
+        
+        // تهيئة الجسيمات
+        createParticles();
     </script>
 </body>
 </html>
