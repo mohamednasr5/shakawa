@@ -340,13 +340,13 @@
                     <div class="search-option-card" data-search-type="nationalId" id="searchByNationalIdBtn">
                         <div class="search-option-icon"><i class="fas fa-id-card"></i></div>
                         <div class="search-option-title">بحث بالرقم القومي</div>
-                        <div class="search-option-desc">ابحث باستخدام الرقم القومي المكون من 14 رقمًا</div>
+                        <div class="search-option-desc">ابحق باستخدام الرقم القومي المكون من 14 رقمًا</div>
                         <div class="search-option-arrow"><i class="fas fa-arrow-left"></i></div>
                     </div>
                     <div class="search-option-card" data-search-type="name" id="searchByNameBtn">
                         <div class="search-option-icon"><i class="fas fa-user"></i></div>
                         <div class="search-option-title">بحث بالاسم</div>
-                        <div class="search-option-desc">ابحث باستخدام الاسم الثلاثي أو رباعي</div>
+                        <div class="search-option-desc">ابحق باستخدام الاسم الثلاثي أو رباعي</div>
                         <div class="search-option-arrow"><i class="fas fa-arrow-left"></i></div>
                     </div>
                 </div>
@@ -417,6 +417,7 @@
         let lastComplaintNumber = null;
         let clientReplyEnabled = false;
         let departmentsList = [];
+        let responsesListener = null;
         const firebaseConfig = {
             apiKey: "AIzaSyBIIStbiZD0ZJ6su7C1bwZlBvqx-PP-t58",
             authDomain: "shakawa-e0a3c.firebaseapp.com",
@@ -600,6 +601,10 @@
             document.getElementById('complaintDetails').style.display = 'none';
             document.getElementById('complaintDetails').innerHTML = '';
             clientReplyEnabled = false;
+            if (responsesListener) {
+                responsesListener.off();
+                responsesListener = null;
+            }
         }
         function openSubmitSection() {
             mainContainer.style.display = 'none';
@@ -619,6 +624,10 @@
             mainContainer.style.display = 'block';
             resetForms();
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (responsesListener) {
+                responsesListener.off();
+                responsesListener = null;
+            }
         }
         function resetForms() {
             if (submitSection.style.display !== 'none') {
@@ -645,6 +654,10 @@
                 document.getElementById('complaintDetails').style.display = 'none';
                 document.getElementById('complaintDetails').innerHTML = '';
                 clientReplyEnabled = false;
+                if (responsesListener) {
+                    responsesListener.off();
+                    responsesListener = null;
+                }
             }
         }
         async function autoFillResidence() {
@@ -737,13 +750,14 @@
                     department: department,
                     priority: priority,
                     problemDetails: problemDetailsText,
-                    status: 'قيد المراجعة',
+                    status: 'جديدة',
                     createdAt: timestamp,
                     updatedAt: timestamp,
                     sendDocuments: sendDocs,
                     documentsSent: false,
                     whatsappLink: sendDocs ? generateWhatsAppLink(complaintNumber, fullName) : '',
-                    responses: []
+                    responses: {},
+                    timestamp: timestamp
                 };
                 await complaintRef.set(complaintData);
                 await database.ref('lastComplaintNumber').set(complaintNumber);
@@ -917,6 +931,51 @@
         function verifyNationalIdForReply(nationalId, complaintNationalId) {
             return nationalId === complaintNationalId;
         }
+        function setupRealtimeResponses(complaintKey) {
+            if (responsesListener) {
+                responsesListener.off();
+            }
+            responsesListener = database.ref(`complaints/${complaintKey}/responses`);
+            responsesListener.on('child_added', (snapshot) => {
+                const response = snapshot.val();
+                displayResponseInRealTime(response);
+            });
+            responsesListener.on('child_changed', (snapshot) => {
+                const response = snapshot.val();
+                updateResponseInRealTime(response);
+            });
+        }
+        function displayResponseInRealTime(response) {
+            const responsesList = document.querySelector('.responses-list');
+            if (!responsesList) return;
+            
+            const date = new Date(response.timestamp).toLocaleString('ar-EG');
+            const isAdmin = response.senderRole === 'admin';
+            
+            const responseHTML = `
+                <div class="response-item ${isAdmin ? 'response-admin' : 'response-client'}" data-id="${response.timestamp}">
+                    <div class="response-header">
+                        <div class="response-sender">
+                            <i class="fas ${isAdmin ? 'fa-user-tie' : 'fa-user'}"></i>
+                            ${isAdmin ? (response.respondedBy || 'الإدارة') : 'أنت'}
+                        </div>
+                        <div class="response-time">${date}</div>
+                    </div>
+                    <div class="response-content">${response.message}</div>
+                </div>
+            `;
+            
+            responsesList.insertAdjacentHTML('beforeend', responseHTML);
+        }
+        function updateResponseInRealTime(response) {
+            const responseElement = document.querySelector(`.response-item[data-id="${response.timestamp}"]`);
+            if (responseElement) {
+                const contentElement = responseElement.querySelector('.response-content');
+                if (contentElement) {
+                    contentElement.textContent = response.message;
+                }
+            }
+        }
         async function displayComplaintDetails(complaint) {
             const detailsContainer = document.getElementById('complaintDetails');
             const createdAt = complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : 'غير معروف';
@@ -926,6 +985,7 @@
                 case 'جديدة': statusClass = 'status-new'; break;
                 case 'قيد المراجعة': statusClass = 'status-in-progress'; break;
                 case 'قيد المعالجة': statusClass = 'status-in-progress'; break;
+                case 'تم الرد': statusClass = 'status-resolved'; break;
                 case 'مكتملة': statusClass = 'status-resolved'; break;
                 case 'ملغاة': statusClass = 'status-closed'; break;
             }
@@ -949,20 +1009,21 @@
                     </div>
                 `;
             }
-            const responses = complaint.responses || [];
             let responsesHTML = '';
-            if (responses.length > 0) {
-                responses.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            if (complaint.responses && Object.keys(complaint.responses).length > 0) {
+                const responsesArray = Object.values(complaint.responses);
+                responsesArray.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                
                 responsesHTML = `
                     <div class="responses-container">
                         <h3 class="responses-title"><i class="fas fa-comments"></i> سجل المحادثة</h3>
                         <div class="responses-list">
                 `;
-                responses.forEach(response => {
-                    const isAdmin = response.type === 'admin';
+                responsesArray.forEach(response => {
+                    const isAdmin = response.senderRole === 'admin';
                     const date = new Date(response.timestamp).toLocaleString('ar-EG');
                     responsesHTML += `
-                        <div class="response-item ${isAdmin ? 'response-admin' : 'response-client'}">
+                        <div class="response-item ${isAdmin ? 'response-admin' : 'response-client'}" data-id="${response.timestamp}">
                             <div class="response-header">
                                 <div class="response-sender">
                                     <i class="fas ${isAdmin ? 'fa-user-tie' : 'fa-user'}"></i>
@@ -1018,7 +1079,7 @@
                     </div>
                     <div class="detail-item">
                         <div class="detail-label"><i class="fas fa-tasks"></i> حالة الشكوى</div>
-                        <div><span class="status-badge ${statusClass}" style="font-size: 1.1rem; padding: 8px 16px;"><i class="fas fa-circle" style="margin-left: 5px; font-size: 0.8rem;"></i>${complaint.status || 'غير محدد'}</span></div>
+                        <div><span class="status-badge ${statusClass}" style="font-size: 1.1rem; padding: 8px 16px;"><i class="fas fa-circle" style="margin-left: 5px; font-size: 0.8rem;"></i>${complaint.status || 'جديدة'}</span></div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label"><i class="fas fa-user"></i> الاسم بالكامل</div>
@@ -1080,6 +1141,7 @@
                     this.value = this.value.substring(0, 14);
                 }
             });
+            setupRealtimeResponses(complaint.key);
         }
         function displayMultipleComplaints(complaints) {
             const detailsContainer = document.getElementById('complaintDetails');
@@ -1094,6 +1156,7 @@
                     case 'جديدة': statusClass = 'status-new'; break;
                     case 'قيد المراجعة': statusClass = 'status-in-progress'; break;
                     case 'قيد المعالجة': statusClass = 'status-in-progress'; break;
+                    case 'تم الرد': statusClass = 'status-resolved'; break;
                     case 'مكتملة': statusClass = 'status-resolved'; break;
                     case 'ملغاة': statusClass = 'status-closed'; break;
                 }
@@ -1103,7 +1166,7 @@
                             <div style="font-weight: 800; color: var(--primary-color); font-size: 1.1rem;">
                                 <i class="fas fa-hashtag"></i> ${complaint.complaintNumber || 'غير معروف'}
                             </div>
-                            <span class="status-badge ${statusClass}">${complaint.status || 'غير محدد'}</span>
+                            <span class="status-badge ${statusClass}">${complaint.status || 'جديدة'}</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                             <div><strong><i class="fas fa-user"></i> الاسم:</strong> ${complaint.fullName || 'غير معروف'}</div>
@@ -1154,27 +1217,24 @@
             }
             try {
                 showLoading(true);
-                const snapshot = await database.ref(`complaints/${complaintKey}`).get();
-                if (!snapshot.exists()) {
-                    showSearchResult('error', 'حدث خطأ: لم يتم العثور على الشكوى');
-                    return;
-                }
-                const complaint = snapshot.val();
-                const responses = complaint.responses || [];
-                responses.push({
+                const timestamp = new Date().toISOString();
+                const responseKey = `response_${timestamp.replace(/[^0-9]/g, '')}`;
+                const responseData = {
                     type: 'client',
                     message: replyMessage,
-                    timestamp: new Date().toISOString()
-                });
+                    timestamp: timestamp,
+                    senderRole: 'client'
+                };
+                await database.ref(`complaints/${complaintKey}/responses/${responseKey}`).set(responseData);
                 await database.ref(`complaints/${complaintKey}`).update({
-                    responses: responses,
-                    updatedAt: new Date().toISOString(),
-                    lastClientReply: new Date().toISOString()
+                    updatedAt: timestamp,
+                    lastClientReply: timestamp,
+                    status: 'تم الرد'
                 });
-                const updatedComplaint = { ...complaint, responses: responses };
-                await displayComplaintDetails(updatedComplaint);
                 showSearchResult('success', '✅ تم إرسال ردك بنجاح!');
                 document.getElementById('clientReplyMessage').value = '';
+                const complaint = await database.ref(`complaints/${complaintKey}`).get();
+                await displayComplaintDetails({ key: complaintKey, ...complaint.val() });
             } catch (error) {
                 console.error('Error submitting reply:', error);
                 showSearchResult('error', 'حدث خطأ أثناء إرسال الرد. يرجى المحاولة مرة أخرى');
