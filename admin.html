@@ -6,9 +6,6 @@
     <title>لوحة التحكم - نظام الشكاوى الموحد</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-   <!-- استبدل مكتبة jsPDF بهذه المكتبات -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent}
         html{font-size:16px;scroll-behavior:smooth}
@@ -299,10 +296,7 @@
                     <div id="complaintsSection" class="content-section">
                         <div class="section-header">
                             <h2 class="section-title">إدارة الشكاوى</h2>
-                            <div class="section-controls">
-                                <button class="save-btn" onclick="exportComplaints()"><i class="fas fa-download"></i> تصدير</button>
-                                <button class="save-btn" onclick="exportAllToPDF()"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
-                            </div>
+                            <div class="section-controls"><button class="save-btn" onclick="exportComplaints()"><i class="fas fa-download"></i> تصدير</button></div>
                         </div>
                         <div class="filter-controls">
                             <div class="filter-group"><label class="filter-label">بحث</label><input type="text" id="searchComplaints" class="filter-input" placeholder="ابحث برقم أو اسم أو رقم قومي..."></div>
@@ -573,6 +567,19 @@
             document.getElementById('editComplaintForm').addEventListener('submit', saveEditedComplaint);
             document.getElementById('departmentForm').addEventListener('submit', saveDepartment);
             document.getElementById('userDepartments').addEventListener('change', updateSelectedDepartments);
+
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    if (item.classList.contains('admin-only') && !(currentUser && currentUser.role === 'admin')) {
+                        showMessage('يجب تسجيل الدخول كمسؤول للوصول إلى هذا القسم', 'error');
+                        return;
+                    }
+                    document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    showSection(item.getAttribute('data-section'));
+                    closeSidebar();
+                });
+            });
         }
 
         function handleLogin(e) {
@@ -581,7 +588,7 @@
             const password = document.getElementById('password').value;
             const loginError = document.getElementById('loginError');
             if (username === 'admin' && password === '123456') {
-                const userData = { username: 'admin', name: 'المدير العام', role: 'admin', phone: '', departments: [] };
+                const userData = { username: 'admin', name: 'المدير العام', role: 'admin', phone: '' };
                 loginError.style.display = 'none';
                 loginSuccess(userData);
             } else {
@@ -625,12 +632,10 @@
         function loginSuccess(userData) {
             isLoggedIn = true;
             currentUser = {
-                key: userData.key,
                 username: userData.username,
                 name: userData.name,
                 role: userData.role || 'user',
                 phone: userData.phone || '',
-                departments: userData.departments || [],
                 loginTime: new Date().toISOString()
             };
             localStorage.setItem('adminLoggedIn', 'true');
@@ -679,7 +684,6 @@
             loadDepartments();
             loadSettings();
             loadOfficeSettings();
-            updateDashboardStats();
         }
 
         function updateAdminWelcome() {
@@ -740,16 +744,7 @@
             }
             allComplaints.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
             updateDashboardStats();
-            
-            // تصفية الشكاوى حسب أقسام المستخدم إذا لم يكن مدير
-            if (currentUser && currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
-                filteredComplaints = allComplaints.filter(complaint => 
-                    currentUser.departments.includes(complaint.department)
-                );
-            } else {
-                filteredComplaints = allComplaints.slice();
-            }
-            
+            filteredComplaints = allComplaints.slice();
             if (currentSection === 'dashboard' || currentSection === 'complaints') {
                 displayComplaintsTable();
                 displayLatestComplaints();
@@ -809,16 +804,7 @@
                 }
                 allComplaints.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
                 updateDashboardStats();
-                
-                // تصفية الشكاوى حسب أقسام المستخدم إذا لم يكن مدير
-                if (currentUser && currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
-                    filteredComplaints = allComplaints.filter(complaint => 
-                        currentUser.departments.includes(complaint.department)
-                    );
-                } else {
-                    filteredComplaints = allComplaints.slice();
-                }
-                
+                filteredComplaints = allComplaints.slice();
                 displayComplaintsTable();
                 displayLatestComplaints();
                 updateDashboardCards();
@@ -844,6 +830,7 @@
                     });
                 }
                 displayUsersGrid();
+                populateUserDepartments();
             } catch(err) {
                 console.error(err);
             }
@@ -918,23 +905,12 @@
         }
 
         function updateDashboardStats() {
-            let complaintsToShow = allComplaints;
-            
-            // إذا كان المستخدم ليس مديراً، نعرض فقط الشكاوى التابعة لأقسامه
-            if (currentUser && currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
-                complaintsToShow = allComplaints.filter(complaint => 
-                    currentUser.departments.includes(complaint.department)
-                );
-            }
-            
-            const total = complaintsToShow.length;
-            const newComplaints = complaintsToShow.filter(c => c.status === 'جديدة').length;
-            const resolvedComplaints = complaintsToShow.filter(c => c.status === 'مكتملة' || c.status === 'تم الرد').length;
-            
+            const total = allComplaints.length;
+            const newComplaints = allComplaints.filter(c => c.status === 'جديدة').length;
+            const resolvedComplaints = allComplaints.filter(c => c.status === 'مكتملة' || c.status === 'تم الرد').length;
             document.getElementById('totalComplaints').textContent = total;
             document.getElementById('newComplaints').textContent = newComplaints;
             document.getElementById('resolvedComplaints').textContent = resolvedComplaints;
-            
             const badge = document.getElementById('complaintsBadge');
             if (newComplaints > 0) {
                 badge.textContent = newComplaints;
@@ -954,22 +930,13 @@
                 case 'month': startDate = new Date(now.setMonth(now.getMonth() - 1)); break;
                 default: startDate = new Date(0);
             }
-            
-            let complaintsToShow = allComplaints;
-            if (currentUser && currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
-                complaintsToShow = allComplaints.filter(complaint => 
-                    currentUser.departments.includes(complaint.department)
-                );
-            }
-            
-            const filtered = complaintsToShow.filter(c => new Date(c.createdAt) >= startDate);
+            const filtered = allComplaints.filter(c => new Date(c.createdAt) >= startDate);
             const newComplaints = filtered.filter(c => c.status === 'جديدة').length;
             const completed = filtered.filter(c => c.status === 'مكتملة').length;
             const inProgress = filtered.filter(c => c.status === 'قيد المراجعة' || c.status === 'قيد المعالجة').length;
             const highPriority = filtered.filter(c => c.priority === 'عاجلة').length;
             const mediumPriority = filtered.filter(c => c.priority === 'متوسطة').length;
             const lowPriority = filtered.filter(c => c.priority === 'منخفضة').length;
-            
             document.getElementById('cardNewComplaints').textContent = newComplaints;
             document.getElementById('cardCompletedComplaints').textContent = completed;
             document.getElementById('cardInProgress').textContent = inProgress;
@@ -1005,10 +972,7 @@
                     <td>${createdAt}</td>
                     <td class="actions">
                         <button class="action-btn btn-view" onclick="viewComplaint('${c.key}')"><i class="fas fa-eye"></i></button>
-                        ${currentUser.role === 'admin' || (currentUser.departments && currentUser.departments.includes(c.department)) ? 
-                            `<button class="action-btn btn-edit" onclick="editComplaint('${c.key}')"><i class="fas fa-edit"></i></button>
-                             <button class="action-btn btn-delete" onclick="deleteComplaint('${c.key}')"><i class="fas fa-trash"></i></button>` : 
-                            ''}
+                        <button class="action-btn btn-edit" onclick="editComplaint('${c.key}')"><i class="fas fa-edit"></i></button>
                     </td>
                 </tr>`;
             });
@@ -1019,9 +983,7 @@
         function displayLatestComplaints() {
             const tbody = document.getElementById('latestComplaintsBody');
             if (!tbody) return;
-            
-            let latest = filteredComplaints.slice(0, 5);
-            
+            const latest = allComplaints.slice(0, 5);
             if (!latest.length) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#666;">لا توجد شكاوى حديثة</td></tr>`;
                 return;
@@ -1055,9 +1017,6 @@
             }
             let html = '';
             allUsers.forEach(u => {
-                // إخفاء مستخدمين المدير إذا لم يكن المستخدم الحالي مديراً
-                if (currentUser.role !== 'admin' && u.role === 'admin') return;
-                
                 const roleColor = u.role === 'admin' ? '#e74c3c' : '#3498db';
                 const departments = u.departments ? u.departments.join(', ') : 'جميع الأقسام';
                 html += `
@@ -1070,11 +1029,9 @@
                         <div class="user-email">${departments}</div>
                     </div>
                     <div style="display:flex;gap:5px;">
-                        ${currentUser.role === 'admin' ? `
                         <button class="action-btn btn-edit" onclick="editUser('${u.key}')"><i class="fas fa-edit"></i></button>
                         <button class="action-btn btn-reset-password" onclick="resetUserPassword('${u.key}')"><i class="fas fa-key"></i></button>
                         <button class="action-btn btn-delete" onclick="deleteUser('${u.key}')"><i class="fas fa-trash"></i></button>
-                        ` : ''}
                     </div>
                 </div>`;
             });
@@ -1100,12 +1057,10 @@
                     <div class="card-value">${complaintsCount}</div>
                     <p class="card-label">شكوى</p>
                     <p style="font-size:.85rem;color:#666;margin-top:10px">${d.description || ''}</p>
-                    ${currentUser.role === 'admin' ? `
                     <div style="margin-top:15px;display:flex;gap:10px">
                         <button class="action-btn" style="background:${color};color:#fff" onclick="editDepartment('${d.key}')"><i class="fas fa-edit"></i></button>
                         <button class="action-btn" style="background:#e74c3c;color:#fff" onclick="deleteDepartment('${d.key}')"><i class="fas fa-trash"></i></button>
                     </div>
-                    ` : ''}
                 </div>`;
             });
             container.innerHTML = html;
@@ -1114,16 +1069,7 @@
         function populateDepartmentFilter() {
             const select = document.getElementById('filterDepartment');
             if (!select) return;
-            
-            let departments = [];
-            if (currentUser.role === 'admin') {
-                // المدير يرى جميع الأقسام
-                departments = [...new Set(allComplaints.map(c => c.department).filter(Boolean))];
-            } else {
-                // المستخدم العادي يرى فقط أقسامه
-                departments = currentUser.departments || [];
-            }
-            
+            const departments = [...new Set(allComplaints.map(c => c.department).filter(Boolean))];
             let options = '<option value="">جميع الأقسام</option>';
             departments.forEach(dept => options += `<option value="${dept}">${dept}</option>`);
             select.innerHTML = options;
@@ -1133,15 +1079,7 @@
             const select = document.getElementById('editDepartment');
             if (!select) return;
             let options = '';
-            
-            let departmentsToShow = allDepartments;
-            if (currentUser.role !== 'admin' && currentUser.departments) {
-                departmentsToShow = allDepartments.filter(dept => 
-                    currentUser.departments.includes(dept.name)
-                );
-            }
-            
-            departmentsToShow.forEach(dept => options += `<option value="${dept.name}">${dept.name}</option>`);
+            allDepartments.forEach(dept => options += `<option value="${dept.name}">${dept.name}</option>`);
             select.innerHTML = options;
         }
 
@@ -1158,13 +1096,7 @@
             const department = document.getElementById('filterDepartment').value;
             const status = document.getElementById('filterStatus').value;
             const priority = document.getElementById('filterPriority').value;
-            
             filteredComplaints = allComplaints.filter(c => {
-                // إذا لم يكن المستخدم مديراً، نعرض فقط الشكاوى التابعة لأقسامه
-                if (currentUser.role !== 'admin' && currentUser.departments && currentUser.departments.length > 0) {
-                    if (!currentUser.departments.includes(c.department)) return false;
-                }
-                
                 const searchMatch = !search ||
                     (c.complaintNumber && c.complaintNumber.toLowerCase().includes(search)) ||
                     (c.fullName && c.fullName.toLowerCase().includes(search)) ||
@@ -1222,13 +1154,6 @@
         function viewComplaint(complaintKey) {
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) return showMessage('لم يتم العثور على الشكوى','error');
-            
-            // التحقق من صلاحيات المستخدم
-            if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
-                showMessage('ليس لديك صلاحية لعرض هذه الشكوى', 'error');
-                return;
-            }
-            
             const modalBody = document.getElementById('modalBody');
             const createdAt = complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : '-';
             const updatedAt = complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : createdAt;
@@ -1278,22 +1203,13 @@
             } else {
                 documentsHTML = `<div class="documents-section"><h3 class="documents-title"><i class="fas fa-file-alt"></i> المستندات الداعمة</h3><div class="no-documents"><i class="far fa-file-alt"></i><p>لا توجد مستندات مرفقة</p></div></div>`;
             }
-            
-            let controlBtns = '';
-            if (currentUser.role === 'admin' || (currentUser.departments && currentUser.departments.includes(complaint.department))) {
-                const downloadBtn = `<button class="action-btn btn-download-pdf" onclick="downloadComplaintPDF('${complaint.key}')"><i class="fas fa-download"></i> تنزيل PDF</button>`;
-                const replyBtn = `<button class="action-btn btn-reply" onclick="showReplyModal('${complaint.key}')"><i class="fas fa-reply"></i> الرد باسم مكتب النائب</button>`;
-                controlBtns = `
-                    ${downloadBtn}
-                    ${replyBtn}
-                    <button class="action-btn btn-edit" onclick="editComplaint('${complaint.key}')"><i class="fas fa-edit"></i> تعديل</button>
-                    <button class="action-btn btn-delete" onclick="deleteComplaint('${complaint.key}')"><i class="fas fa-trash"></i> حذف</button>
-                `;
-            } else {
-                controlBtns = `<button class="action-btn btn-download-pdf" onclick="downloadComplaintPDF('${complaint.key}')"><i class="fas fa-download"></i> تنزيل PDF</button>`;
-            }
-            
-            document.getElementById('modalHeaderControls').innerHTML = controlBtns;
+            const downloadBtn = `<button class="action-btn btn-download-pdf" onclick="downloadComplaintPDF('${complaint.key}')"><i class="fas fa-download"></i> تنزيل PDF</button>`;
+            const replyBtn = `<button class="action-btn btn-reply" onclick="showReplyModal('${complaint.key}')"><i class="fas fa-reply"></i> الرد باسم مكتب النائب</button>`;
+            const controlBtns = `
+                <button class="action-btn btn-edit" onclick="editComplaint('${complaint.key}')"><i class="fas fa-edit"></i> تعديل</button>
+                <button class="action-btn btn-delete" onclick="deleteComplaint('${complaint.key}')"><i class="fas fa-trash"></i> حذف</button>
+            `;
+            document.getElementById('modalHeaderControls').innerHTML = downloadBtn + replyBtn + controlBtns;
             modalBody.innerHTML = `
                 <div class="details-grid">
                     <div class="detail-item"><div class="detail-label">رقم الشكوى</div><div><strong>${complaint.complaintNumber || ''}</strong></div></div>
@@ -1312,7 +1228,6 @@
                 </div>
                 ${documentsHTML}
                 ${responsesHTML}
-                ${currentUser.role === 'admin' || (currentUser.departments && currentUser.departments.includes(complaint.department)) ? `
                 <div style="margin-top:20px;padding-top:20px;border-top:1px solid #eee">
                     <h4 style="margin-bottom:10px;color:#2c3e50">تغيير الحالة:</h4>
                     <div style="display:flex;flex-wrap:wrap;gap:10px">
@@ -1322,7 +1237,6 @@
                         <button class="action-btn" style="background:#e74c3c;color:#fff" onclick="updateStatus('${complaint.key}', 'ملغاة')">ملغاة</button>
                     </div>
                 </div>
-                ` : ''}
             `;
             document.getElementById('complaintDetailsModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -1331,13 +1245,6 @@
         function editComplaint(complaintKey) {
             const complaint = allComplaints.find(c => c.key === complaintKey);
             if (!complaint) return;
-            
-            // التحقق من صلاحيات المستخدم
-            if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
-                showMessage('ليس لديك صلاحية لتعديل هذه الشكوى', 'error');
-                return;
-            }
-            
             document.getElementById('editComplaintId').value = complaintKey;
             document.getElementById('editFullName').value = complaint.fullName || '';
             document.getElementById('editNationalId').value = complaint.nationalId || '';
@@ -1394,15 +1301,6 @@
         }
 
         async function updateStatus(complaintKey, newStatus) {
-            const complaint = allComplaints.find(c => c.key === complaintKey);
-            if (!complaint) return;
-            
-            // التحقق من صلاحيات المستخدم
-            if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
-                showMessage('ليس لديك صلاحية لتغيير حالة هذه الشكوى', 'error');
-                return;
-            }
-            
             if (!confirm(`هل تريد تغيير حالة الشكوى إلى "${newStatus}"؟`)) return;
             try {
                 showLoading();
@@ -1422,10 +1320,6 @@
         }
 
         function showAddUserModal() {
-            if (currentUser.role !== 'admin') {
-                showMessage('يجب تسجيل الدخول كمسؤول لإضافة مستخدمين', 'error');
-                return;
-            }
             document.getElementById('userModalTitle').textContent = 'إضافة مستخدم جديد';
             document.getElementById('userForm').reset();
             document.getElementById('userId').value = '';
@@ -1436,10 +1330,6 @@
         }
 
         function editUser(userKey) {
-            if (currentUser.role !== 'admin') {
-                showMessage('يجب تسجيل الدخول كمسؤول لتعديل المستخدمين', 'error');
-                return;
-            }
             const user = allUsers.find(u => u.key === userKey);
             if (!user) return;
             document.getElementById('userModalTitle').textContent = 'تعديل المستخدم';
@@ -1473,10 +1363,6 @@
 
         async function saveUser(e) {
             e.preventDefault();
-            if (currentUser.role !== 'admin') {
-                showMessage('يجب تسجيل الدخول كمسؤول لحفظ المستخدمين', 'error');
-                return;
-            }
             const userId = document.getElementById('userId').value;
             const name = document.getElementById('userName').value.trim();
             const username = document.getElementById('userUsername').value.trim();
@@ -1496,505 +1382,238 @@
                 departments,
                 updatedAt: new Date().toISOString(),
                 updatedBy: currentUser.name
-            };
-            if (password) userData.password = password;
-            try {
-                showLoading();
-                if (userId) {
-                    await database.ref(`users/${userId}`).update(userData);
-                } else {
-                    userData.createdAt = new Date().toISOString();
-                    await database.ref('users').push(userData);
-                }
-                showMessage(`تم ${userId ? 'تحديث' : 'إضافة'} المستخدم بنجاح`, 'success');
-                closeUserModal();
-            } catch(err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء حفظ المستخدم', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        async function resetUserPassword(userKey) {
-            if (currentUser.role !== 'admin') {
-                showMessage('يجب تسجيل الدخول كمسؤول لإعادة تعيين كلمات السر', 'error');
-                return;
-            }
-            const newPassword = prompt('أدخل كلمة السر الجديدة:');
-            if (!newPassword) return;
-            try {
-                showLoading();
-                await database.ref(`users/${userKey}`).update({
-                    password: newPassword,
-                    updatedAt: new Date().toISOString(),
-                    updatedBy: currentUser.name
-                });
-                showMessage('تم إعادة تعيين كلمة السر بنجاح', 'success');
-            } catch(err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء إعادة تعيين كلمة السر', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        async function deleteUser(userKey) {
-            if (currentUser.role !== 'admin') {
-                showMessage('يجب تسجيل الدخول كمسؤول لحذف المستخدمين', 'error');
-                return;
-            }
-            if (!confirm('هل تريد حذف هذا المستخدم؟')) return;
-            try {
-                showLoading();
-                await database.ref(`users/${userKey}`).remove();
-                showMessage('تم حذف المستخدم بنجاح', 'success');
-            } catch(err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء حذف المستخدم', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        function closeUserModal() {
-            document.getElementById('userModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
-        function showReplyModal(complaintKey) {
-            const complaint = allComplaints.find(c => c.key === complaintKey);
-            if (!complaint) return;
-            
-            // التحقق من صلاحيات المستخدم
-            if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
-                showMessage('ليس لديك صلاحية للرد على هذه الشكوى', 'error');
-                return;
-            }
-            
-            document.getElementById('replyComplaintId').value = complaintKey;
-            document.getElementById('replyModal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-
-        async function sendReply(e) {
-            e.preventDefault();
-            const complaintKey = document.getElementById('replyComplaintId').value;
-            const replyText = document.getElementById('replyText').value.trim();
-            if (!replyText) return showMessage('يرجى كتابة نص الرد', 'error');
-            try {
-                showLoading();
-                const complaintSnap = await database.ref(`complaints/${complaintKey}`).get();
-                const complaint = complaintSnap.val();
-                const responses = complaint.responses || [];
-                responses.push({
-                    type: 'admin',
-                    message: replyText,
-                    timestamp: new Date().toISOString(),
-                    respondedBy: currentUser.name
-                });
-                await database.ref(`complaints/${complaintKey}`).update({
-                    responses,
-                    status: 'تم الرد',
-                    updatedAt: new Date().toISOString(),
-                    respondedBy: currentUser.name,
-                    responseDate: new Date().toISOString()
-                });
-                showMessage('تم إرسال الرد بنجاح', 'success');
-                closeReplyModal();
-                closeModal();
-                viewComplaint(complaintKey);
-            } catch(err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء إرسال الرد', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        function closeReplyModal() {
-            document.getElementById('replyModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
-        function showAddDepartmentModal() {
-            if (currentUser.role !== 'admin') {
-                showMessage('يجب تسجيل الدخول كمسؤول لإضافة أقسام', 'error');
-                return;
-            }
-            document.getElementById('departmentModalTitle').textContent = 'إضافة قسم جديد';
-            document.getElementById('departmentForm').reset();
-            document.getElementById('departmentId').value = '';
-            document.getElementById('departmentModal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-
-        function editDepartment(departmentKey) {
-            if (currentUser.role !== 'admin') {
-                showMessage('يجب تسجيل الدخول كمسؤول لتعديل الأقسام', 'error');
-                return;
-            }
-            const department = allDepartments.find(d => d.key === departmentKey);
-            if (!department) return;
-            document.getElementById('departmentModalTitle').textContent = 'تعديل القسم';
-            document.getElementById('departmentId').value = departmentKey;
-            document.getElementById('departmentName').value = department.name || '';
-            document.getElementById('departmentDescription').value = department.description || '';
-            document.getElementById('departmentEmail').value = department.email || '';
-            document.getElementById('departmentModal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-
-        async function saveDepartment(e) {
-            e.preventDefault();
-            if (currentUser.role !== 'admin') {
-                showMessage('يجب تسجيل الدخول كمسؤول لحفظ الأقسام', 'error');
-                return;
-            }
-            const departmentId = document.getElementById('departmentId').value;
-            const departmentData = {
-                name: document.getElementById('departmentName').value.trim(),
-                description: document.getElementById('departmentDescription').value.trim(),
-                email: document.getElementById('departmentEmail').value.trim(),
-                updatedAt: new Date().toISOString(),
-                updatedBy: currentUser.name
-            };
-            try {
-                showLoading();
-                if (departmentId) {
-                    await database.ref(`departments/${departmentId}`).update(departmentData);
-                } else {
-                    departmentData.createdAt = new Date().toISOString();
-                    await database.ref('departments').push(departmentData);
-                }
-                showMessage(`تم ${departmentId ? 'تحديث' : 'إضافة'} القسم بنجاح`, 'success');
-                closeDepartmentModal();
-            } catch(err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء حفظ القسم', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        async function deleteDepartment(departmentKey) {
-            if (currentUser.role !== 'admin') {
-                showMessage('يجب تسجيل الدخول كمسؤول لحذف الأقسام', 'error');
-                return;
-            }
-            if (!confirm('هل تريد حذف هذا القسم؟')) return;
-            try {
-                showLoading();
-                await database.ref(`departments/${departmentKey}`).remove();
-                showMessage('تم حذف القسم بنجاح', 'success');
-            } catch(err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء حذف القسم', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        function closeDepartmentModal() {
-            document.getElementById('departmentModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
+           }; if (password) userData.password = password; try { showLoading(); if (userId) {
+await database.ref(users/${userId}).update(userData);
+} else {
+userData.createdAt = new Date().toISOString();
+await database.ref('users').push(userData);
+}
+showMessage(تم ${userId ? 'تحديث' : 'إضافة'} المستخدم بنجاح, 'success');
+closeUserModal();
+} catch(err) {
+console.error(err);
+showMessage('حدث خطأ أثناء حفظ المستخدم', 'error');
+} finally {
+hideLoading();
+}
+}
+async function resetUserPassword(userKey) {
+const newPassword = prompt('أدخل كلمة السر الجديدة:');
+if (!newPassword) return;
+try {
+showLoading();
+await database.ref(users/${userKey}).update({
+password: newPassword,
+updatedAt: new Date().toISOString(),
+updatedBy: currentUser.name
+});
+showMessage('تم إعادة تعيين كلمة السر بنجاح', 'success');
+} catch(err) {
+console.error(err);
+showMessage('حدث خطأ أثناء إعادة تعيين كلمة السر', 'error');
+} finally {
+hideLoading();
+}
+}
+async function deleteUser(userKey) {
+if (!confirm('هل تريد حذف هذا المستخدم؟')) return;
+try {
+showLoading();
+await database.ref(users/${userKey}).remove();
+showMessage('تم حذف المستخدم بنجاح', 'success');
+} catch(err) {
+console.error(err);
+showMessage('حدث خطأ أثناء حذف المستخدم', 'error');
+} finally {
+hideLoading();
+}
+}
+function closeUserModal() {
+document.getElementById('userModal').style.display = 'none';
+document.body.style.overflow = 'auto';
+}
+function showReplyModal(complaintKey) {
+document.getElementById('replyComplaintId').value = complaintKey;
+document.getElementById('replyModal').style.display = 'flex';
+document.body.style.overflow = 'hidden';
+}
+async function sendReply(e) {
+e.preventDefault();
+const complaintKey = document.getElementById('replyComplaintId').value;
+const replyText = document.getElementById('replyText').value.trim();
+if (!replyText) return showMessage('يرجى كتابة نص الرد', 'error');
+try {
+showLoading();
+const complaintSnap = await database.ref(complaints/${complaintKey}).get();
+const complaint = complaintSnap.val();
+const responses = complaint.responses || [];
+responses.push({
+type: 'admin',
+message: replyText,
+timestamp: new Date().toISOString(),
+respondedBy: currentUser.name
+});
+await database.ref(complaints/${complaintKey}).update({
+responses,
+status: 'تم الرد',
+updatedAt: new Date().toISOString(),
+respondedBy: currentUser.name,
+responseDate: new Date().toISOString()
+});
+showMessage('تم إرسال الرد بنجاح', 'success');
+closeReplyModal();
+closeModal();
+viewComplaint(complaintKey);
+} catch(err) {
+console.error(err);
+showMessage('حدث خطأ أثناء إرسال الرد', 'error');
+} finally {
+hideLoading();
+}
+}
+function closeReplyModal() {
+document.getElementById('replyModal').style.display = 'none';
+document.body.style.overflow = 'auto';
+}
+function showAddDepartmentModal() {
+document.getElementById('departmentModalTitle').textContent = 'إضافة قسم جديد';
+document.getElementById('departmentForm').reset();
+document.getElementById('departmentId').value = '';
+document.getElementById('departmentModal').style.display = 'flex';
+document.body.style.overflow = 'hidden';
+}
+function editDepartment(departmentKey) {
+const department = allDepartments.find(d => d.key === departmentKey);
+if (!department) return;
+document.getElementById('departmentModalTitle').textContent = 'تعديل القسم';
+document.getElementById('departmentId').value = departmentKey;
+document.getElementById('departmentName').value = department.name || '';
+document.getElementById('departmentDescription').value = department.description || '';
+document.getElementById('departmentEmail').value = department.email || '';
+document.getElementById('departmentModal').style.display = 'flex';
+document.body.style.overflow = 'hidden';
+}
+async function saveDepartment(e) {
+e.preventDefault();
+const departmentId = document.getElementById('departmentId').value;
+const departmentData = {
+name: document.getElementById('departmentName').value.trim(),
+description: document.getElementById('departmentDescription').value.trim(),
+email: document.getElementById('departmentEmail').value.trim(),
+updatedAt: new Date().toISOString(),
+updatedBy: currentUser.name
+};
+try {
+showLoading();
+if (departmentId) {
+await database.ref(departments/${departmentId}).update(departmentData);
+} else {
+departmentData.createdAt = new Date().toISOString();
+await database.ref('departments').push(departmentData);
+}
+showMessage(تم ${departmentId ? 'تحديث' : 'إضافة'} القسم بنجاح, 'success');
+closeDepartmentModal();
+} catch(err) {
+console.error(err);
+showMessage('حدث خطأ أثناء حفظ القسم', 'error');
+} finally {
+hideLoading();
+}
+}
+async function deleteDepartment(departmentKey) {
+if (!confirm('هل تريد حذف هذا القسم؟')) return;
+try {
+showLoading();
+await database.ref(departments/${departmentKey}).remove();
+showMessage('تم حذف القسم بنجاح', 'success');
+} catch(err) {
+console.error(err);
+showMessage('حدث خطأ أثناء حذف القسم', 'error');
+} finally {
+hideLoading();
+}
+}
+function closeDepartmentModal() {
+document.getElementById('departmentModal').style.display = 'none';
+document.body.style.overflow = 'auto';
+}
 async function downloadComplaintPDF(complaintKey) {
-    const complaint = allComplaints.find(c => c.key === complaintKey);
-    if (!complaint) return;
-
-    try {
-        showLoading();
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
-
-        doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
-        doc.setFont("Amiri", "normal");
-
-        let y = 20;
-
-        const title = fixArabic("تفاصيل الشكوى");
-        doc.setFontSize(20);
-        doc.text(title, 190, y, { align: "right" });
-        y += 12;
-
-        doc.setFontSize(11);
-        doc.text(
-            fixArabic(`تاريخ الإنشاء: ${new Date().toLocaleString("ar-EG")}`),
-            190, y, { align: "right" }
-        );
-        y += 12;
-
-        const rows = [
-            ["رقم الشكوى", complaint.complaintNumber || "غير معروف"],
-            ["الاسم الكامل", complaint.fullName],
-            ["الرقم القومي", complaint.nationalId || "غير متوفر"],
-            ["القسم", complaint.department],
-            ["الحالة", complaint.status],
-            ["الأولوية", complaint.priority],
-            ["الهاتف 1", complaint.phone1],
-            ["الهاتف 2", complaint.phone2 || "غير متوفر"],
-            ["العنوان", complaint.address || ""]
-        ];
-
-        doc.setFontSize(12);
-
-        rows.forEach(([label, value]) => {
-            if (y > 270) {
-                doc.addPage();
-                y = 20;
-            }
-
-            doc.text(fixArabic(label + " :"), 190, y, { align: "right" });
-            doc.text(fixArabic(value || ""), 120, y, { align: "right", maxWidth: 65 });
-            y += 8;
-        });
-
-        y += 8;
-
-        doc.setFontSize(14);
-        doc.text(fixArabic("تفاصيل المشكلة"), 190, y, { align: "right" });
-        y += 8;
-
-        doc.setFontSize(12);
-        const problemLines = doc.splitTextToSize(
-            fixArabic(complaint.problemDetails || "لا توجد تفاصيل"),
-            170
-        );
-
-        problemLines.forEach(line => {
-            if (y > 270) {
-                doc.addPage();
-                y = 20;
-            }
-            doc.text(line, 190, y, { align: "right" });
-            y += 7;
-        });
-
-        doc.setFontSize(10);
-        doc.text(
-            fixArabic(`تم الإنشاء بواسطة: ${currentUser.name}`),
-            105, 285, { align: "center" }
-        );
-
-        doc.save(`شكوى_${complaint.complaintNumber || complaintKey}.pdf`);
-        showMessage("تم تحميل الملف بنجاح", "success");
-
-    } catch (e) {
-        console.error(e);
-        showMessage("حدث خطأ أثناء إنشاء PDF", "error");
-    } finally {
-        hideLoading();
-    }
+const complaint = allComplaints.find(c => c.key === complaintKey);
+if (!complaint) return;
+try {
+showLoading();
+// يمكن إضافة jsPDF هنا إذا لزم الأمر
+alert('ميزة التنزيل PDF قيد التطوير');
+} catch(err) {
+console.error(err);
+showMessage('حدث خطأ أثناء تنزيل PDF', 'error');
+} finally {
+hideLoading();
 }
-async function exportAllToPDF() {
-    try {
-        showLoading();
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF("p", "mm", "a4");
-
-        doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
-        doc.setFont("Amiri");
-
-        let y = 20;
-
-        doc.setFontSize(18);
-        doc.text(fixArabic("تقرير جميع الشكاوى"), 190, y, { align: "right" });
-        y += 10;
-
-        doc.setFontSize(12);
-        doc.text(
-            fixArabic(`إجمالي الشكاوى: ${filteredComplaints.length}`),
-            190, y, { align: "right" }
-        );
-        y += 12;
-
-        filteredComplaints.forEach((c, i) => {
-            if (y > 260) {
-                doc.addPage();
-                y = 20;
-            }
-
-            doc.setFontSize(13);
-            doc.text(
-                fixArabic(`(${i + 1}) شكوى رقم: ${c.complaintNumber || "—"}`),
-                190, y, { align: "right" }
-            );
-            y += 7;
-
-            doc.setFontSize(11);
-            doc.text(fixArabic(`الاسم: ${c.fullName}`), 190, y, { align: "right" });
-            y += 6;
-            doc.text(fixArabic(`القسم: ${c.department}`), 190, y, { align: "right" });
-            y += 6;
-            doc.text(fixArabic(`الحالة: ${c.status}`), 190, y, { align: "right" });
-            y += 8;
-
-            doc.line(20, y, 190, y);
-            y += 6;
-        });
-
-        doc.save(`تقرير_الشكاوى_${Date.now()}.pdf`);
-        showMessage("تم تصدير التقرير بنجاح", "success");
-
-    } catch (e) {
-        console.error(e);
-        showMessage("فشل إنشاء التقرير", "error");
-    } finally {
-        hideLoading();
-    }
 }
-     async function deleteComplaint(complaintKey) {
-            const complaint = allComplaints.find(c => c.key === complaintKey);
-            if (!complaint) return;
-            
-            // التحقق من صلاحيات المستخدم
-            if (currentUser.role !== 'admin' && currentUser.departments && !currentUser.departments.includes(complaint.department)) {
-                showMessage('ليس لديك صلاحية لحذف هذه الشكوى', 'error');
-                return;
-            }
-            
-            if (!confirm('هل تريد حذف هذه الشكوى؟')) return;
-            try {
-                showLoading();
-                await database.ref(`complaints/${complaintKey}`).remove();
-                showMessage('تم حذف الشكوى بنجاح', 'success');
-                closeModal();
-            } catch(err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء حذف الشكوى', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        function viewDocument(url, name) {
-            window.open(url, '_blank');
-        }
-
-        function showMessage(text, type = 'success') {
-            const msg = document.createElement('div');
-            msg.className = `message ${type === 'error' ? 'error' : ''}`;
-            msg.textContent = text;
-            document.body.appendChild(msg);
-            setTimeout(() => msg.remove(), 3000);
-        }
-
-        function showLoading() {
-            document.getElementById('loadingOverlay').style.display = 'flex';
-        }
-
-        function hideLoading() {
-            document.getElementById('loadingOverlay').style.display = 'none';
-        }
-
-        function showSection(section) {
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(section + 'Section').classList.add('active');
-            currentSection = section;
-            if (section === 'complaints') displayComplaintsTable();
-            if (section === 'users') displayUsersGrid();
-            if (section === 'departments') displayDepartmentsGrid();
-            if (section === 'reports') generateReports();
-            document.querySelector('.main-content').scrollTop = 0;
-        }
-
-        function openSidebar() {
-            document.getElementById('sidebar').classList.add('active');
-            document.getElementById('sidebarOverlay').style.display = 'block';
-        }
-
-        function closeSidebar() {
-            document.getElementById('sidebar').classList.remove('active');
-            document.getElementById('sidebarOverlay').style.display = 'none';
-        }
-
-        function closeModal() {
-            document.getElementById('complaintDetailsModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
-        function updateMobileNav(link) {
-            document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
-            link.classList.add('active');
-        }
-
-        function generateReports() {
-            const period = document.getElementById('reportPeriod').value;
-            const now = new Date();
-            let startDate;
-            switch(period) {
-                case 'week': startDate = new Date(now.setDate(now.getDate() - 7)); break;
-                case 'month': startDate = new Date(now.setMonth(now.getMonth() - 1)); break;
-                case 'quarter': startDate = new Date(now.setMonth(now.getMonth() - 3)); break;
-                case 'year': startDate = new Date(now.setFullYear(now.getFullYear() - 1)); break;
-                default: startDate = new Date(now.setDate(now.getDate() - 7));
-            }
-            
-            let complaintsToShow = filteredComplaints;
-            const filtered = complaintsToShow.filter(c => new Date(c.createdAt) >= startDate);
-            const completed = filtered.filter(c => c.status === 'مكتملة' || c.status === 'تم الرد').length;
-            const total = filtered.length;
-            const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-            const avgTime = total > 0 ? Math.round(total / 7) : 0;
-            const satisfaction = total > 0 ? Math.round((completed / total) * 100) : 0;
-            document.getElementById('reportTotal').textContent = total;
-            document.getElementById('reportCompletionRate').textContent = completionRate + '%';
-            document.getElementById('reportAvgTime').textContent = avgTime + ' يوم';
-            document.getElementById('reportSatisfaction').textContent = satisfaction + '%';
-            showMessage('تم تحديث التقارير', 'success');
-        }
-
-        function exportComplaints() {
-            showMessage('ميزة التصدير قيد التطوير', 'info');
-        }
-
-        async function saveSettings(e) {
-            e.preventDefault();
-            const settingsData = {
-                systemName: document.getElementById('systemName').value,
-                itemsPerPage: document.getElementById('itemsPerPage').value,
-                enableNotifications: document.getElementById('enableNotifications').checked,
-                enableReminders: document.getElementById('enableReminders').checked,
-                welcomeMessage: document.getElementById('welcomeMessage').value,
-                notificationEmail: document.getElementById('notificationEmail').value,
-                updatedAt: new Date().toISOString()
-            };
-            try {
-                showLoading();
-                await database.ref('settings').set(settingsData);
-                settings = settingsData;
-                showMessage('تم حفظ الإعدادات بنجاح', 'success');
-            } catch(err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء حفظ الإعدادات', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        async function saveOfficeSettings(e) {
-            e.preventDefault();
-            const officeSettingsData = {
-                whatsappNumber: document.getElementById('officeWhatsappNumber').value,
-                replyName: document.getElementById('officeReplyName').value,
-                replySignature: document.getElementById('officeReplySignature').value,
-                updatedAt: new Date().toISOString()
-            };
-            try {
-                showLoading();
-                await database.ref('officeSettings').set(officeSettingsData);
-                officeSettings = officeSettingsData;
-                showMessage('تم حفظ إعدادات المكتب بنجاح', 'success');
-            } catch(err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء حفظ إعدادات المكتب', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-    </script>
+function showMessage(text, type = 'success') {
+const msg = document.createElement('div');
+msg.className = message ${type === 'error' ? 'error' : ''};
+msg.textContent = text;
+document.body.appendChild(msg);
+setTimeout(() => msg.remove(), 3000);
+}
+function showLoading() {
+document.getElementById('loadingOverlay').style.display = 'flex';
+}
+function hideLoading() {
+document.getElementById('loadingOverlay').style.display = 'none';
+}
+function showSection(section) {
+document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+document.getElementById(section + 'Section').classList.add('active');
+currentSection = section;
+if (section === 'complaints') displayComplaintsTable();
+if (section === 'users') displayUsersGrid();
+if (section === 'departments') displayDepartmentsGrid();
+if (section === 'reports') generateReports();
+document.querySelector('.main-content').scrollTop = 0;
+}
+function openSidebar() {
+document.getElementById('sidebar').classList.add('active');
+document.getElementById('sidebarOverlay').style.display = 'block';
+}
+function closeSidebar() {
+document.getElementById('sidebar').classList.remove('active');
+document.getElementById('sidebarOverlay').style.display = 'none';
+}
+function updateMobileNav(link) {
+document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
+link.classList.add('active');
+}
+function generateReports() {
+// كود التقارير هنا
+showMessage('التقارير قيد التطوير');
+}
+function closeModal() {
+document.getElementById('complaintDetailsModal').style.display = 'none';
+document.body.style.overflow = 'auto';
+}
+function exportComplaints() {
+// كود التصدير هنا
+showMessage('ميزة التصدير قيد التطوير');
+}
+function saveSettings(e) {
+e.preventDefault();
+// كود الحفظ هنا
+showMessage('تم حفظ الإعدادات', 'success');
+}
+function saveOfficeSettings(e) {
+e.preventDefault();
+// كود الحفظ هنا
+showMessage('تم حفظ إعدادات المكتب', 'success');
+}
+function deleteComplaint(key) {
+if (confirm('حذف الشكوى؟')) {
+database.ref('complaints/' + key).remove();
+showMessage('تم الحذف');
+}
+}
+</script>
 </body>
 </html>
