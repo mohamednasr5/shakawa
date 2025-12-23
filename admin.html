@@ -6,12 +6,18 @@
     <title>لوحة التحكم - نظام الشكاوى الموحد</title>
     <!-- إضافة manifest لتثبيت التطبيق -->
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a5fb4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="نظام الشكاوى">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- أيقونة التطبيق -->
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3067/3067256.png">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3067/3067256.png">
     <style>
+        /* جميع الأنماط السابقة تبقى كما هي */
         *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent}
         html{font-size:16px;scroll-behavior:smooth}
         body{background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);color:#333;line-height:1.6;min-height:100vh;overflow-x:hidden;padding-bottom:80px}
@@ -869,6 +875,23 @@
             });
         }
 
+        // ==================== تسجيل Service Worker ====================
+        
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('sw.js')
+                        .then(registration => {
+                            console.log('Service Worker registered with scope:', registration.scope);
+                            serviceWorkerRegistered = true;
+                        })
+                        .catch(error => {
+                            console.error('Service Worker registration failed:', error);
+                        });
+                });
+            }
+        }
+
         // ==================== تحديث الدوال الحالية ====================
 
         // دالة تحميل الإعدادات
@@ -895,17 +918,8 @@
                     notificationPermission = savedPermission;
                 }
 
-                // التحقق من دعم Service Worker وتسجيله
-                if ('serviceWorker' in navigator && notificationPermission === 'granted') {
-                    navigator.serviceWorker.register('sw.js')
-                        .then(registration => {
-                            serviceWorkerRegistered = true;
-                            console.log('Service Worker registered');
-                        })
-                        .catch(error => {
-                            console.error('Service Worker registration failed:', error);
-                        });
-                }
+                // تسجيل Service Worker
+                registerServiceWorker();
             });
         }
 
@@ -2159,70 +2173,6 @@
                 closeUserModal();
             }
         };
-    </script>
-    
-    <!-- Service Worker للتطبيق -->
-    <script>
-        // تسجيل Service Worker للإشعارات
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                // إنشاء ملف service worker ديناميكياً
-                const swContent = `
-                    self.addEventListener('install', event => {
-                        console.log('Service Worker installing.');
-                        self.skipWaiting();
-                    });
-
-                    self.addEventListener('activate', event => {
-                        console.log('Service Worker activating.');
-                    });
-
-                    self.addEventListener('push', event => {
-                        const options = {
-                            body: event.data ? event.data.text() : 'طلب جديد',
-                            icon: 'https://cdn-icons-png.flaticon.com/512/3067/3067256.png',
-                            badge: 'https://cdn-icons-png.flaticon.com/512/3067/3067256.png',
-                            vibrate: [200, 100, 200],
-                            tag: 'new-complaint'
-                        };
-
-                        event.waitUntil(
-                            self.registration.showNotification('نظام الشكاوى الموحد', options)
-                        );
-                    });
-
-                    self.addEventListener('notificationclick', event => {
-                        event.notification.close();
-                        event.waitUntil(
-                            clients.matchAll({type: 'window'}).then(windowClients => {
-                                for (let client of windowClients) {
-                                    if (client.url === self.registration.scope && 'focus' in client) {
-                                        return client.focus();
-                                    }
-                                }
-                                if (clients.openWindow) {
-                                    return clients.openWindow('/');
-                                }
-                            })
-                        );
-                    });
-                `;
-
-                // إنشاء blob من كود الـ service worker
-                const blob = new Blob([swContent], { type: 'application/javascript' });
-                const swURL = URL.createObjectURL(blob);
-
-                // تسجيل الـ service worker
-                navigator.serviceWorker.register(swURL)
-                    .then(registration => {
-                        console.log('Service Worker registered with scope:', registration.scope);
-                        serviceWorkerRegistered = true;
-                    })
-                    .catch(error => {
-                        console.error('Service Worker registration failed:', error);
-                    });
-            });
-        }
     </script>
 </body>
 </html>
