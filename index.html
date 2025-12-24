@@ -2305,6 +2305,12 @@ textarea {
         }
         
         async function saveUserResidence(nationalId, localUnit) {
+        // ⚠️ هذه الدالة معطلة - لا تُستخدم!
+        // السبب: كانت تُنشئ مستخدمين جدد في Firebase مع كل شكوى
+        return; // الدالة معطلة تماماً
+
+        // الكود الأصلي (معطل):
+        /*
             try {
                 const userRef = database.ref('users').child(nationalId);
                 const userData = {
@@ -2318,8 +2324,10 @@ textarea {
                 console.error('Error saving user residence:', error);
             }
         }
-        
-        async function getUserResidence(nationalId) {
+        */
+    }
+    
+    async function getUserResidence(nationalId) {
             try {
                 const snapshot = await database.ref('users').child(nationalId).get();
                 if (snapshot.exists()) {
@@ -2398,7 +2406,6 @@ textarea {
 
         await complaintRef.set(complaintData);
         await database.ref('lastComplaintNumber').set(complaintNumber);
-        // await saveUserResidence(nationalId, localUnit); // معطل - لا نريد إنشاء مستخدمين
 
         currentComplaintKey = complaintKey;
         currentComplaintData = complaintData;
