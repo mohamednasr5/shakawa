@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>لوحة التحكم - نظام الشكاوى الموحد</title>
     <!-- إضافة manifest لتثبيت التطبيق -->
-    <link rel="manifest" href="manifest-admin.json">
+    <link rel="manifest" href="/shakawa/manifest-admin.json">
     <meta name="theme-color" content="#1a5fb4">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -441,11 +441,11 @@
             <form id="loginForm" class="login-form">
                 <div class="form-group">
                     <label class="form-label">اسم المستخدم</label>
-                    <input type="text" class="form-control" id="username" placeholder="أدخل اسم المستخدم" required>
+                    <input type="text" class="form-control" id="username" placeholder="أدخل اسم المستخدم" required autocomplete="username">
                 </div>
                 <div class="form-group">
                     <label class="form-label">كلمة المرور</label>
-                    <input type="password" class="form-control" id="password" placeholder="أدخل كلمة المرور" required>
+                    <input type="password" class="form-control" id="password" placeholder="أدخل كلمة المرور" required autocomplete="current-password">
                 </div>
                 <div class="login-error" id="loginError">
                     اسم المستخدم أو كلمة المرور غير صحيحة
@@ -605,7 +605,7 @@
                         <div class="filter-controls">
                             <div class="filter-group">
                                 <label class="filter-label">البحث</label>
-                                <input type="text" id="searchComplaints" class="filter-input" placeholder="ابحث برقم الطلب، الاسم، الرقم القومي...">
+                                <input type="text" id="searchComplaints" class="filter-input" placeholder="ابحث برقم الطلب، الاسم، الرقم القومي..." autocomplete="off">
                             </div>
                             <div class="filter-group">
                                 <label class="filter-label">القسم</label>
@@ -676,12 +676,12 @@
                                 <h3><i class="fas fa-cog"></i> الإعدادات العامة</h3>
                                 <div class="setting-item">
                                     <label class="setting-label">اسم النظام</label>
-                                    <input type="text" class="setting-input" value="نظام الشكاوى الموحد" id="systemName">
+                                    <input type="text" class="setting-input" value="نظام الشكاوى الموحد" id="systemName" autocomplete="off">
                                     <p class="setting-description">الاسم الذي يظهر في رأس الموقع</p>
                                 </div>
                                 <div class="setting-item">
                                     <label class="setting-label">وصف النظام</label>
-                                    <textarea class="setting-textarea" id="systemDescription">خدمة إلكترونية متطورة لتقديم الشكاوى والمشكلات ومتابعتها بكل سهولة</textarea>
+                                    <textarea class="setting-textarea" id="systemDescription" autocomplete="off">خدمة إلكترونية متطورة لتقديم الشكاوى والمشكلات ومتابعتها بكل سهولة</textarea>
                                     <p class="setting-description">الوصف الذي يظهر في رأس الموقع</p>
                                 </div>
                                 <div class="setting-item">
@@ -717,7 +717,7 @@
                             <div class="departments-list" id="departmentsList">
                             </div>
                             <div class="add-department-form">
-                                <input type="text" id="newDepartmentName" class="setting-input" placeholder="اسم القسم الجديد">
+                                <input type="text" id="newDepartmentName" class="setting-input" placeholder="اسم القسم الجديد" autocomplete="off">
                                 <button class="btn-add" onclick="addDepartment()">
                                     <i class="fas fa-plus"></i>
                                     إضافة قسم
@@ -787,21 +787,21 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>الاسم الكامل</label>
-                            <input type="text" id="userName" required>
+                            <input type="text" id="userName" required autocomplete="name">
                         </div>
                         <div class="form-group">
                             <label>اسم المستخدم</label>
-                            <input type="text" id="userUsername" required>
+                            <input type="text" id="userUsername" required autocomplete="username">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>البريد الإلكتروني</label>
-                            <input type="email" id="userEmail" required>
+                            <input type="email" id="userEmail" required autocomplete="email">
                         </div>
                         <div class="form-group">
                             <label>كلمة المرور</label>
-                            <input type="password" id="userPassword" placeholder="اتركها فارغة للإبقاء على القديمة">
+                            <input type="password" id="userPassword" placeholder="اتركها فارغة للإبقاء على القديمة" autocomplete="new-password">
                         </div>
                     </div>
                     <div class="form-group">
@@ -836,8 +836,478 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- ملف PWA Handler -->
-    <script src="pwa-handler.js"></script>
+    <!-- PWA Handler script inline -->
+    <script>
+        // =============== PWA Handler for both apps ===============
+        class PWAHandler {
+          constructor(appType = 'client') {
+            this.appType = appType; // 'client' or 'admin'
+            this.deferredPrompt = null;
+            this.isAppInstalled = false;
+            this.init();
+          }
+          init() {
+            this.checkIfAppInstalled();
+            this.registerServiceWorker();
+            this.setupEventListeners();
+            this.showWelcomeMessage();
+          }
+          // تسجيل Service Worker
+          registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.register('/shakawa/sw.js')
+                .then(registration => {
+                  console.log('Service Worker registered successfully:', registration);
+                 
+                  // تفعيل الإشعارات
+                  this.requestNotificationPermission();
+                 
+                  // التحقق من التحديثات
+                  registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                      if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        this.showUpdateMessage();
+                      }
+                    });
+                  });
+                })
+                .catch(error => {
+                  console.error('Service Worker registration failed:', error);
+                });
+            }
+          }
+          // التحقق من تثبيت التطبيق
+          checkIfAppInstalled() {
+            // طرق الكشف عن التطبيقات المثبتة
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            const isFullscreen = window.matchMedia('(display-mode: fullscreen)').matches;
+            const isIOS = window.navigator.standalone === true;
+            const localStorageInstalled = localStorage.getItem(`appInstalled_${this.appType}`) === 'true';
+            this.isAppInstalled = isStandalone || isFullscreen || isIOS || localStorageInstalled;
+           
+            if (this.isAppInstalled) {
+              this.hideInstallButton();
+            }
+          }
+          // إعداد مستمعي الأحداث
+          setupEventListeners() {
+            // حدث قبل التثبيت (Android)
+            window.addEventListener('beforeinstallprompt', (e) => {
+              e.preventDefault();
+              this.deferredPrompt = e;
+              this.showInstallPrompt();
+            });
+            // حدث بعد التثبيت
+            window.addEventListener('appinstalled', () => {
+              console.log('App installed successfully');
+              this.isAppInstalled = true;
+              localStorage.setItem(`appInstalled_${this.appType}`, 'true');
+              this.hideInstallPrompt();
+              this.showSuccessMessage();
+            });
+            // حدث تغيير وضع العرض
+            window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
+              this.isAppInstalled = e.matches;
+              if (this.isAppInstalled) {
+                this.hideInstallButton();
+              }
+            });
+          }
+          // عرض رسالة الترحيب
+          showWelcomeMessage() {
+            if (!this.isAppInstalled && !localStorage.getItem(`welcomeShown_${this.appType}`)) {
+              setTimeout(() => {
+                const message = this.appType === 'client'
+                  ? '📱 يمكنك تثبيت تطبيق الشكاوى على شاشتك الرئيسية للوصول السريع!'
+                  : '📱 يمكنك تثبيت لوحة التحكم على شاشتك الرئيسية لإدارة الشكاوى بسهولة!';
+               
+                this.showToast(message, 'info', 5000);
+                localStorage.setItem(`welcomeShown_${this.appType}`, 'true');
+              }, 3000);
+            }
+          }
+          // عرض نافذة التثبيت
+          showInstallPrompt() {
+            if (this.isAppInstalled || !this.deferredPrompt) return;
+            const installContainer = document.getElementById('installContainer');
+            const installDescription = document.getElementById('installDescription');
+           
+            if (!installContainer) return;
+            let instructions = '';
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            if (isIOS) {
+              instructions = `
+                <p><strong>لتثبيت التطبيق على iOS:</strong></p>
+                <ol style="text-align: right; margin-right: 15px;">
+                  <li>اضغط على زر "مشاركة" في أسفل المتصفح</li>
+                  <li>اختر "أضف إلى الشاشة الرئيسية"</li>
+                  <li>اضغط على "إضافة" في الزاوية العليا اليمنى</li>
+                </ol>
+              `;
+            } else {
+              instructions = `
+                <p><strong>لتثبيت التطبيق على Android:</strong></p>
+                <ol style="text-align: right; margin-right: 15px;">
+                  <li>اضغط على زر "تثبيت" أدناه</li>
+                  <li>في النافذة المنبثقة، اضغط على "تثبيت"</li>
+                  <li>سيظهر التطبيق على شاشتك الرئيسية</li>
+                </ol>
+              `;
+            }
+            const appName = this.appType === 'client' ? 'تطبيق الشكاوى' : 'لوحة التحكم';
+            installDescription.innerHTML = `
+              <p>${this.appType === 'client'
+                ? 'ثبت تطبيق الشكاوى على شاشتك الرئيسية لتقديم ومتابعة الشكاوى بسهولة'
+                : 'ثبت لوحة التحكم على شاشتك الرئيسية لإدارة الشكاوى بسهولة'}</p>
+              ${instructions}
+            `;
+            installContainer.style.display = 'flex';
+          }
+          // إخفاء نافذة التثبيت
+          hideInstallPrompt() {
+            const installContainer = document.getElementById('installContainer');
+            if (installContainer) {
+              installContainer.style.display = 'none';
+            }
+          }
+          // إخفاء زر التثبيت
+          hideInstallButton() {
+            const floatingBtn = document.getElementById('floatingInstallBtn');
+            if (floatingBtn) {
+              floatingBtn.style.display = 'none';
+            }
+          }
+          // طلب إذن الإشعارات
+          requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+              setTimeout(() => {
+                Notification.requestPermission().then(permission => {
+                  if (permission === 'granted') {
+                    console.log('Notification permission granted');
+                    if (this.appType === 'admin') {
+                      this.sendWelcomeNotification();
+                    }
+                  }
+                });
+              }, 2000);
+            }
+          }
+          // إرسال إشعار ترحيبي
+          sendWelcomeNotification() {
+            if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+              navigator.serviceWorker.ready.then(registration => {
+                const title = this.appType === 'client'
+                  ? 'مرحباً بكم في تطبيق الشكاوى'
+                  : 'مرحباً بك في لوحة التحكم';
+               
+                const body = this.appType === 'client'
+                  ? 'يمكنك الآن تقديم ومتابعة شكواك بسهولة'
+                  : 'يمكنك الآن إدارة الشكاوى والطلبات بكل سهولة';
+                registration.showNotification(title, {
+                  body: body,
+                  icon: '/shakawa/icon-192x192.png',
+                  badge: '/shakawa/icon-192x192.png',
+                  vibrate: [200, 100, 200]
+                });
+              });
+            }
+          }
+          // عرض رسالة التحديث
+          showUpdateMessage() {
+            const message = '🔄 تم تحديث التطبيق! يرجى إعادة تحميل الصفحة للحصول على أحدث الميزات.';
+            this.showToast(message, 'info', 10000);
+          }
+          // عرض رسالة النجاح
+          showSuccessMessage() {
+            const message = this.appType === 'client'
+              ? '✅ تم تثبيت تطبيق الشكاوى بنجاح على شاشتك الرئيسية!'
+              : '✅ تم تثبيت لوحة التحكم بنجاح على شاشتك الرئيسية!';
+           
+            this.showToast(message, 'success', 5000);
+          }
+          // دالة مساعدة لعرض Toast
+          showToast(message, type = 'info', duration = 3000) {
+            // إنشاء عنصر Toast إذا لم يكن موجوداً
+            let toast = document.getElementById('pwa-toast');
+            if (!toast) {
+              toast = document.createElement('div');
+              toast.id = 'pwa-toast';
+              toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 12px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                max-width: 400px;
+                animation: slideIn 0.3s ease;
+              `;
+              document.body.appendChild(toast);
+            }
+            // تعيين الأنماط حسب النوع
+            const colors = {
+              success: 'linear-gradient(135deg, #1a5fb4, #2d8fd5)',
+              error: 'linear-gradient(135deg, #e74c3c, #c0392b)',
+              info: 'linear-gradient(135deg, #3498db, #2980b9)',
+              warning: 'linear-gradient(135deg, #f39c12, #e67e22)'
+            };
+            toast.style.background = colors[type] || colors.info;
+            toast.innerHTML = message;
+            toast.style.display = 'block';
+            // إخفاء بعد المدة المحددة
+            setTimeout(() => {
+              toast.style.animation = 'slideOut 0.3s ease';
+              setTimeout(() => {
+                toast.style.display = 'none';
+                toast.style.animation = '';
+              }, 300);
+            }, duration);
+          }
+          // دالة التثبيت
+          async install() {
+            if (this.deferredPrompt) {
+              this.deferredPrompt.prompt();
+              const { outcome } = await this.deferredPrompt.userChoice;
+             
+              if (outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+              }
+             
+              this.deferredPrompt = null;
+              this.hideInstallPrompt();
+            }
+          }
+          // التحقق من اتصال الإنترنت
+          checkOnlineStatus() {
+            if (!navigator.onLine) {
+              this.showToast('⚠️ أنت غير متصل بالإنترنت', 'warning', 5000);
+            }
+           
+            window.addEventListener('online', () => {
+              this.showToast('✅ تم استعادة الاتصال بالإنترنت', 'success', 3000);
+            });
+           
+            window.addEventListener('offline', () => {
+              this.showToast('⚠️ فقدت الاتصال بالإنترنت', 'warning', 5000);
+            });
+          }
+          // تحديث التطبيق
+          updateApp() {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.ready.then(registration => {
+                registration.update();
+              });
+            }
+          }
+        }
+        // =============== تهيئة PWA حسب الصفحة ===============
+        document.addEventListener('DOMContentLoaded', function() {
+          // تحديد نوع التطبيق بناءً على الصفحة
+          const isAdminPage = window.location.pathname.includes('admin');
+          const appType = isAdminPage ? 'admin' : 'client';
+         
+          // إنشاء مثيل PWAHandler
+          window.pwaHandler = new PWAHandler(appType);
+         
+          // التحقق من اتصال الإنترنت
+          window.pwaHandler.checkOnlineStatus();
+         
+          // ربط أزرار التثبيت
+          document.addEventListener('click', function(e) {
+            if (e.target.id === 'installButton' || e.target.closest('#installButton')) {
+              window.pwaHandler.install();
+            }
+           
+            if (e.target.id === 'cancelInstall' || e.target.closest('#cancelInstall')) {
+              window.pwaHandler.hideInstallPrompt();
+            }
+           
+            if (e.target.id === 'floatingInstallBtn' || e.target.closest('#floatingInstallBtn')) {
+              window.pwaHandler.showInstallPrompt();
+            }
+          });
+        });
+    </script>
+    <!-- Service Worker script inline -->
+    <script>
+        // Service Worker لنظام الشكاوى الموحد
+        const CACHE_NAME = 'shakawa-cache-v2';
+        const urlsToCache = [
+          // الصفحات الرئيسية
+          '/shakawa/',
+          '/shakawa/index.html',
+          '/shakawa/admin.html',
+         
+          // الأيقونات
+          '/shakawa/icon-192x192.png',
+          '/shakawa/icon-512x512.png',
+         
+          // ملفات الـ manifest
+          '/shakawa/manifest-index.json',
+          '/shakawa/manifest-admin.json',
+         
+          // مكتبات خارجية
+          'https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap',
+          'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+          'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
+          'https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js',
+          'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
+        ];
+        // تثبيت Service Worker
+        self.addEventListener('install', event => {
+          console.log('[Service Worker] Installing...');
+          event.waitUntil(
+            caches.open(CACHE_NAME).then(cache => {
+              return cache.addAll(urlsToCache);
+            }).then(() => self.skipWaiting())
+          );
+        });
+        // تفعيل Service Worker
+        self.addEventListener('activate', event => {
+          console.log('[Service Worker] Activating...');
+          event.waitUntil(
+            caches.keys().then(cacheNames =>
+              Promise.all(
+                cacheNames.map(cacheName => {
+                  if (cacheName !== CACHE_NAME) {
+                    return caches.delete(cacheName);
+                  }
+                })
+              )
+            ).then(() => self.clients.claim())
+          );
+        });
+        // جلب الطلبات (Cache First)
+        self.addEventListener('fetch', event => {
+          event.respondWith(
+            caches.match(event.request).then(cachedResponse => {
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              return fetch(event.request).then(networkResponse => {
+                if (!networkResponse || networkResponse.status !== 200) {
+                  return networkResponse;
+                }
+                const responseClone = networkResponse.clone();
+                caches.open(CACHE_NAME).then(cache => {
+                  cache.put(event.request, responseClone);
+                });
+                return networkResponse;
+              }).catch(() => {
+                // في حالة عدم الاتصال
+                if (event.request.mode === 'navigate') {
+                  // التحقق من الصفحة المطلوبة
+                  const url = new URL(event.request.url);
+                  if (url.pathname.includes('admin')) {
+                    return caches.match('/shakawa/admin.html');
+                  } else {
+                    return caches.match('/shakawa/index.html');
+                  }
+                }
+                return new Response('لا يوجد اتصال بالإنترنت', {
+                  status: 408,
+                  headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+                });
+              });
+            })
+          );
+        });
+        // إشعارات Push - إصدار محسن
+        self.addEventListener('push', event => {
+          const data = event.data ? event.data.json() : {};
+         
+          // تحديد نوع الإشعار
+          const notificationType = data.type || 'general';
+          let title, body, icon, url;
+         
+          switch(notificationType) {
+            case 'new-complaint':
+              title = 'شكوى جديدة 📝';
+              body = `تم استلام شكوى جديدة من ${data.clientName || 'عميل'}`;
+              icon = '/shakawa/icon-192x192.png';
+              url = '/shakawa/admin.html';
+              break;
+            case 'status-update':
+              title = 'تحديث حالة الشكوى 🔄';
+              body = `تم تحديث حالة الشكوى ${data.complaintNumber || ''}`;
+              icon = '/shakawa/icon-192x192.png';
+              url = '/shakawa/index.html';
+              break;
+            default:
+              title = data.title || 'إشعار جديد';
+              body = data.body || 'لديك إشعار جديد من النظام';
+              icon = '/shakawa/icon-192x192.png';
+              url = data.url || '/shakawa/';
+          }
+          const options = {
+            body: body,
+            icon: icon,
+            badge: '/shakawa/icon-192x192.png',
+            vibrate: [200, 100, 200],
+            tag: notificationType,
+            data: {
+              url: url,
+              type: notificationType,
+              timestamp: new Date().toISOString()
+            },
+            actions: [
+              {
+                action: 'open',
+                title: 'فتح'
+              },
+              {
+                action: 'close',
+                title: 'إغلاق'
+              }
+            ]
+          };
+          event.waitUntil(
+            self.registration.showNotification(title, options)
+          );
+        });
+        // عند الضغط على الإشعار
+        self.addEventListener('notificationclick', event => {
+          event.notification.close();
+          if (event.action === 'close') {
+            return;
+          }
+          const notificationData = event.notification.data || {};
+          const urlToOpen = notificationData.url || '/shakawa/';
+          event.waitUntil(
+            clients.matchAll({
+              type: 'window',
+              includeUncontrolled: true
+            }).then(windowClients => {
+              // البحث عن نافذة مفتوحة بالفعل
+              for (const client of windowClients) {
+                if (client.url.includes('/shakawa/') && 'focus' in client) {
+                  return client.focus().then(() => {
+                    // إرسال رسالة إلى الصفحة إذا لزم الأمر
+                    if (notificationData.type) {
+                      client.postMessage({
+                        type: 'notificationClick',
+                        data: notificationData
+                      });
+                    }
+                  });
+                }
+              }
+              // فتح نافذة جديدة إذا لم تكن هناك نافذة مفتوحة
+              return clients.openWindow(urlToOpen);
+            })
+          );
+        });
+        // استقبال الرسائل من الصفحة
+        self.addEventListener('message', event => {
+          if (event.data && event.data.type === 'SKIP_WAITING') {
+            self.skipWaiting();
+          }
+        });
+    </script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBIIStbiZD0ZJ6su7C1bwZlBvqx-PP-t58",
@@ -886,7 +1356,7 @@
                     // تسجيل service worker للإشعارات
                     if ('serviceWorker' in navigator) {
                         try {
-                            const registration = await navigator.serviceWorker.register('sw.js');
+                            const registration = await navigator.serviceWorker.register('/shakawa/sw.js');
                             serviceWorkerRegistered = true;
                             console.log('Service Worker registered successfully');
                         } catch (error) {
@@ -902,7 +1372,7 @@
             }
         }
         // إرسال إشعار
-        function sendNotification(title, body, icon = 'https://cdn-icons-png.flaticon.com/512/3067/3067256.png') {
+        function sendNotification(title, body, icon = '/shakawa/icon-192x192.png') {
             // التحقق من تفعيل الإشعارات في الإعدادات
             const enableNotifications = document.getElementById('enableNotifications').checked;
             if (!enableNotifications) return;
@@ -913,7 +1383,7 @@
             const options = {
                 body: body,
                 icon: icon,
-                badge: 'https://cdn-icons-png.flaticon.com/512/3067/3067256.png',
+                badge: '/shakawa/icon-192x192.png',
                 vibrate: [200, 100, 200],
                 tag: 'new-complaint',
                 renotify: true,
@@ -1004,7 +1474,7 @@
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('sw.js')
+                    navigator.serviceWorker.register('/shakawa/sw.js')
                         .then(registration => {
                             console.log('Service Worker registered with scope:', registration.scope);
                             serviceWorkerRegistered = true;
@@ -1236,7 +1706,7 @@
                             sendNotification(
                                 'طلب جديد',
                                 `تم استلام طلب جديد من ${complaint.fullName || 'مستخدم'} - ${complaint.department || 'قسم غير محدد'}`,
-                                'https://cdn-icons-png.flaticon.com/512/3067/3067256.png'
+                                '/shakawa/icon-192x192.png'
                             );
                             showMessage('تم استلام طلب جديد', 'success');
                         }
@@ -1581,400 +2051,4 @@
                         <div class="detail-label">درجة أهمية المشكلة</div>
                         <div class="detail-value">${priority}</div>
                     </div>
-                    <div class="detail-item full-width">
-                        <div class="detail-label">نوع المشكلة</div>
-                        <div class="detail-value">${complaint.problemType || '-'}</div>
-                    </div>
-                    <div class="detail-item full-width">
-                        <div class="detail-label">تفاصيل المشكلة</div>
-                        <div class="detail-value">${complaint.problemDetails || '-'}</div>
-                    </div>
-                </div>
-            `;
-            html += `
-                <div class="status-form">
-                    <h4><i class="fas fa-exchange-alt"></i> تغيير حالة الشكوى</h4>
-                    <select id="complaintStatusSelect">
-                        <option value="جديدة" ${complaint.status === 'جديدة' || !complaint.status ? 'selected' : ''}>جديدة</option>
-                        <option value="قيد المراجعة" ${complaint.status === 'قيد المراجعة' ? 'selected' : ''}>قيد المراجعة</option>
-                        <option value="قيد المعالجة" ${complaint.status === 'قيد المعالجة' ? 'selected' : ''}>قيد المعالجة</option>
-                        <option value="تم الرد" ${complaint.status === 'تم الرد' ? 'selected' : ''}>تم الرد</option>
-                        <option value="مكتملة" ${complaint.status === 'مكتملة' ? 'selected' : ''}>مكتملة</option>
-                        <option value="ملغاة" ${complaint.status === 'ملغاة' ? 'selected' : ''}>ملغاة</option>
-                    </select>
-                    <h4 style="margin-top:15px;"><i class="fas fa-flag"></i> درجة أهمية المشكلة</h4>
-                    <select id="complaintPrioritySelect">
-                        <option value="عادية" ${priority === 'عادية' ? 'selected' : ''}>عادية</option>
-                        <option value="مهمة" ${priority === 'مهمة' ? 'selected' : ''}>مهمة</option>
-                        <option value="فى غاية الأهمية" ${priority === 'فى غاية الأهمية' ? 'selected' : ''}>فى غاية الأهمية</option>
-                    </select>
-                    <div class="form-actions">
-                        <button class="action-btn btn-status" onclick="updateComplaintStatus('${key}')">
-                            <i class="fas fa-save"></i>
-                            حفظ الحالة / النوع
-                        </button>
-                    </div>
-                </div>
-            `;
-            html += `
-                <div class="responses-container">
-                    <div class="responses-title">
-                        <i class="fas fa-comments"></i>
-                        سجل متابعة الطلب
-                    </div>
-                    <div class="responses-list">
-            `;
-            if (complaint.responses && Object.keys(complaint.responses).length > 0) {
-                const responsesArray = Object.values(complaint.responses);
-                responsesArray.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-               
-                responsesArray.forEach(response => {
-                    const isAdmin = response.senderRole === 'admin';
-                    const senderName = isAdmin
-                        ? 'المكتب الخدمي للنائب أحمد الحديدي'
-                        : (response.senderName || complaint.fullName || 'العميل');
-                    html += `
-                        <div class="response-item ${isAdmin ? 'response-admin' : 'response-client'}">
-                            <div class="response-header">
-                                <div class="response-sender">
-                                    <i class="fas ${isAdmin ? 'fa-user-shield' : 'fa-user'}"></i>
-                                    <span>${senderName}</span>
-                                </div>
-                                <div class="response-time">
-                                    ${formatDate(response.timestamp)}
-                                </div>
-                            </div>
-                            <div class="response-content">${response.message || ''}</div>
-                        </div>
-                    `;
-                });
-            } else {
-                html += `
-                    <p style="color:#666;">لا توجد ردود حتى الآن.</p>
-                `;
-            }
-            html += `
-                    </div>
-                </div>
-            `;
-            html += `
-                <div class="reply-form">
-                    <h4><i class="fas fa-reply"></i> إضافة رد من المكتب الخدمي للنائب أحمد الحديدي</h4>
-                    <textarea id="replyMessage" placeholder="اكتب ردك هنا..."></textarea>
-                    <div class="form-actions">
-                        <button class="action-btn btn-reply" onclick="sendReply('${key}')">
-                            <i class="fas fa-paper-plane"></i>
-                            إرسال الرد
-                        </button>
-                    </div>
-                </div>
-            `;
-            html += `
-                <div class="form-actions" style="margin-top:20px;">
-                    <button class="action-btn btn-view" onclick="downloadComplaintPDF('${key}')">
-                        <i class="fas fa-file-pdf"></i>
-                        تصدير PDF
-                    </button>
-                    <button class="action-btn btn-delete" onclick="deleteComplaint('${key}')">
-                        <i class="fas fa-trash"></i>
-                        حذف الشكوى
-                    </button>
-                    <button class="action-btn btn-secondary" onclick="closeComplaintModal()">
-                        <i class="fas fa-times"></i>
-                        إغلاق
-                    </button>
-                </div>
-            `;
-            modalBody.innerHTML = html;
-            document.getElementById('complaintModal').style.display = 'flex';
-        }
-        function closeComplaintModal() {
-            document.getElementById('complaintModal').style.display = 'none';
-        }
-        async function updateComplaintStatus(key) {
-            const status = document.getElementById('complaintStatusSelect').value;
-            const priority = document.getElementById('complaintPrioritySelect').value;
-            try {
-                await database.ref(`complaints/${key}`).update({
-                    status,
-                    priority: priority,
-                    updatedAt: new Date().toISOString()
-                });
-                showMessage('تم تحديث حالة الشكوى ودرجة الأهمية بنجاح', 'success');
-                loadComplaints();
-            } catch (err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء تحديث الحالة', 'error');
-            }
-        }
-        async function sendReply(key) {
-            const textarea = document.getElementById('replyMessage');
-            const message = textarea.value.trim();
-            if (!message) {
-                showMessage('من فضلك اكتب نص الرد أولاً', 'error');
-                return;
-            }
-            const timestamp = new Date().toISOString();
-            const responseKey = `response_${timestamp.replace(/[^0-9]/g, '')}`;
-            const data = {
-                message,
-                senderName: 'المكتب الخدمي للنائب أحمد الحديدي',
-                senderRole: 'admin',
-                timestamp: timestamp
-            };
-            try {
-                await database.ref(`complaints/${key}/responses/${responseKey}`).set(data);
-                await database.ref(`complaints/${key}`).update({
-                    updatedAt: timestamp,
-                    status: 'تم الرد'
-                });
-                textarea.value = '';
-                showMessage('تم إرسال الرد بنجاح', 'success');
-                viewComplaint(key);
-            } catch (err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء إرسال الرد', 'error');
-            }
-        }
-        async function deleteComplaint(key) {
-            if (!confirm('هل أنت متأكد من حذف هذه الشكوى؟')) return;
-            try {
-                await database.ref(`complaints/${key}`).remove();
-                showMessage('تم حذف الشكوى بنجاح', 'success');
-                closeComplaintModal();
-            } catch (err) {
-                console.error(err);
-                showMessage('حدث خطأ أثناء حذف الشكوى', 'error');
-            }
-        }
-        // دوال التصدير
-        function exportToExcel() {
-            if (!allComplaints.length) {
-                showMessage('لا توجد بيانات لتصديرها', 'error');
-                return;
-            }
-            const data = allComplaints.map(c => ({
-                'رقم الشكوى': c.complaintNumber || '',
-                'الاسم بالكامل': c.fullName || '',
-                'القسم': c.department || '',
-                'درجة الأهمية': c.priority || c.problemType || 'عادية',
-                'الحالة': c.status || 'جديدة',
-                'تاريخ الإرسال': c.createdAt
-                    ? new Date(c.createdAt).toLocaleString('ar-EG')
-                    : ''
-            }));
-            const worksheet = XLSX.utils.json_to_sheet(data);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'الشكاوى');
-            XLSX.writeFile(workbook, 'complaints.xlsx');
-            showMessage('تم بدء تنزيل ملف Excel', 'success');
-        }
-        function getComplaintField(c, field) {
-            switch (field) {
-                case 'country':
-                    return c.country || c.countryName || c.residence || c.localUnit || '-';
-                case 'governorate':
-                    return 'الدقهلية';
-                case 'city':
-                    return c.city || c.localUnit || '-';
-                case 'address':
-                    return c.address || c.fullAddress || '-';
-                case 'phone':
-                    return c.phone1 || c.phone || '-';
-                case 'phone2':
-                    return c.phone2 || '-';
-                case 'email':
-                    return c.email || '-';
-                default:
-                    return '-';
-            }
-        }
-        async function downloadComplaintPDF(complaintKey) {
-            const complaint = allComplaints.find(c => c.key === complaintKey);
-            if (!complaint) return;
-            try {
-                showLoading();
-                const priority = complaint.priority || complaint.problemType || 'عادية';
-                const complaintDirectLink = `https://mohamednasr5.github.io/shakawa/?id=${complaint.complaintNumber}`;
-                // ترميز الرابط للاستخدام في Google Charts API
-                const encodedLink = encodeURIComponent(complaintDirectLink);
-                const qrCodeUrl = `https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodedLink}&choe=UTF-8`;
-                const htmlContent = `
-                    <!DOCTYPE html>
-                    <html dir="rtl">
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>تقرير الشكوى - ${complaint.complaintNumber}</title>
-                        <style>
-                            body {
-                                font-family: 'Cairo', sans-serif;
-                                padding: 20px;
-                                color: #333;
-                            }
-                            .header {
-                                text-align: center;
-                                margin-bottom: 30px;
-                                border: 3px solid #000;
-                                padding: 25px;
-                                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                                border-radius: 10px;
-                                position: relative;
-                            }
-                            .header h1 {
-                                color: #000;
-                                margin-bottom: 15px;
-                                font-size: 28px;
-                                font-weight: bold;
-                            }
-                            .complaint-number-display {
-                                font-size: 26px;
-                                color: #000;
-                                font-weight: bold;
-                                margin: 15px 0;
-                                letter-spacing: 2px;
-                            }
-                            .qrcode-container {
-                                background: #fff;
-                                padding: 20px;
-                                border-radius: 10px;
-                                margin: 20px auto;
-                                display: inline-block;
-                                border: 3px solid #000;
-                                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                            }
-                            .qrcode-container img {
-                                display: block;
-                                width: 200px;
-                                height: 200px;
-                                margin: 0 auto;
-                            }
-                            .qrcode-label {
-                                color: #000;
-                                font-size: 13px;
-                                margin-top: 12px;
-                                font-weight: bold;
-                                text-align: center;
-                                line-height: 1.5;
-                            }
-                            .print-date {
-                                color: #666;
-                                font-size: 12px;
-                                margin-top: 15px;
-                            }
-                            .info-table {
-                                width: 100%;
-                                border-collapse: collapse;
-                                margin-bottom: 20px;
-                            }
-                            .info-table td {
-                                padding: 10px;
-                                border: 1px solid #ddd;
-                            }
-                            .info-table .label {
-                                background: #f8f9fa;
-                                font-weight: bold;
-                                width: 30%;
-                            }
-                            .details {
-                                background: #f8f9fa;
-                                padding: 15px;
-                                border-radius: 8px;
-                                margin: 20px 0;
-                                border-right: 4px solid #1a5fb4;
-                            }
-                            .response {
-                                padding: 15px;
-                                border-radius: 8px;
-                                margin: 10px 0;
-                            }
-                            .footer {
-                                margin-top: 40px;
-                                text-align: center;
-                                color: #666;
-                                font-size: 12px;
-                                border-top: 1px solid #ddd;
-                                padding-top: 15px;
-                            }
-                            @media print {
-                                .header {
-                                    -webkit-print-color-adjust: exact;
-                                    print-color-adjust: exact;
-                                }
-                                .qrcode-container img {
-                                    -webkit-print-color-adjust: exact;
-                                    print-color-adjust: exact;
-                                }
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="header">
-                            <h1>🏛️ نظام الشكاوى الموحد - الإدارة</h1>
-                            <div class="complaint-number-display">رقم الطلب: ${complaint.complaintNumber}</div>
-                            <!-- QR Code Container -->
-                            <div class="qrcode-container">
-                                <img src="${qrCodeUrl}" alt="QR Code" onerror="this.style.display='none';">
-                                <div class="qrcode-label">
-                                    📱 امسح QR Code للوصول المباشر للطلب<br>
-                                    ${complaintDirectLink}
-                                </div>
-                            </div>
-                            <p class="print-date">تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')}</p>
-                        </div>
-                        <table class="info-table">
-                            <tr><td class="label">رقم الشكوى</td><td>${complaint.complaintNumber || '-'}</td></tr>
-                            <tr><td class="label">الاسم الكامل</td><td>${complaint.fullName || '-'}</td></tr>
-                            <tr><td class="label">الرقم القومي</td><td>${complaint.nationalId || '-'}</td></tr>
-                            <tr><td class="label">بلد الإقامة</td><td>${getComplaintField(complaint, 'country')}</td></tr>
-                            <tr><td class="label">المحافظة</td><td>${getComplaintField(complaint, 'governorate')}</td></tr>
-                            <tr><td class="label">المدينة</td><td>${getComplaintField(complaint, 'city')}</td></tr>
-                            <tr><td class="label">العنوان</td><td>${getComplaintField(complaint, 'address')}</td></tr>
-                            <tr><td class="label">رقم الهاتف 1</td><td>${getComplaintField(complaint, 'phone')}</td></tr>
-                            <tr><td class="label">رقم الهاتف 2</td><td>${getComplaintField(complaint, 'phone2')}</td></tr>
-                            <tr><td class="label">البريد الإلكتروني</td><td>${getComplaintField(complaint, 'email')}</td></tr>
-                            <tr><td class="label">القسم المختص</td><td>${complaint.department || '-'}</td></tr>
-                            <tr><td class="label">الأولوية</td><td>${priority}</td></tr>
-                            <tr><td class="label">نوع المشكلة</td><td>${complaint.problemType || '-'}</td></tr>
-                            <tr><td class="label">حالة الشكوى</td><td>${complaint.status || '-'}</td></tr>
-                            <tr><td class="label">تاريخ التقديم</td><td>${complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('ar-EG') : '-'}</td></tr>
-                            <tr><td class="label">آخر تحديث</td><td>${complaint.updatedAt ? new Date(complaint.updatedAt).toLocaleString('ar-EG') : '-'}</td></tr>
-                        </table>
-                        <h3>📝 تفاصيل المشكلة</h3>
-                        <div class="details">${complaint.problemDetails || '-'}</div>
-                        ${complaint.responses && Object.keys(complaint.responses).length > 0 ? `
-                            <h3>💬 الردود والمتابعات</h3>
-                            ${Object.values(complaint.responses)
-                                .sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp))
-                                .map(response => {
-                                    const isAdmin = response.senderRole === 'admin';
-                                    const date = new Date(response.timestamp).toLocaleString('ar-EG');
-                                    const senderName = isAdmin ? response.senderName : complaint.fullName;
-                                    return `
-                                        <div class="response" style="border-right: 4px solid ${isAdmin ? '#28a745' : '#3498db'}; background: ${isAdmin ? '#d4edda' : '#e3f2fd'};">
-                                            <div style="display:flex;justify-content:space-between;">
-                                                <strong>${senderName}</strong>
-                                                <small>${date}</small>
-                                            </div>
-                                            <div style="margin-top:5px;">${response.message}</div>
-                                        </div>
-                                    `;
-                                }).join('')}
-                        ` : ''}
-                        <div class="footer">
-                            <p>© 2026 نظام الشكاوى الموحد - الإدارة</p>
-                            <p>تم الإنشاء بواسطة: <strong>Mohamed Nasr</strong></p>
-                            <p style="margin-top: 10px; font-size: 10px; word-break: break-all;">
-                                الرابط المباشر: ${complaintDirectLink}
-                            </p>
-                        </div>
-                        <script>
-                            // الطباعة التلقائية بعد تحميل QR Code
-                            window.onload = function() {
-                                setTimeout(function() {
-                                    window.print();
-                                }, 1000);
-                            };
-                        <\/script>
-                    </body>
-                    </html>
-               
+                    <div
