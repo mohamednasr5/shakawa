@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>نظام الشكاوى الموحد - العميل</title>
-    
+
     <!-- PWA Meta Tags for Client App -->
     <link rel="manifest" href="manifest-index.json">
     <link rel="icon" href="icon-192x192.png">
@@ -14,11 +14,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="الشكاوى الموحد">
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-   <style>
+
+    <style>
+
 :root {
     --primary-color: #1a5fb4;
     --secondary-color: #2d8fd5;
@@ -1417,12 +1418,140 @@ textarea {
     border-right: 5px solid #ffc107;
 }
 
-</style>
-    
+
+
+/* أنماط التموية والإخفاء */
+.blurred-overlay {
+    position: relative;
+    filter: blur(8px);
+    pointer-events: none;
+    user-select: none;
+}
+
+.verification-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(102, 126, 234, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    border-radius: var(--border-radius);
+}
+
+.verification-box {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.5s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.verification-box h3 {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    font-weight: 800;
+}
+
+.verification-box p {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+    line-height: 1.8;
+}
+
+.verification-box .warning-text {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border: 2px solid var(--warning-color);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 25px;
+    color: #856404;
+    font-weight: 600;
+}
+
+.verification-input {
+    width: 100%;
+    padding: 18px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 15px;
+    font-size: 1.2rem;
+    text-align: center;
+    letter-spacing: 3px;
+    font-family: 'Cairo', monospace;
+    margin-bottom: 20px;
+    transition: var(--transition);
+}
+
+.verification-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(26, 95, 180, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn-verify {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    padding: 18px 40px;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(26, 95, 180, 0.4);
+}
+
+.btn-verify:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(26, 95, 180, 0.5);
+}
+
+.btn-verify:active {
+    transform: scale(0.98);
+}
+
+.verification-error {
+    color: var(--danger-color);
+    font-size: 1rem;
+    margin-top: 15px;
+    font-weight: 600;
+    display: none;
+}
+
+.complaint-details-wrapper {
+    position: relative;
+}
+
+    </style>
+
     <!-- QR Code Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
+
     <div class="particles" id="particles"></div>
     
     <!-- Install Button Container -->
@@ -3046,35 +3175,641 @@ textarea {
                             طباعة
                         </button>
                     </div>
-                </body>
-                </html>
-            `;
-            window.print();
-            document.body.innerHTML = originalContent;
-            window.location.reload();
+                
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, updateDoc, arrayUnion, serverTimestamp, orderBy } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+const firebaseConfig = {
+    apiKey: "AIzaSyD6H5w1BT76CaF8cnjtspektrB6I8R1YBo",
+    authDomain: "alhadidycomplaintssystem.firebaseapp.com",
+    projectId: "alhadidycomplaintssystem",
+    storageBucket: "alhadidycomplaintssystem.firebasestorage.app",
+    messagingSenderId: "278396162211",
+    appId: "1:278396162211:web:05584aaa65a87c67d8cf1e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// المتغيرات العامة
+let currentComplaintData = null;
+let currentSearchType = '';
+let currentSearchValue = '';
+const ADMIN_CODE = '521988';
+
+// تهيئة الجسيمات
+function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.width = Math.random() * 60 + 20 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+        particlesContainer.appendChild(particle);
+    }
+}
+
+createParticles();
+
+// عناصر DOM
+const mainContainer = document.getElementById('mainContainer');
+const submitComplaintSection = document.getElementById('submitComplaintSection');
+const trackComplaintSection = document.getElementById('trackComplaintSection');
+const submitBox = document.getElementById('submitBox');
+const trackBox = document.getElementById('trackBox');
+const backFromSubmit = document.getElementById('backFromSubmit');
+const backFromTrack = document.getElementById('backFromTrack');
+const complaintForm = document.getElementById('complaintForm');
+const loadingOverlay = document.getElementById('loadingOverlay');
+
+// التنقل بين الأقسام
+submitBox.addEventListener('click', () => {
+    mainContainer.style.display = 'none';
+    submitComplaintSection.style.display = 'block';
+});
+
+trackBox.addEventListener('click', () => {
+    mainContainer.style.display = 'none';
+    trackComplaintSection.style.display = 'block';
+});
+
+backFromSubmit.addEventListener('click', () => {
+    submitComplaintSection.style.display = 'none';
+    mainContainer.style.display = 'flex';
+    complaintForm.reset();
+    document.getElementById('charCount').textContent = '0';
+});
+
+backFromTrack.addEventListener('click', () => {
+    trackComplaintSection.style.display = 'none';
+    mainContainer.style.display = 'flex';
+    resetSearch();
+});
+
+// عداد الأحرف
+const complaintDescInput = document.getElementById('complaintDescription');
+const charCountElement = document.getElementById('charCount');
+
+complaintDescInput.addEventListener('input', () => {
+    const count = complaintDescInput.value.length;
+    charCountElement.textContent = count;
+    if (count > 450) {
+        charCountElement.style.color = 'var(--danger-color)';
+    } else {
+        charCountElement.style.color = '#666';
+    }
+});
+
+// خيارات البحث
+const searchCards = document.querySelectorAll('.search-option-card');
+const searchInputContainers = document.querySelectorAll('.search-input-container');
+
+searchCards.forEach(card => {
+    card.addEventListener('click', () => {
+        const searchType = card.dataset.search;
+        searchCards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        searchInputContainers.forEach(container => {
+            container.classList.remove('active');
+            if (container.dataset.search === searchType) {
+                container.classList.add('active');
+            }
+        });
+        currentSearchType = searchType;
+    });
+});
+
+// خيار المستندات
+const documentsCheckbox = document.getElementById('documentsCheckbox');
+const documentsInstructions = document.getElementById('documentsInstructions');
+
+if (documentsCheckbox) {
+    documentsCheckbox.addEventListener('change', () => {
+        if (documentsCheckbox.checked) {
+            documentsInstructions.classList.add('show');
+        } else {
+            documentsInstructions.classList.remove('show');
         }
-        
-        function showMessage(type, text) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
-            messageDiv.style.display = 'block';
-            setTimeout(() => messageDiv.style.display = 'none', 5000);
+    });
+}
+
+// دالة عرض التحميل
+function showLoading() {
+    loadingOverlay.style.display = 'flex';
+}
+
+function hideLoading() {
+    loadingOverlay.style.display = 'none';
+}
+
+// دالة عرض الرسائل
+function showMessage(message, type) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+
+    const container = document.querySelector('.form-section') || document.querySelector('.search-section');
+    container.insertBefore(messageDiv, container.firstChild);
+
+    setTimeout(() => {
+        messageDiv.style.animation = 'fadeOut 0.5s ease';
+        setTimeout(() => messageDiv.remove(), 500);
+    }, 5000);
+}
+
+// التحقق من الرقم القومي
+function validateNationalId(nationalId) {
+    if (!nationalId || nationalId.length !== 14) {
+        return false;
+    }
+    const firstDigit = nationalId.charAt(0);
+    return firstDigit === '2' || firstDigit === '3';
+}
+
+// تقديم الشكوى
+complaintForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const fullName = document.getElementById('fullName').value.trim();
+    const nationalId = document.getElementById('nationalId').value.trim();
+    const localUnit = document.getElementById('localUnit').value;
+    const complaintType = document.getElementById('complaintType').value;
+    const complaintDescription = document.getElementById('complaintDescription').value.trim();
+    const phoneNumber = document.getElementById('phoneNumber').value.trim();
+    const documentsIncluded = documentsCheckbox ? documentsCheckbox.checked : false;
+
+    if (!fullName || !nationalId || !localUnit || !complaintType || !complaintDescription || !phoneNumber) {
+        showMessage('⚠️ يرجى ملء جميع الحقول المطلوبة', 'error');
+        return;
+    }
+
+    if (!validateNationalId(nationalId)) {
+        showMessage('⚠️ الرقم القومي يجب أن يكون 14 رقمًا ويبدأ بـ 2 أو 3', 'error');
+        return;
+    }
+
+    const phoneRegex = /^01[0-2,5]{1}[0-9]{8}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+        showMessage('⚠️ رقم الهاتف غير صحيح. يجب أن يكون رقم مصري صحيح', 'error');
+        return;
+    }
+
+    showLoading();
+
+    try {
+        const complaintData = {
+            fullName,
+            nationalId,
+            localUnit,
+            complaintType,
+            complaintDescription,
+            phoneNumber,
+            documentsIncluded,
+            status: 'جديدة',
+            priority: 'متوسطة',
+            createdAt: serverTimestamp(),
+            responses: []
+        };
+
+        const docRef = await addDoc(collection(db, 'complaints'), complaintData);
+        const complaintNumber = docRef.id.slice(-8).toUpperCase();
+
+        await updateDoc(doc(db, 'complaints', docRef.id), {
+            complaintNumber: complaintNumber
+        });
+
+        hideLoading();
+
+        complaintForm.reset();
+        charCountElement.textContent = '0';
+
+        showComplaintSuccess(complaintNumber, docRef.id);
+
+    } catch (error) {
+        hideLoading();
+        console.error('Error:', error);
+        showMessage('❌ حدث خطأ أثناء تقديم الشكوى. يرجى المحاولة مرة أخرى', 'error');
+    }
+});
+
+// عرض نجاح تقديم الشكوى مع QR Code
+function showComplaintSuccess(complaintNumber, complaintId) {
+    const successHTML = `
+        <div class="message success">
+            <i class="fas fa-check-circle"></i>
+            <h3 style="margin: 15px 0;">✅ تم تقديم شكواك بنجاح</h3>
+            <p style="font-size: 1.2rem; margin: 10px 0;">رقم الشكوى: <strong>${complaintNumber}</strong></p>
+            <p>احتفظ برقم الشكوى لمتابعة حالتها لاحقًا</p>
+        </div>
+
+        <div class="qr-code-container">
+            <h3><i class="fas fa-qrcode"></i> رمز الاستجابة السريع (QR Code)</h3>
+            <p class="qr-description">امسح الكود التالي لمتابعة شكواك بسهولة</p>
+            <div class="qr-code-wrapper">
+                <div id="qrcode"></div>
+            </div>
+            <div class="complaint-link-box">
+                <p style="margin-bottom: 15px; font-weight: 600; color: #333;">أو استخدم الرابط المباشر:</p>
+                <a href="?complaint=${complaintId}" class="complaint-link" target="_blank">
+                    ${window.location.origin}${window.location.pathname}?complaint=${complaintId}
+                </a>
+            </div>
+            <p class="qr-info-text">
+                <i class="fas fa-info-circle"></i>
+                يمكنك حفظ هذا الرمز أو الرابط لمتابعة شكواك في أي وقت
+            </p>
+        </div>
+    `;
+
+    const formSection = document.querySelector('.form-section');
+    formSection.innerHTML = successHTML;
+
+    const complaintUrl = `${window.location.origin}${window.location.pathname}?complaint=${complaintId}`;
+    new QRCode(document.getElementById('qrcode'), {
+        text: complaintUrl,
+        width: 200,
+        height: 200,
+        colorDark: '#1a5fb4',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+    });
+
+    setTimeout(() => {
+        formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
+
+// البحث عن الشكوى
+async function searchComplaint(searchType, searchValue) {
+    if (!searchValue.trim()) {
+        showMessage('⚠️ يرجى إدخال قيمة البحث', 'error');
+        return;
+    }
+
+    showLoading();
+
+    try {
+        let q;
+        if (searchType === 'number') {
+            q = query(collection(db, 'complaints'), where('complaintNumber', '==', searchValue.toUpperCase()));
+        } else if (searchType === 'national-id') {
+            q = query(collection(db, 'complaints'), where('nationalId', '==', searchValue));
+        } else if (searchType === 'name') {
+            q = query(collection(db, 'complaints'), where('fullName', '==', searchValue));
         }
-        
-        function showSearchResult(type, text) {
-            const detailsContainer = document.getElementById('complaintDetails');
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = `<div class="message ${type}" style="margin-top: 20px;">${text}</div>`;
-            detailsContainer.appendChild(tempDiv);
-            setTimeout(() => tempDiv.remove(), 5000);
+
+        const querySnapshot = await getDocs(q);
+        hideLoading();
+
+        if (querySnapshot.empty) {
+            showMessage('❌ لم يتم العثور على شكوى بهذه البيانات', 'error');
+            return;
         }
-        
-        function showLoading(show) {
-            loadingOverlay.style.display = show ? 'flex' : 'none';
+
+        const complaint = querySnapshot.docs[0];
+        currentComplaintData = { id: complaint.id, ...complaint.data() };
+        currentSearchValue = searchValue;
+
+        displayComplaintWithVerification();
+
+    } catch (error) {
+        hideLoading();
+        console.error('Error:', error);
+        showMessage('❌ حدث خطأ أثناء البحث. يرجى المحاولة مرة أخرى', 'error');
+    }
+}
+
+// عرض الشكوى مع طبقة التحقق
+function displayComplaintWithVerification() {
+    const data = currentComplaintData;
+
+    const detailsHTML = `
+        <div class="complaint-details-wrapper">
+            <div class="verification-overlay" id="verificationOverlay">
+                <div class="verification-box">
+                    <h3><i class="fas fa-shield-alt"></i> التحقق من الهوية</h3>
+                    <p>لرؤية تفاصيل الطلب أو الرد عليه، يرجى إدخال الرقم القومي المسجل</p>
+                    <div class="warning-text">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        هذا الإجراء للحفاظ على خصوصية بياناتك
+                    </div>
+                    <input 
+                        type="text" 
+                        id="verifyNationalIdInput" 
+                        class="verification-input" 
+                        placeholder="أدخل الرقم القومي (14 رقم)"
+                        maxlength="14"
+                    >
+                    <button class="btn-verify" onclick="window.verifyNationalId()">
+                        <i class="fas fa-check-circle"></i> تحقق الآن
+                    </button>
+                    <div class="verification-error" id="verificationError">
+                        <i class="fas fa-times-circle"></i> الرقم القومي غير صحيح
+                    </div>
+                </div>
+            </div>
+
+            <div class="complaint-details blurred-overlay" id="complaintDetailsContent">
+                <h2 style="text-align: center; color: var(--primary-color); margin-bottom: 30px;">
+                    <i class="fas fa-file-alt"></i> تفاصيل الشكوى
+                </h2>
+
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-hashtag"></i> رقم الشكوى</div>
+                        <div class="detail-value">${data.complaintNumber || 'غير متوفر'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-user"></i> الاسم الكامل</div>
+                        <div class="detail-value">${data.fullName}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-id-card"></i> الرقم القومي</div>
+                        <div class="detail-value">${data.nationalId}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-map-marker-alt"></i> بلد الإقامة</div>
+                        <div class="detail-value">${data.localUnit}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-folder"></i> نوع الشكوى</div>
+                        <div class="detail-value">${data.complaintType}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-phone"></i> رقم الهاتف</div>
+                        <div class="detail-value">${data.phoneNumber}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-calendar"></i> تاريخ التقديم</div>
+                        <div class="detail-value">${data.createdAt ? new Date(data.createdAt.toDate()).toLocaleString('ar-EG') : 'غير متوفر'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-flag"></i> الأولوية</div>
+                        <div class="detail-value">
+                            <span class="priority-badge priority-${data.priority === 'عالية' ? 'high' : data.priority === 'متوسطة' ? 'medium' : 'low'}">
+                                ${data.priority}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-info-circle"></i> الحالة</div>
+                        <div class="detail-value">
+                            <span class="status-badge status-${data.status === 'جديدة' ? 'new' : data.status === 'قيد المعالجة' ? 'in-progress' : data.status === 'تم الحل' ? 'resolved' : 'closed'}">
+                                ${data.status}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label"><i class="fas fa-paperclip"></i> مستندات مرفقة</div>
+                        <div class="detail-value">${data.documentsIncluded ? '✅ نعم' : '❌ لا'}</div>
+                    </div>
+                </div>
+
+                <div class="detail-item" style="grid-column: 1 / -1; margin-top: 20px;">
+                    <div class="detail-label"><i class="fas fa-comment-alt"></i> وصف الشكوى</div>
+                    <div class="detail-value" style="white-space: pre-line; line-height: 1.8;">${data.complaintDescription}</div>
+                </div>
+
+                ${data.responses && data.responses.length > 0 ? `
+                    <div class="responses-container">
+                        <h3 class="responses-title"><i class="fas fa-comments"></i> الردود والمتابعات</h3>
+                        <div class="responses-list">
+                            ${data.responses.map(response => `
+                                <div class="response-item response-${response.sender}">
+                                    <div class="response-header">
+                                        <div class="response-sender">
+                                            <i class="fas ${response.sender === 'admin' ? 'fa-user-shield' : 'fa-user'}"></i>
+                                            ${response.sender === 'admin' ? 'رد المكتب' : 'رد العميل'}
+                                        </div>
+                                        <div class="response-time">${response.timestamp ? new Date(response.timestamp.toDate()).toLocaleString('ar-EG') : ''}</div>
+                                    </div>
+                                    <div class="response-content">${response.message}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${data.status !== 'مغلقة' ? `
+                    <div class="reply-section">
+                        <h3 style="color: var(--primary-color); margin-bottom: 20px;">
+                            <i class="fas fa-reply"></i> الرد على المكتب
+                        </h3>
+                        <textarea 
+                            id="clientReplyText" 
+                            placeholder="اكتب ردك هنا..."
+                            style="width: 100%; min-height: 150px; padding: 15px; border: 2px solid #e0e0e0; border-radius: 15px; font-size: 1rem; resize: vertical;"
+                        ></textarea>
+                        <button class="btn btn-client-reply" onclick="window.submitClientReply()" style="margin-top: 20px;">
+                            <i class="fas fa-paper-plane"></i> <span>إرسال الرد</span>
+                        </button>
+                    </div>
+                ` : ''}
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn btn-whatsapp" onclick="window.contactWhatsApp()">
+                        <i class="fab fa-whatsapp"></i> <span>تواصل عبر واتساب</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const complaintDetails = document.getElementById('complaintDetails');
+    complaintDetails.innerHTML = detailsHTML;
+    complaintDetails.style.display = 'block';
+
+    setTimeout(() => {
+        complaintDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
+
+// التحقق من الرقم القومي
+window.verifyNationalId = function() {
+    const input = document.getElementById('verifyNationalIdInput').value.trim();
+    const errorDiv = document.getElementById('verificationError');
+    const overlay = document.getElementById('verificationOverlay');
+    const content = document.getElementById('complaintDetailsContent');
+
+    if (input === ADMIN_CODE || input === currentComplaintData.nationalId) {
+        overlay.style.animation = 'fadeOut 0.5s ease';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            content.classList.remove('blurred-overlay');
+            content.style.filter = 'none';
+            content.style.pointerEvents = 'auto';
+            content.style.userSelect = 'auto';
+        }, 500);
+    } else {
+        errorDiv.style.display = 'block';
+        document.getElementById('verifyNationalIdInput').style.borderColor = 'var(--danger-color)';
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+            document.getElementById('verifyNationalIdInput').style.borderColor = '#e0e0e0';
+        }, 3000);
+    }
+};
+
+// إرسال رد العميل
+window.submitClientReply = async function() {
+    const replyText = document.getElementById('clientReplyText').value.trim();
+
+    if (!replyText) {
+        showMessage('⚠️ يرجى كتابة رد قبل الإرسال', 'error');
+        return;
+    }
+
+    showLoading();
+
+    try {
+        const newResponse = {
+            sender: 'client',
+            message: replyText,
+            timestamp: serverTimestamp()
+        };
+
+        await updateDoc(doc(db, 'complaints', currentComplaintData.id), {
+            responses: arrayUnion(newResponse),
+            status: 'قيد المعالجة'
+        });
+
+        hideLoading();
+        showMessage('✅ تم إرسال ردك بنجاح', 'success');
+
+        const updatedDoc = await getDocs(query(collection(db, 'complaints'), where('complaintNumber', '==', currentComplaintData.complaintNumber)));
+        if (!updatedDoc.empty) {
+            currentComplaintData = { id: updatedDoc.docs[0].id, ...updatedDoc.docs[0].data() };
+            displayComplaintWithVerification();
         }
-        
-        // تهيئة الجسيمات
-        createParticles();
-    </script>
+
+    } catch (error) {
+        hideLoading();
+        console.error('Error:', error);
+        showMessage('❌ حدث خطأ أثناء إرسال الرد', 'error');
+    }
+};
+
+// التواصل عبر واتساب
+window.contactWhatsApp = function() {
+    const phoneNumber = '201094455574';
+    const message = `مرحباً، أريد الاستفسار عن الشكوى رقم: ${currentComplaintData.complaintNumber}`;
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+};
+
+// إضافة مستمعي أحداث لأزرار البحث
+document.getElementById('searchByNumberBtn')?.addEventListener('click', () => {
+    const searchValue = document.getElementById('searchNumber').value.trim();
+    searchComplaint('number', searchValue);
+});
+
+document.getElementById('searchByNationalIdBtn')?.addEventListener('click', () => {
+    const searchValue = document.getElementById('searchNationalId').value.trim();
+    searchComplaint('national-id', searchValue);
+});
+
+document.getElementById('searchByNameBtn')?.addEventListener('click', () => {
+    const searchValue = document.getElementById('searchName').value.trim();
+    searchComplaint('name', searchValue);
+});
+
+// إعادة تعيين البحث
+function resetSearch() {
+    currentComplaintData = null;
+    currentSearchType = '';
+    currentSearchValue = '';
+    document.getElementById('complaintDetails').innerHTML = '';
+    document.getElementById('complaintDetails').style.display = 'none';
+    searchCards.forEach(c => c.classList.remove('active'));
+    searchInputContainers.forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.clean-search-input').forEach(input => input.value = '');
+}
+
+// التحقق من URL للشكوى المباشرة
+const urlParams = new URLSearchParams(window.location.search);
+const complaintId = urlParams.get('complaint');
+if (complaintId) {
+    (async () => {
+        showLoading();
+        try {
+            const complaintDoc = await getDocs(query(collection(db, 'complaints'), where('__name__', '==', complaintId)));
+            hideLoading();
+
+            if (!complaintDoc.empty) {
+                mainContainer.style.display = 'none';
+                trackComplaintSection.style.display = 'block';
+                currentComplaintData = { id: complaintDoc.docs[0].id, ...complaintDoc.docs[0].data() };
+                displayComplaintWithVerification();
+            } else {
+                showMessage('❌ الشكوى غير موجودة', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            console.error('Error:', error);
+        }
+    })();
+}
+
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(registration => console.log('SW registered'))
+            .catch(err => console.log('SW registration failed'));
+    });
+}
+
+// PWA Install
+let deferredPrompt;
+const installContainer = document.getElementById('installContainer');
+const installButton = document.getElementById('installButton');
+const cancelInstall = document.getElementById('cancelInstall');
+const floatingInstallBtn = document.getElementById('floatingInstallBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    setTimeout(() => {
+        installContainer.style.display = 'flex';
+    }, 3000);
+
+    floatingInstallBtn.style.display = 'flex';
+});
+
+installButton?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+
+    if (outcome === 'accepted') {
+        console.log('App installed');
+    }
+
+    deferredPrompt = null;
+    installContainer.style.display = 'none';
+    floatingInstallBtn.style.display = 'none';
+});
+
+cancelInstall?.addEventListener('click', () => {
+    installContainer.style.display = 'none';
+});
+
+floatingInstallBtn?.addEventListener('click', () => {
+    installContainer.style.display = 'flex';
+});
+
+window.addEventListener('appinstalled', () => {
+    console.log('App installed successfully');
+    installContainer.style.display = 'none';
+    floatingInstallBtn.style.display = 'none';
+});
+
+</script>
 </body>
 </html>
