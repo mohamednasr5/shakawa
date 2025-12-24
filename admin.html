@@ -643,6 +643,43 @@
                                     حفظ الإعدادات
                                 </button>
                             </div>
+
+                            <!-- قسم النسخ الاحتياطي والاستعادة -->
+                            <div class="settings-card">
+                                <h3><i class="fas fa-database"></i> النسخ الاحتياطي والاستعادة</h3>
+                                <div class="setting-item">
+                                    <label class="setting-label">إنشاء نسخة احتياطية</label>
+                                    <p class="setting-description">
+                                        قم بتحميل نسخة كاملة من قاعدة البيانات (الشكاوى، المستخدمين، الأقسام، الإعدادات)
+                                    </p>
+                                    <button class="btn-export" onclick="createBackup()">
+                                        <i class="fas fa-download"></i>
+                                        إنشاء نسخة احتياطية
+                                    </button>
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <label class="setting-label">استعادة نسخة احتياطية</label>
+                                    <p class="setting-description">
+                                        استعادة جميع البيانات من ملف النسخة الاحتياطية (سيتم حذف البيانات الحالية)
+                                    </p>
+                                    <button class="btn-add" onclick="restoreBackup()" style="background:linear-gradient(135deg,#e74c3c,#c0392b)">
+                                        <i class="fas fa-upload"></i>
+                                        استعادة البيانات
+                                    </button>
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <label class="setting-label">تلميحات مهمة:</label>
+                                    <ul class="setting-description" style="padding-right:20px;">
+                                        <li>النسخة الاحتياطية تحتوي على <strong>جميع البيانات</strong> بما في ذلك المرفقات إذا وجدت</li>
+                                        <li>احتفظ بالنسخة الاحتياطية في مكان آمن</li>
+                                        <li>يمكنك استعادة البيانات عند تغيير Firebase أو في حالات الطوارئ</li>
+                                        <li>الاستعادة تحذف <strong>جميع البيانات الحالية</strong> وتستبدلها</li>
+                                        <li>النسخة الاحتياطية متوافقة مع GitHub Pages</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -678,7 +715,7 @@
                 </div>
                 <div class="mobile-nav-item admin-only" data-section="users">
                     <i class="fas fa-users mobile-nav-icon"></i>
-                                    <span>المستخدمين</span>
+                    <span>المستخدمين</span>
                 </div>
                 <div class="mobile-nav-item admin-only" data-section="settings">
                     <i class="fas fa-cog mobile-nav-icon"></i>
@@ -2320,6 +2357,209 @@
 
             XLSX.writeFile(workbook, 'complaints.xlsx');
             showMessage('تم بدء تنزيل ملف Excel', 'success');
+        }
+
+        // ==================== دوال النسخ الاحتياطي والاستعادة ====================
+
+        async function createBackup() {
+            showLoading();
+            try {
+                // جمع جميع البيانات من قاعدة البيانات
+                const [complaintsSnapshot, usersSnapshot, departmentsSnapshot, settingsSnapshot] = await Promise.all([
+                    database.ref('complaints').once('value'),
+                    database.ref('users').once('value'),
+                    database.ref('departments').once('value'),
+                    database.ref('settings').once('value')
+                ]);
+
+                const backupData = {
+                    metadata: {
+                        version: "2.0",
+                        created: new Date().toISOString(),
+                        totalRecords: {
+                            complaints: Object.keys(complaintsSnapshot.val() || {}).length,
+                            users: Object.keys(usersSnapshot.val() || {}).length,
+                            departments: Object.keys(departmentsSnapshot.val() || {}).length
+                        },
+                        firebaseConfig: {
+                            ...firebaseConfig,
+                            // إخفاء المعلومات الحساسة
+                            apiKey: "HIDDEN_FOR_SECURITY",
+                            authDomain: firebaseConfig.authDomain,
+                            databaseURL: firebaseConfig.databaseURL
+                        }
+                    },
+                    complaints: complaintsSnapshot.val() || {},
+                    users: usersSnapshot.val() || {},
+                    departments: departmentsSnapshot.val() || {},
+                    settings: settingsSnapshot.val() || {}
+                };
+
+                // تحويل إلى JSON
+                const jsonString = JSON.stringify(backupData, null, 2);
+                
+                // إنشاء ملف للتحميل
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                a.download = `firebase-backup-${timestamp}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showMessage('تم إنشاء النسخة الاحتياطية بنجاح', 'success');
+                
+                // حفظ سجل النسخ الاحتياطي
+                try {
+                    const backupLog = {
+                        timestamp: new Date().toISOString(),
+                        type: "manual",
+                        fileSize: blob.size,
+                        recordCount: backupData.metadata.totalRecords
+                    };
+                    
+                    await database.ref('backupLogs').push(backupLog);
+                } catch (logError) {
+                    console.log('Could not save backup log:', logError);
+                }
+                
+            } catch (error) {
+                console.error('Error creating backup:', error);
+                showMessage('حدث خطأ أثناء إنشاء النسخة الاحتياطية', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function restoreBackup() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                if (!confirm('⚠️ تحذير هام: استعادة النسخة الاحتياطية ستحذف جميع البيانات الحالية وتستبدلها بالبيانات من الملف. هل أنت متأكد من المتابعة؟')) {
+                    return;
+                }
+                
+                if (!confirm('⚠️ هل أنت متأكد تماماً؟ هذه العملية لا يمكن التراجع عنها!')) {
+                    return;
+                }
+                
+                showLoading();
+                
+                try {
+                    const reader = new FileReader();
+                    
+                    reader.onload = async (event) => {
+                        try {
+                            const backupData = JSON.parse(event.target.result);
+                            
+                            // التحقق من صحة ملف النسخة الاحتياطية
+                            if (!backupData.metadata || !backupData.metadata.version) {
+                                throw new Error('ملف النسخة الاحتياطية غير صالح أو تالف');
+                            }
+                            
+                            // التحقق من التوافق
+                            if (!backupData.metadata.version.startsWith('2.')) {
+                                if (!confirm('⚠️ ملف النسخة الاحتياطية من إصدار قديم. قد تحدث مشاكل في التوافق. هل تريد المتابعة؟')) {
+                                    hideLoading();
+                                    return;
+                                }
+                            }
+                            
+                            // عرض ملخص البيانات
+                            const summary = `
+                            ملخص النسخة الاحتياطية:
+                            - الشكاوى: ${backupData.metadata.totalRecords?.complaints || 0}
+                            - المستخدمين: ${backupData.metadata.totalRecords?.users || 0}
+                            - الأقسام: ${backupData.metadata.totalRecords?.departments || 0}
+                            - تاريخ الإنشاء: ${new Date(backupData.metadata.created).toLocaleString('ar-EG')}
+                            `;
+                            
+                            if (!confirm(`${summary}\n\nهل تريد متابعة الاستعادة؟`)) {
+                                hideLoading();
+                                return;
+                            }
+                            
+                            // حذف جميع البيانات الحالية أولاً
+                            await database.ref().set(null);
+                            
+                            showMessage('جاري استعادة البيانات...', 'success');
+                            
+                            // استعادة البيانات الجديدة مع التعامل مع الحقول الفارغة
+                            const restorePromises = [];
+                            
+                            if (backupData.complaints && Object.keys(backupData.complaints).length > 0) {
+                                restorePromises.push(database.ref('complaints').set(backupData.complaints));
+                            } else {
+                                restorePromises.push(database.ref('complaints').set({}));
+                            }
+                            
+                            if (backupData.users && Object.keys(backupData.users).length > 0) {
+                                restorePromises.push(database.ref('users').set(backupData.users));
+                            } else {
+                                restorePromises.push(database.ref('users').set({}));
+                            }
+                            
+                            if (backupData.departments && Object.keys(backupData.departments).length > 0) {
+                                restorePromises.push(database.ref('departments').set(backupData.departments));
+                            } else {
+                                restorePromises.push(database.ref('departments').set({}));
+                            }
+                            
+                            if (backupData.settings && Object.keys(backupData.settings).length > 0) {
+                                restorePromises.push(database.ref('settings').set(backupData.settings));
+                            } else {
+                                restorePromises.push(database.ref('settings').set({}));
+                            }
+                            
+                            await Promise.all(restorePromises);
+                            
+                            showMessage('✅ تم استعادة البيانات بنجاح! سيتم إعادة تحميل الصفحة...', 'success');
+                            
+                            // حفظ سجل الاستعادة
+                            try {
+                                const restoreLog = {
+                                    timestamp: new Date().toISOString(),
+                                    type: "restore",
+                                    fileName: file.name,
+                                    fileSize: file.size,
+                                    recordCount: backupData.metadata.totalRecords
+                                };
+                                
+                                await database.ref('restoreLogs').push(restoreLog);
+                            } catch (logError) {
+                                console.log('Could not save restore log:', logError);
+                            }
+                            
+                            // إعادة تحميل الصفحة بعد ثانيتين
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 2000);
+                            
+                        } catch (error) {
+                            console.error('Error restoring backup:', error);
+                            showMessage('حدث خطأ أثناء استعادة البيانات: ' + error.message, 'error');
+                        } finally {
+                            hideLoading();
+                        }
+                    };
+                    
+                    reader.readAsText(file);
+                } catch (error) {
+                    console.error('Error reading file:', error);
+                    showMessage('حدث خطأ أثناء قراءة الملف', 'error');
+                    hideLoading();
+                }
+            };
+            
+            input.click();
         }
 
         // ==================== دوال المستخدمين ====================
