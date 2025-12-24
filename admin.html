@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>لوحة التحكم - نظام الشكاوى الموحد</title>
     
-    <!-- Manifest لتثبيت التطبيق PWA -->
     <link rel="manifest" href="manifest-admin.json">
     <meta name="theme-color" content="#1a5fb4">
     <meta name="mobile-web-app-capable" content="yes">
@@ -13,14 +12,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="إدارة الشكاوى">
     
-    <!-- الخطوط والأيقونات -->
     <style>
-        /* خط Cairo من Google Fonts - سيتم تخزينه محلياً بواسطة Service Worker */
+        /* خط Cairo من Google Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- أيقونة التطبيق -->
     <link rel="icon" type="image/png" href="icon-192x192.png">
     <link rel="apple-touch-icon" href="icon-512x512.png">
     
@@ -338,7 +335,6 @@
     </style>
 </head>
 <body>
-    <!-- نافذة تثبيت PWA -->
     <div id="installContainer" class="install-container" style="display: none;">
         <div class="install-card">
             <div class="install-icon">
@@ -357,15 +353,12 @@
         </div>
     </div>
 
-    <!-- زر التثبيت العائم -->
     <div class="floating-install-btn" id="floatingInstallBtn">
         <i class="fas fa-download"></i>
     </div>
 
-    <!-- Toast للإشعارات -->
     <div id="pwa-toast"></div>
 
-    <!-- شاشة تسجيل الدخول -->
     <div id="loginScreen" class="login-container">
         <div class="login-box">
             <div class="login-logo">
@@ -392,7 +385,6 @@
         </div>
     </div>
 
-    <!-- شاشة لوحة التحكم -->
     <div id="dashboardScreen" style="display:none;">
         <header>
             <div class="container">
@@ -472,7 +464,6 @@
                         </li>
                     </ul>
                     
-                    <!-- زر تثبيت التطبيق -->
                     <div class="install-btn-container" id="installBtnContainer">
                         <button class="install-btn" id="installBtn">
                             <i class="fas fa-download"></i>
@@ -482,7 +473,6 @@
                 </div>
 
                 <div class="main-content">
-                    <!-- قسم لوحة التحكم -->
                     <div id="dashboardSection" class="content-section active">
                         <div class="section-header">
                             <h2 class="section-title">لوحة التحكم الرئيسية</h2>
@@ -537,7 +527,6 @@
                         </div>
                     </div>
 
-                    <!-- قسم إدارة الشكاوى -->
                     <div id="complaintsSection" class="content-section">
                         <div class="section-header">
                             <h2 class="section-title">إدارة الشكاوى</h2>
@@ -602,7 +591,6 @@
                         </div>
                     </div>
 
-                    <!-- قسم المستخدمين -->
                     <div id="usersSection" class="content-section">
                         <div class="section-header">
                             <h2 class="section-title">إدارة المستخدمين</h2>
@@ -617,7 +605,6 @@
                         </div>
                     </div>
 
-                    <!-- قسم الإعدادات -->
                     <div id="settingsSection" class="content-section">
                         <div class="section-header">
                             <h2 class="section-title">إعدادات النظام</h2>
@@ -659,7 +646,6 @@
                         </div>
                     </div>
 
-                    <!-- قسم الأقسام -->
                     <div id="departmentsSection" class="content-section">
                         <div class="section-header">
                             <h2 class="section-title">إدارة الأقسام</h2>
@@ -680,7 +666,6 @@
                 </div>
             </div>
 
-            <!-- القائمة السفلية للهواتف -->
             <div class="mobile-nav" id="mobileNav">
                 <div class="mobile-nav-item active" data-section="dashboard">
                     <i class="fas fa-tachometer-alt mobile-nav-icon"></i>
@@ -715,7 +700,6 @@
         </div>
     </div>
 
-    <!-- نافذة عرض تفاصيل الشكوى -->
     <div id="complaintModal" class="complaint-details-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -729,7 +713,6 @@
         </div>
     </div>
 
-    <!-- نافذة إضافة/تعديل مستخدم -->
     <div id="userModal" class="form-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -787,17 +770,14 @@
         </div>
     </div>
 
-    <!-- نافذة التحميل -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
     </div>
 
-    <!-- مكتبات JavaScript -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- ملف PWA Handler -->
     <script>
         // =============== PWA Handler for both apps ===============
         class PWAHandler {
@@ -1125,7 +1105,6 @@
         });
     </script>
 
-    <!-- كود التطبيق الرئيسي -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBIIStbiZD0ZJ6su7C1bwZlBvqx-PP-t58",
@@ -2217,7 +2196,6 @@
                             <h1>🏛️ نظام الشكاوى الموحد - الإدارة</h1>
                             <div class="complaint-number-display">رقم الطلب: ${complaint.complaintNumber}</div>
 
-                            <!-- QR Code Container -->
                             <div class="qrcode-container">
                                 <img src="${qrCodeUrl}" alt="QR Code" onerror="this.style.display='none';">
                                 <div class="qrcode-label">
@@ -2286,7 +2264,7 @@
                                     window.print();
                                 }, 1000);
                             };
-                        </script>
+                        <\/script>
                     </body>
                     </html>
                 `;
