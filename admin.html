@@ -1571,7 +1571,7 @@
             document.getElementById('userForm').reset();
         }
 
-        async function saveUser() {
+              async function saveUser() {
             const name = document.getElementById('userName').value.trim();
             const email = document.getElementById('userEmail').value.trim();
             const password = document.getElementById('userPassword').value;
@@ -1594,9 +1594,14 @@
             try {
                 showLoading();
 
+                // حفظ المستخدم الحالي
+                const currentUserTemp = auth.currentUser;
+
+                // إنشاء المستخدم الجديد
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const userId = userCredential.user.uid;
 
+                // حفظ بيانات المستخدم في Firestore
                 await db.collection('users').doc(userId).set({
                     name: name,
                     email: email,
@@ -1605,6 +1610,12 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     createdBy: currentUser.uid
                 });
+
+                // تسجيل خروج المستخدم الجديد فوراً
+                await auth.signOut();
+
+                // إعادة تسجيل دخول المستخدم الأصلي
+                await auth.signInWithEmailAndPassword(currentUserTemp.email, prompt('الرجاء إدخال كلمة مرورك لإكمال العملية:'));
 
                 await logAudit('إضافة مستخدم', `تم إضافة مستخدم جديد: ${name} (${email}) - الدور: ${role}`);
 
@@ -1628,6 +1639,7 @@
                 hideLoading();
             }
         }
+
 
         // ==================== إدارة الأقسام ====================
         async function addDepartment() {
